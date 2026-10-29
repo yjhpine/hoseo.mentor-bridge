@@ -74,7 +74,30 @@
 | 운영 현황 조회 | 관리자가 전체 질의응답 내용과 건수를 확인할 수 있도록 지원 |
 | 사용자 PC 기억 | 재방문 시 사용자를 기억하는 기능이 필요하며, 로그인 유지 등 구체적인 동작은 추후 결정 |
 
-사용자 PC 기억 기능은 데이터베이스만으로 구현 범위가 정해지지 않으므로, 로그인·세션 처리와 브라우저의 쿠키 또는 저장소 사용 방식을 함께 검토합니다. 프런트엔드, 백엔드, 데이터베이스 제품 등 구체적인 기술 스택은 아직 정하지 않았습니다.
+사용자 PC 기억 기능은 데이터베이스만으로 구현 범위가 정해지지 않으므로, 로그인·세션 처리와 브라우저의 쿠키 또는 저장소 사용 방식을 함께 검토합니다. 선택한 기술 스택은 [기술 스택](#기술-스택)에 정리했습니다.
+
+## 기술 스택
+
+분야마다 GitHub 스타가 가장 많고, 학교 서비스에 자유롭게 쓸 수 있는 라이선스의 도구를 골랐습니다.
+
+| 영역 | 선택 | 라이선스 |
+| --- | --- | --- |
+| 프런트엔드 | Next.js (App Router), React, TypeScript | MIT |
+| UI | Tailwind CSS, shadcn/ui | MIT |
+| 백엔드·DB | Supabase (Auth, Postgres, Realtime) | Apache-2.0 (클라이언트 라이브러리 MIT) |
+| 관리자 화면 | refine (관리자 기능 구현 때 도입) | MIT |
+
+역공학에 참고하는 오픈소스 레포와 라이선스별 사용 규칙은 [docs/references.md](docs/references.md)에 있습니다.
+
+## 개발 환경
+
+1. Node.js 20 이상을 설치합니다.
+2. 의존성을 설치합니다: `npm install`
+3. `.env.example`을 `.env.local`로 복사하고 Supabase 프로젝트의 URL과 publishable key를 넣습니다.
+4. 개발 서버를 실행합니다: `npm run dev` → http://localhost:3000
+5. (선택) 레퍼런스 레포를 받습니다: `npm run refs`
+
+DB 스키마는 `supabase/migrations/`의 SQL 파일로 관리합니다. 새 파일은 `npx supabase migration new <이름>`으로 만듭니다.
 
 ## 추가 확인 사항
 
