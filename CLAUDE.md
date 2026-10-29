@@ -27,6 +27,12 @@ npx supabase migration new <이름>   # supabase/migrations/에 SQL 파일 생�
 
 이 PC에는 Docker가 없어서 로컬 Supabase(`supabase start`)는 쓰지 않습니다. 마이그레이션은 원격 Supabase 프로젝트에 적용합니다.
 
+## Supabase 프로젝트
+
+- 이름: `hoseo-mentoring` (조직 `TeaJoSan`, 무료 플랜, 서울 리전 `ap-northeast-2`)
+- 프로젝트 ref: `gxcnjcqfykcpbtikhixs` (Supabase MCP 도구의 `project_id`)
+- 접속 정보는 `.env.local`에 있습니다 (Git 제외). 같은 조직의 `teajosan` 프로젝트는 다른 서비스이므로 건드리지 않습니다.
+
 ## 규칙
 
 - DB 스키마 변경은 항상 `supabase/migrations/`의 SQL 파일로 합니다.
