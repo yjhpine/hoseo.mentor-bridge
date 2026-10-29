@@ -1,6 +1,6 @@
 # hoseo.mentor-bridge
 
-호서대학교 단과대학별 멘토·멘티 매칭 웹 서비스입니다. 학교에서 소규모로 운영합니다. 요구사항은 [README.md](README.md)에 있습니다. README의 "추가 확인 사항"에 있는 항목은 추측으로 정하지 말고 사용자에게 물어봅니다.
+호서대학교 단과대학별 멘토·멘티 매칭 웹 서비스입니다. 학교에서 소규모로 운영합니다. 요구사항은 [README.md](README.md), 구조 설계(역할·화면·데이터 모델·RLS·구현 단계)는 [docs/architecture.md](docs/architecture.md)에 있습니다. 구현은 설계 문서를 따르고, 설계와 다르게 만들어야 하면 설계 문서를 먼저 고칩니다. 확정된 결정은 [docs/architecture.md](docs/architecture.md) 11장에 있습니다. 거기 없는 새 결정은 추측으로 정하지 말고 사용자에게 물어봅니다.
 
 ## 스택
 
@@ -37,8 +37,9 @@ npx supabase migration new <이름>   # supabase/migrations/에 SQL 파일 생�
 
 - DB 스키마 변경은 항상 `supabase/migrations/`의 SQL 파일로 합니다.
 - 모든 테이블에 RLS를 켜고, 관리자·멘토·멘티 권한은 RLS 정책으로 나눕니다.
-- 멘토 답변 50자 검증은 DB 제약과 화면 양쪽에 둡니다. 공백 포함 여부는 아직 정해지지 않았습니다.
-- `service_role`·secret 키는 클라이언트 코드나 `NEXT_PUBLIC_` 변수에 넣지 않습니다. `.env.local`은 커밋하지 않습니다.
+- 멘토 답변은 공백을 뺀 50자 이상이어야 합니다. DB 트리거와 화면 양쪽에서 검증하고, 기준값은 `app_settings`에서 읽습니다.
+- 로그인은 소속(학과 / "멘토" / "관리자") + 이름 + 숫자 6자리 PIN입니다. Supabase Auth에는 소속·이름으로 계산한 가상 이메일과 PIN을 넘깁니다 (`lib/auth/login-key.ts`와 DB `login_email()`이 같은 결과를 내야 함). 메일을 보내는 인증 기능(비밀번호 찾기 메일 등)은 쓰지 않습니다.
+- `service_role`·secret 키는 Next.js 앱 코드(클라이언트·서버 모두)나 `NEXT_PUBLIC_` 변수에 넣지 않습니다. 관리자 API가 필요한 계정 작업은 Edge Function `admin-users`에서만 secret 키를 씁니다. `.env.local`은 커밋하지 않습니다.
 
 ## 레퍼런스 (역공학)
 
