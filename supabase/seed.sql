@@ -11,13 +11,12 @@ select name, ord * 10 from unnest(array[
 on conflict (name) do nothing;
 
 -- 단과대학·학과: 호서대학교 홈페이지 '대학 (2026 기준) > 학부(과)홈페이지'에서 확인 (2026-10-30)
--- 트랙은 따로 넣지 않고 학부를 소속으로 씁니다. 교양·교육과정 운영 조직(창의교양학부, 혁신융합학부, 융합학부)과 연구소는 뺐습니다.
+-- 트랙은 따로 넣지 않고 학부를 소속으로 씁니다. 교양대학(자유전공학부·창의교양학부·혁신융합학부), 융합학부, 연구소는 뺐습니다.
 insert into public.colleges (name, position) values
   ('AI공과대학', 10),
   ('바이오헬스대학', 20),
   ('아트앤컬처대학', 30),
-  ('글로벌융합대학', 40),
-  ('교양대학', 50)
+  ('글로벌융합대학', 40)
 on conflict (name) do nothing;
 
 insert into public.departments (college_id, name, position)
@@ -85,8 +84,7 @@ from (values
   ('글로벌융합대학', '스마트원예조경학과', 210),
   ('글로벌융합대학', '반도체디스플레이학과', 220),
   ('글로벌융합대학', '물류유통학과', 230),
-  ('글로벌융합대학', '첨단산업AI공학과', 240),
-  ('교양대학', '자유전공학부', 10)
+  ('글로벌융합대학', '첨단산업AI공학과', 240)
 ) as d(college, name, position)
 join public.colleges c on c.name = d.college
 on conflict (college_id, name) do nothing;
