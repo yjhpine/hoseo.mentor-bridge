@@ -354,6 +354,7 @@ erDiagram
 | `fee_records` | 학기별 멘토 강사료 | (학기, 멘토) 중복 불가 |
 | `survey_responses` | 학기 말 멘토 만족도 | (학기, 멘토, 멘티) 중복 불가. 그 학기에 해당 멘토와 톡방이 있던 멘티만 |
 | `app_settings` | 바뀔 수 있는 운영 규칙 | 한 줄만 존재 |
+| `admin_invites` | 관리자 계정 생성 허가 (6.1) | secret 키로만 읽고 씀. 가입 트리거가 쓰고 지움 |
 
 `app_settings` 열:
 
@@ -367,11 +368,15 @@ erDiagram
 
 | 함수 | 용도 |
 | --- | --- |
+| `normalize_login_name(raw)` | 이름 + 구분 문자를 `login_name`으로 정규화. 앱의 `normalizeLoginName()`과 같은 결과를 냄 (6.1) |
 | `login_email(login_group, login_name)` | 가상 이메일 계산. 앱의 `lib/auth/login-key.ts`와 같은 결과를 냄 (6.1) |
-| `is_admin()` | 현재 사용자가 관리자인지. RLS 정책에서 사용 |
+| `is_admin()` | 현재 사용자가 관리자인지. RLS 정책에서 사용 (비로그인 실행 권한 없음) |
+| `is_backend()` | secret 키(`service_role`)나 운영 SQL로 들어온 요청인지. 보호 열 트리거에서 사용 |
 | `is_room_member(room_id)` | 현재 사용자가 톡방 참여자인지 |
 | `answer_length(body)` | `app_settings` 기준 글자 수 계산 (공백 포함 여부 반영) |
 | `handle_new_user()` | `auth.users` 생성 시 `profiles`와 역할별 테이블 생성 (트리거) |
+| `guard_login_email()` | `auth.users`의 이메일이 바뀔 때 `profiles`의 로그인 키와 맞는지 확인 (트리거) |
+| `protect_profile_columns()`, `protect_mentor_columns()` | 보호 열 변경 차단 (트리거, 6.1·6.2) |
 | `open_chat_room(mentor_id)` | 멘티가 현재 학기 톡방을 열거나 기존 방 반환 (RPC) |
 | `admin_semester_stats(semester_id)` | 멘토별 톡방 수, 질문 수, 답변 수, 마지막 답변 시각 (관리자 전용 RPC) |
 | `close_semester(semester_id)` | 학기 종료: `closed_at` 기록, 만족도 조사 기간 설정 (관리자 전용 RPC) |
@@ -390,11 +395,13 @@ Supabase Auth는 이메일(또는 전화번호)과 비밀번호로 계정을 만
 | --- | --- | --- |
 | `login_group` | 멘티 `dept:<학과 id>`, 멘토 `mentor`, 관리자 `admin` | `dept:12` |
 | `login_name` | 이름 + 구분 문자를 유니코드 정규화(NFC)하고, 공백을 모두 빼고, 영문은 소문자로 | `홍길동a` |
-| 가상 이메일 | `u-` + SHA-256(`login_group` + `\|` + `login_name`)의 앞 32자 + `@` + 고정 도메인 | `u-3f9c…@login.<도메인>` |
+| 가상 이메일 | `u-` + SHA-256(`login_group` + `\|` + `login_name`)의 앞 32자 + `@login.hoseo-mentor.invalid` | `u-3f9c…@login.hoseo-mentor.invalid` |
 
 - 같은 계산을 앱(`lib/auth/login-key.ts`)과 DB(`login_email()`)에 둡니다. 앱은 로그인·가입에, DB는 가입 검증에 씁니다.
 - 학과 이름이 바뀌어도 학과 id는 그대로라 로그인에 영향이 없습니다.
-- 가상 주소로 메일이 나가지 않도록 Supabase의 이메일 인증(Confirm email)을 끕니다. Supabase가 고정 도메인을 받아 주는지는 구현 1단계 시작할 때 먼저 확인합니다.
+- 가상 주소로 메일이 나가지 않도록 Supabase의 이메일 인증(Confirm email)을 끕니다.
+- 도메인은 예약 최상위 도메인 `.invalid`(RFC 2606)를 씁니다. 실제로 있을 수 없는 주소라 혹시 메일이 나가도 남의 서버로 가지 않고, 배포 도메인(11장 11번)과도 상관이 없습니다. 바꾸면 모든 계정의 로그인 키가 바뀌므로 고정합니다.
+- 2026-10-30에 실제 프로젝트에서 확인했습니다: 이 도메인으로 `signUp`이 받아들여지고 바로 세션이 나옴, 틀린 PIN은 `invalid_credentials`, PIN 변경은 현재 PIN이 없거나 틀리면 거부(`current_password_required`, `current_password_invalid`).
 
 **가입**
 
@@ -402,11 +409,15 @@ Supabase Auth는 이메일(또는 전화번호)과 비밀번호로 계정을 만
 2. 서버 액션이 PIN 형식(숫자 6자리)을 검사하고, 가상 이메일을 계산해 `supabase.auth.signUp()`을 호출합니다. 소속·이름·역할별 정보는 `options.data`로 넘깁니다.
 3. `handle_new_user()` 트리거가 다시 검사하고 `profiles`와 역할별 테이블을 만듭니다.
    - 이메일이 `login_email(login_group, login_name)`과 같은지 확인합니다. API를 직접 불러 임의의 이메일로 가입하는 것을 막습니다.
-   - 소속이 `admin`이면 거부합니다. `mentor`이면 멘토로 만들고, `dept:<id>`이면 쓰고 있는 학과인지 확인한 뒤 멘티로 만듭니다.
+   - 소속이 `admin`이면 거부합니다. 단, secret 키로만 쓸 수 있는 `admin_invites`에 그 이메일의 허가(10분 유효)가 있으면 허가를 지우고 관리자로 만듭니다(첫 관리자 스크립트, `admin-users`). Supabase Auth는 사용자를 만든 뒤에 `app_metadata`를 저장해서 트리거가 볼 수 없기 때문에 허가 표를 씁니다. `mentor`이면 멘토로 만들고, `dept:<id>`이면 쓰고 있는 학과인지 확인한 뒤 멘티로 만듭니다.
    - 멘토는 `job_field_id`를 확인하고 `status = 'pending'`으로 만듭니다.
 4. 이메일 인증이 없으므로 가입 직후 바로 로그인됩니다.
 
 **동명이인**: `(login_group, login_name)`은 중복될 수 없습니다. 같은 소속에 같은 이름이 있으면 가입 화면이 구분 문자(영문·숫자 1~3자, 예: `A`)를 붙이라고 안내합니다. 화면에는 `홍길동A`처럼 이름과 구분 문자를 함께 보여 주고, 로그인할 때도 이름칸에 `홍길동A`라고 씁니다.
+
+**이름에 쓸 수 있는 글자**: 한글 음절·영문과 그 사이의 공백 한 칸, 30자까지입니다 (`profiles.name` CHECK). 보이지 않는 글자(폭 없는 공백 등)를 섞어 남과 같아 보이는 이름으로 가입하는 것을 막기 위해서입니다.
+
+**로그인 키 가로채기 방지**: 사용자가 `updateUser({ email })`로 이메일을 남의 가상 이메일로 바꾸면, 그 사람이 나중에 가입할 로그인 키를 미리 차지할 수 있습니다. `guard_login_email()` 트리거가 이메일은 늘 `login_email(profiles.login_group, profiles.login_name)`과 같아야 한다고 막습니다. 그래서 `admin-users`가 이름·소속을 바꿀 때는 `profiles`를 먼저 고친 뒤 이메일을 바꿉니다.
 
 **로그인**: 소속·이름·PIN을 받은 서버 액션이 가상 이메일을 계산해 `signInWithPassword()`를 호출합니다. 실패하면 "소속, 이름 또는 PIN이 맞지 않습니다"라고만 안내해 어느 값이 틀렸는지 알려 주지 않습니다.
 
@@ -421,7 +432,9 @@ Supabase Auth는 이메일(또는 전화번호)과 비밀번호로 계정을 만
 
 **이름·소속 변경**: 로그인 키가 바뀌므로 관리자만 합니다. 가상 이메일도 함께 바꿉니다.
 
-**관리자 계정**: 가입 화면으로는 만들 수 없습니다. 관리자가 `/admin/users`에서 만들고, 첫 관리자는 운영자 PC에서 한 번 실행하는 설치 스크립트(`scripts/create-admin.mjs`)로 만듭니다.
+**관리자 계정**: 가입 화면으로는 만들 수 없습니다. 관리자가 `/admin/users`에서 만들고(임시 PIN, 처음 로그인할 때 변경), 첫 관리자는 운영자 PC에서 한 번 실행하는 설치 스크립트로 만듭니다: `node --env-file=.env.local scripts/create-admin.mjs` (secret 키는 실행할 때 입력받고 저장하지 않음).
+
+**임시 PIN**: PIN 초기화와 관리자 생성의 임시 PIN은 서버에서 무작위 6자리로 정해 관리자 화면에 한 번만 보여 줍니다.
 
 PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 API가 필요합니다. 이 작업은 Edge Function `admin-users`가 secret 키로 처리하고, 호출한 사람이 관리자인지 먼저 확인합니다. Next.js 앱 코드에는 secret 키를 넣지 않습니다.
 
@@ -483,8 +496,8 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 
 | 테이블 | 조회 | 생성 | 수정 | 삭제 |
 | --- | --- | --- | --- | --- |
-| `profiles` | 본인, 관리자, 공개 멘토의 이름, 같은 톡방 상대 | 트리거 | 본인(`must_change_pin` 해제만), 관리자 | 관리자 |
-| `mentee_profiles` | 본인, 관리자, 톡방 상대 멘토 | 트리거 | 관리자 | 관리자 |
+| `profiles` | 본인, 관리자, 공개 멘토의 이름, 같은 톡방 상대 | 트리거 | 본인(`must_change_pin` 해제만), 관리자(`must_change_pin`만). 이름·소속·역할은 `admin-users`만 | `admin-users`가 auth 계정을 지우면 함께 지워짐 |
+| `mentee_profiles` | 본인, 관리자, 톡방 상대 멘토 | 트리거 | `admin-users`만 (학과가 로그인 키라서) | `profiles`와 함께 |
 | `mentor_profiles` | `published`는 로그인 사용자 전체, 본인, 관리자 | 트리거 | 본인(보호 열 제외), 관리자 | 관리자 |
 | `colleges`, `departments`, `job_fields` | 모두 (비로그인 포함, 가입·로그인 화면의 선택 목록용) | 관리자 | 관리자 | 관리자 |
 | `semesters`, `app_settings` | 로그인 사용자 | 관리자 | 관리자 | 관리자 |
@@ -494,6 +507,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 | `messages` | 참여자, 관리자 (숨김 메시지는 관리자만) | 참여자 (열린 학기) | 관리자(숨김) | 없음 |
 | `room_reads` | 본인 | 본인 | 본인 | 없음 |
 | `fee_records` | 관리자 | 관리자 | 관리자 | 관리자 |
+| `admin_invites` | 없음 (secret 키만) | 없음 | 없음 | 없음 |
 | `survey_responses` | 관리자 | 조건을 갖춘 멘티 | 없음 | 없음 |
 
 **Storage 버킷**
@@ -597,6 +611,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 14 | PIN 분실 | 설계 기본값 | 관리자가 임시 PIN 설정 → 다음 로그인 때 사용자가 바꿈 | `/admin/users`, `admin-users` |
 | 15 | 이름·소속 변경 | 설계 기본값 | 관리자만 (로그인 키가 바뀌기 때문) | `/admin/users`, `admin-users` |
 | 16 | 무작위 대입 대책 | 설계 기본값 | 가입·로그인에 Cloudflare Turnstile CAPTCHA. 실사용 전 필수 | Supabase Auth 설정 |
+| 17 | 가상 이메일 도메인 | 사용자 | `login.hoseo-mentor.invalid` (2026-10-30 확정, 가입·로그인·PIN 변경 시험 통과) | `lib/auth/login-key.ts`, DB `login_email()` |
 
 ## 12. 구현 단계
 
@@ -610,3 +625,5 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 6. 배포 | 호스팅, Turnstile CAPTCHA, 도메인, 개인정보 처리방침, 백업 절차 | 학교 사용자가 실제 주소로 가입하고 쓸 수 있음 |
 
 각 단계의 DB 변경은 `supabase/migrations/`에 SQL로 남기고, 적용 후 Supabase 보안 점검(advisors)으로 RLS 누락을 확인합니다.
+
+1단계에서는 PIN 초기화를 위해 refine 없이 최소 관리자 화면 `/admin/users`(사용자 목록, PIN 초기화, 관리자 만들기)를 두었습니다. 2단계에서 refine 관리자로 옮기면서 이름·소속 변경 화면을 붙입니다.

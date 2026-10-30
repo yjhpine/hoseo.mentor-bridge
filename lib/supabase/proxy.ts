@@ -1,21 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { hasEnvVars } from "../utils";
+import type { Database } from "@/types/database.types";
+
+const LOGIN_PATH = "/auth/login";
+const PIN_PATH = "/account/pin";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   });
 
-  // If the env vars are not set, skip proxy check. You can remove this
-  // once you setup the project.
-  if (!hasEnvVars) {
-    return supabaseResponse;
-  }
-
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
-  const supabase = createServerClient(
+  const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
@@ -47,16 +44,41 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  // 세션 쿠키를 갱신했을 수 있으므로 이동 응답에도 쿠키를 옮겨 담습니다.
+  const redirectTo = (pathname: string) => {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
-    return NextResponse.redirect(url);
+    url.pathname = pathname;
+    url.search = "";
+    const response = NextResponse.redirect(url);
+    supabaseResponse.cookies
+      .getAll()
+      .forEach((cookie) => response.cookies.set(cookie));
+    return response;
+  };
+
+  const { pathname } = request.nextUrl;
+  const isAuthPage = pathname.startsWith("/auth");
+
+  // 비로그인 사용자는 로그인·회원가입 화면만 볼 수 있습니다 (docs/architecture.md 2.2).
+  if (!user) {
+    return isAuthPage ? supabaseResponse : redirectTo(LOGIN_PATH);
+  }
+
+  if (isAuthPage) {
+    return redirectTo("/");
+  }
+
+  // 임시 PIN으로 로그인한 사용자는 PIN을 바꿀 때까지 PIN 변경 화면으로 보냅니다 (6.1).
+  // 서버 액션(POST)은 막지 않습니다. 로그아웃은 어느 화면에서나 되어야 합니다.
+  if (request.method === "GET" && pathname !== PIN_PATH) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("must_change_pin")
+      .eq("id", user.sub)
+      .maybeSingle();
+    if (profile?.must_change_pin) {
+      return redirectTo(PIN_PATH);
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
