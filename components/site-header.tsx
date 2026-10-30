@@ -8,11 +8,12 @@ import { ROLE_LABELS, displayName, getCurrentUser } from "@/lib/auth/current-use
 function HeaderFrame({ children }: { children?: React.ReactNode }) {
   return (
     <header className="w-full border-b border-b-foreground/10">
-      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-4 px-5 text-sm">
+      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-3 whitespace-nowrap px-4 text-sm sm:px-5">
         <Link href="/" className="font-semibold">
-          호서대학교 멘토링
+          <span className="sm:hidden">호서 멘토링</span>
+          <span className="hidden sm:inline">호서대학교 멘토링</span>
         </Link>
-        <div className="flex items-center gap-3">{children}</div>
+        <div className="flex items-center gap-2 sm:gap-3">{children}</div>
       </div>
     </header>
   );
@@ -34,6 +35,14 @@ export async function SiteHeader() {
             {displayName(user)}
             <Badge variant="secondary">{ROLE_LABELS[user.role]}</Badge>
           </span>
+          {user.role === "admin" && (
+            <Link
+              href="/admin/users"
+              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              사용자 관리
+            </Link>
+          )}
           <Link
             href="/account/pin"
             className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
@@ -47,7 +56,9 @@ export async function SiteHeader() {
           </form>
         </>
       )}
-      <ThemeSwitcher />
+      <div className="hidden sm:block">
+        <ThemeSwitcher />
+      </div>
     </HeaderFrame>
   );
 }

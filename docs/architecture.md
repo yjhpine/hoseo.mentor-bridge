@@ -354,6 +354,7 @@ erDiagram
 | `fee_records` | 학기별 멘토 강사료 | (학기, 멘토) 중복 불가 |
 | `survey_responses` | 학기 말 멘토 만족도 | (학기, 멘토, 멘티) 중복 불가. 그 학기에 해당 멘토와 톡방이 있던 멘티만 |
 | `app_settings` | 바뀔 수 있는 운영 규칙 | 한 줄만 존재 |
+| `admin_invites` | 관리자 계정 생성 허가 (6.1) | secret 키로만 읽고 씀. 가입 트리거가 쓰고 지움 |
 
 `app_settings` 열:
 
@@ -408,7 +409,7 @@ Supabase Auth는 이메일(또는 전화번호)과 비밀번호로 계정을 만
 2. 서버 액션이 PIN 형식(숫자 6자리)을 검사하고, 가상 이메일을 계산해 `supabase.auth.signUp()`을 호출합니다. 소속·이름·역할별 정보는 `options.data`로 넘깁니다.
 3. `handle_new_user()` 트리거가 다시 검사하고 `profiles`와 역할별 테이블을 만듭니다.
    - 이메일이 `login_email(login_group, login_name)`과 같은지 확인합니다. API를 직접 불러 임의의 이메일로 가입하는 것을 막습니다.
-   - 소속이 `admin`이면 거부합니다. 단, secret 키로만 넣을 수 있는 `app_metadata.role = 'admin'`이 있으면(첫 관리자 스크립트, `admin-users`) 관리자로 만듭니다. `mentor`이면 멘토로 만들고, `dept:<id>`이면 쓰고 있는 학과인지 확인한 뒤 멘티로 만듭니다.
+   - 소속이 `admin`이면 거부합니다. 단, secret 키로만 쓸 수 있는 `admin_invites`에 그 이메일의 허가(10분 유효)가 있으면 허가를 지우고 관리자로 만듭니다(첫 관리자 스크립트, `admin-users`). Supabase Auth는 사용자를 만든 뒤에 `app_metadata`를 저장해서 트리거가 볼 수 없기 때문에 허가 표를 씁니다. `mentor`이면 멘토로 만들고, `dept:<id>`이면 쓰고 있는 학과인지 확인한 뒤 멘티로 만듭니다.
    - 멘토는 `job_field_id`를 확인하고 `status = 'pending'`으로 만듭니다.
 4. 이메일 인증이 없으므로 가입 직후 바로 로그인됩니다.
 
@@ -431,7 +432,9 @@ Supabase Auth는 이메일(또는 전화번호)과 비밀번호로 계정을 만
 
 **이름·소속 변경**: 로그인 키가 바뀌므로 관리자만 합니다. 가상 이메일도 함께 바꿉니다.
 
-**관리자 계정**: 가입 화면으로는 만들 수 없습니다. 관리자가 `/admin/users`에서 만들고, 첫 관리자는 운영자 PC에서 한 번 실행하는 설치 스크립트(`scripts/create-admin.mjs`)로 만듭니다.
+**관리자 계정**: 가입 화면으로는 만들 수 없습니다. 관리자가 `/admin/users`에서 만들고(임시 PIN, 처음 로그인할 때 변경), 첫 관리자는 운영자 PC에서 한 번 실행하는 설치 스크립트로 만듭니다: `node --env-file=.env.local scripts/create-admin.mjs` (secret 키는 실행할 때 입력받고 저장하지 않음).
+
+**임시 PIN**: PIN 초기화와 관리자 생성의 임시 PIN은 서버에서 무작위 6자리로 정해 관리자 화면에 한 번만 보여 줍니다.
 
 PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 API가 필요합니다. 이 작업은 Edge Function `admin-users`가 secret 키로 처리하고, 호출한 사람이 관리자인지 먼저 확인합니다. Next.js 앱 코드에는 secret 키를 넣지 않습니다.
 
@@ -504,6 +507,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 | `messages` | 참여자, 관리자 (숨김 메시지는 관리자만) | 참여자 (열린 학기) | 관리자(숨김) | 없음 |
 | `room_reads` | 본인 | 본인 | 본인 | 없음 |
 | `fee_records` | 관리자 | 관리자 | 관리자 | 관리자 |
+| `admin_invites` | 없음 (secret 키만) | 없음 | 없음 | 없음 |
 | `survey_responses` | 관리자 | 조건을 갖춘 멘티 | 없음 | 없음 |
 
 **Storage 버킷**
