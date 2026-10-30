@@ -1,6 +1,6 @@
 import { startTransition } from "react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/native-select";
 import type { CollegeOption } from "@/features/auth/api/affiliations";
 
 /**
@@ -31,13 +31,6 @@ export function PinInput(
       {...props}
     />
   );
-}
-
-const selectClassName =
-  "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
-
-export function Select({ className, ...props }: React.ComponentProps<"select">) {
-  return <select className={cn(selectClassName, className)} {...props} />;
 }
 
 /**
@@ -91,3 +84,5 @@ export function FormMessage({ state }: { state: { error?: string; success?: stri
   }
   return null;
 }
+
+export { Select };

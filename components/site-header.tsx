@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { logout } from "@/features/auth/api/actions";
+import { UserMenu } from "@/components/user-menu";
 import { ROLE_LABELS, displayName, getCurrentUser } from "@/lib/auth/current-user";
 
 function HeaderFrame({ children }: { children?: React.ReactNode }) {
@@ -24,6 +22,9 @@ export function SiteHeaderFallback() {
   return <HeaderFrame />;
 }
 
+const NAV_LINK =
+  "text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
+
 export async function SiteHeader() {
   const user = await getCurrentUser();
 
@@ -31,29 +32,21 @@ export async function SiteHeader() {
     <HeaderFrame>
       {user && (
         <>
-          <span className="hidden items-center gap-2 sm:flex">
-            {displayName(user)}
-            <Badge variant="secondary">{ROLE_LABELS[user.role]}</Badge>
-          </span>
-          {user.role === "admin" && (
-            <Link
-              href="/admin/users"
-              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-            >
-              사용자 관리
+          <Link href="/mentors" className={NAV_LINK}>
+            멘토 찾기
+          </Link>
+          {user.role === "mentor" && (
+            <Link href="/mentor" className={NAV_LINK}>
+              <span className="sm:hidden">내 페이지</span>
+              <span className="hidden sm:inline">내 멘토 페이지</span>
             </Link>
           )}
-          <Link
-            href="/account/pin"
-            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            PIN 변경
-          </Link>
-          <form action={logout}>
-            <Button type="submit" size="sm" variant="outline">
-              로그아웃
-            </Button>
-          </form>
+          {user.role === "admin" && (
+            <Link href="/admin" className={NAV_LINK}>
+              관리자
+            </Link>
+          )}
+          <UserMenu name={displayName(user)} roleLabel={ROLE_LABELS[user.role]} />
         </>
       )}
       <div className="hidden sm:block">

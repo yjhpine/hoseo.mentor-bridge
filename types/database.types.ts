@@ -253,7 +253,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mentor_directory: {
+        Row: {
+          accepting_questions: boolean | null
+          career: string | null
+          college_id: number | null
+          college_name: string | null
+          company: string | null
+          headline: string | null
+          id: string | null
+          intro: string | null
+          job_field_id: number | null
+          job_field_name: string | null
+          name: string | null
+          name_tag: string | null
+          photo_path: string | null
+          published_at: string | null
+          status: Database["public"]["Enums"]["mentor_status"] | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
