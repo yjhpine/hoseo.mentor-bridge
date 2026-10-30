@@ -11,7 +11,13 @@ import type {
   JobFieldOption,
 } from "@/features/auth/api/affiliations";
 import { NAME_MAX_LENGTH } from "@/lib/auth/login-key";
-import { AffiliationSelect, FormMessage, PinInput, Select } from "./fields";
+import {
+  AffiliationSelect,
+  FormMessage,
+  PinInput,
+  Select,
+  submitWithoutReset,
+} from "./fields";
 
 export function SignUpForm({
   colleges,
@@ -24,20 +30,24 @@ export function SignUpForm({
     signUp,
     {},
   );
-  // 서버가 돌려준 값이 있으면 그 소속으로 다시 그립니다 (가입 실패 후 폼이 초기화될 때).
+  // "멘토"를 골랐을 때만 기업명·직무 분야 칸을 보여 줍니다.
   const [selectedGroup, setSelectedGroup] = useState("");
   const group = selectedGroup || state.values?.group || "";
   const isMentor = group === "mentor";
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form
+      action={action}
+      onSubmit={submitWithoutReset(action)}
+      className="flex flex-col gap-5"
+    >
       <div className="grid gap-2">
         <Label htmlFor="group">소속</Label>
         <AffiliationSelect
           id="group"
           name="group"
           colleges={colleges}
-          value={group}
+          defaultValue={state.values?.group ?? ""}
           onChange={(e) => setSelectedGroup(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">

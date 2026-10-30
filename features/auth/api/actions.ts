@@ -45,7 +45,7 @@ export async function login(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: await loginEmail(group, normalizeLoginName(name)),
     password: pin,
   });
@@ -60,8 +60,13 @@ export async function login(
     };
   }
 
-  // 임시 PIN이면 proxy가 PIN 변경 화면으로 보냅니다.
-  redirect("/");
+  // 임시 PIN이면 바로 PIN 변경 화면으로 보냅니다. 다른 화면으로 가려 해도 proxy가 다시 보냅니다.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("must_change_pin")
+    .eq("id", data.user.id)
+    .maybeSingle();
+  redirect(profile?.must_change_pin ? "/account/pin" : "/");
 }
 
 export async function signUp(

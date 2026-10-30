@@ -1,6 +1,19 @@
+import { startTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { CollegeOption } from "@/features/auth/api/affiliations";
+
+/**
+ * 폼 action으로 제출하면 React가 끝난 뒤 폼을 초기화해 소속 선택(select)이 빈칸으로 돌아갑니다.
+ * onSubmit에서 직접 action을 불러 초기화를 막고, 실패했을 때 입력값을 그대로 둡니다.
+ */
+export function submitWithoutReset(action: (formData: FormData) => void) {
+  return (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startTransition(() => action(formData));
+  };
+}
 
 /** 숫자 6자리 PIN 입력칸. 휴대폰에서는 숫자 키패드가 뜹니다. */
 export function PinInput(

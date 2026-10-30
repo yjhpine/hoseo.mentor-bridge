@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login, type FormState } from "@/features/auth/api/actions";
 import type { CollegeOption } from "@/features/auth/api/affiliations";
-import { AffiliationSelect, FormMessage, PinInput } from "./fields";
+import {
+  AffiliationSelect,
+  FormMessage,
+  PinInput,
+  submitWithoutReset,
+} from "./fields";
 
 export function LoginForm({ colleges }: { colleges: CollegeOption[] }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
@@ -16,7 +21,11 @@ export function LoginForm({ colleges }: { colleges: CollegeOption[] }) {
   );
 
   return (
-    <form action={action} className="flex flex-col gap-5">
+    <form
+      action={action}
+      onSubmit={submitWithoutReset(action)}
+      className="flex flex-col gap-5"
+    >
       <div className="grid gap-2">
         <Label htmlFor="group">소속</Label>
         <AffiliationSelect
