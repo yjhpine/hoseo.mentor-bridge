@@ -23,7 +23,10 @@ npm run build
 npm run lint
 npm run refs     # 레퍼런스 레포를 references/에 받기
 npx supabase migration new <이름>   # supabase/migrations/에 SQL 파일 생성
+node --env-file=.env.local scripts/create-admin.mjs   # 첫 관리자 생성 (secret 키는 실행할 때 입력)
 ```
+
+Edge Function은 `supabase/functions/`에 있고 원격 프로젝트에 배포합니다. `admin-users`는 `verify_jwt = false`로 배포하고(`supabase/config.toml`), 호출자 확인은 함수 안에서 합니다. 고치면 저장소 파일과 배포본이 같은지 확인합니다.
 
 이 PC에는 Docker가 없어서 로컬 Supabase(`supabase start`)는 쓰지 않습니다. 마이그레이션은 원격 Supabase 프로젝트에 적용합니다.
 

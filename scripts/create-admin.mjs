@@ -55,7 +55,10 @@ const { count, error: countError } = await supabase
   .select("id", { count: "exact", head: true })
   .eq("role", "admin");
 if (countError) {
-  fail(`Supabase에 연결하지 못했습니다: ${countError.message}`);
+  fail(
+    `Supabase에 연결하지 못했습니다 (${countError.code || countError.message || "알 수 없는 오류"}). ` +
+      "secret 키와 .env.local의 NEXT_PUBLIC_SUPABASE_URL이 맞는지 확인하세요.",
+  );
 }
 if (count > 0) {
   console.log(`이미 관리자가 ${count}명 있습니다. 보통은 관리자 화면(/admin/users)에서 만듭니다.`);

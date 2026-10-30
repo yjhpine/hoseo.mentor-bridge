@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Enums } from "@/types/database.types";
@@ -48,4 +49,13 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 /** 화면과 로그인에 쓰는 이름. 동명이인 구분 문자를 이름 뒤에 붙입니다 (예: 홍길동A). */
 export function displayName(user: Pick<CurrentUser, "name" | "nameTag">) {
   return user.name + (user.nameTag ?? "");
+}
+
+/** 역할이 맞지 않으면 "페이지를 찾을 수 없음"을 보여 줍니다. 최종 판단은 RLS와 admin-users가 다시 합니다. */
+export async function requireRole(role: UserRole): Promise<CurrentUser> {
+  const user = await getCurrentUser();
+  if (user?.role !== role) {
+    notFound();
+  }
+  return user;
 }

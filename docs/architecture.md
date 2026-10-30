@@ -625,3 +625,5 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 6. 배포 | 호스팅, Turnstile CAPTCHA, 도메인, 개인정보 처리방침, 백업 절차 | 학교 사용자가 실제 주소로 가입하고 쓸 수 있음 |
 
 각 단계의 DB 변경은 `supabase/migrations/`에 SQL로 남기고, 적용 후 Supabase 보안 점검(advisors)으로 RLS 누락을 확인합니다.
+
+1단계에서는 PIN 초기화를 위해 refine 없이 최소 관리자 화면 `/admin/users`(사용자 목록, PIN 초기화, 관리자 만들기)를 두었습니다. 2단계에서 refine 관리자로 옮기면서 이름·소속 변경 화면을 붙입니다.

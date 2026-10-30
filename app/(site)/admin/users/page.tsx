@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,7 +12,7 @@ import {
   CreateAdminForm,
   ResetPinButton,
 } from "@/features/admin/components/user-actions";
-import { ROLE_LABELS, displayName, getCurrentUser } from "@/lib/auth/current-user";
+import { ROLE_LABELS, displayName, requireRole } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "사용자 관리" };
@@ -35,10 +34,7 @@ const MENTOR_STATUS_LABELS = {
 } as const;
 
 async function AdminUsers() {
-  const me = await getCurrentUser();
-  if (me?.role !== "admin") {
-    notFound();
-  }
+  const me = await requireRole("admin");
 
   const supabase = await createClient();
   const { data: users } = await supabase
