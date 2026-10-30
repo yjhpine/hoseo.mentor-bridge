@@ -367,11 +367,15 @@ erDiagram
 
 | 함수 | 용도 |
 | --- | --- |
+| `normalize_login_name(raw)` | 이름 + 구분 문자를 `login_name`으로 정규화. 앱의 `normalizeLoginName()`과 같은 결과를 냄 (6.1) |
 | `login_email(login_group, login_name)` | 가상 이메일 계산. 앱의 `lib/auth/login-key.ts`와 같은 결과를 냄 (6.1) |
-| `is_admin()` | 현재 사용자가 관리자인지. RLS 정책에서 사용 |
+| `is_admin()` | 현재 사용자가 관리자인지. RLS 정책에서 사용 (비로그인 실행 권한 없음) |
+| `is_backend()` | secret 키(`service_role`)나 운영 SQL로 들어온 요청인지. 보호 열 트리거에서 사용 |
 | `is_room_member(room_id)` | 현재 사용자가 톡방 참여자인지 |
 | `answer_length(body)` | `app_settings` 기준 글자 수 계산 (공백 포함 여부 반영) |
 | `handle_new_user()` | `auth.users` 생성 시 `profiles`와 역할별 테이블 생성 (트리거) |
+| `guard_login_email()` | `auth.users`의 이메일이 바뀔 때 `profiles`의 로그인 키와 맞는지 확인 (트리거) |
+| `protect_profile_columns()`, `protect_mentor_columns()` | 보호 열 변경 차단 (트리거, 6.1·6.2) |
 | `open_chat_room(mentor_id)` | 멘티가 현재 학기 톡방을 열거나 기존 방 반환 (RPC) |
 | `admin_semester_stats(semester_id)` | 멘토별 톡방 수, 질문 수, 답변 수, 마지막 답변 시각 (관리자 전용 RPC) |
 | `close_semester(semester_id)` | 학기 종료: `closed_at` 기록, 만족도 조사 기간 설정 (관리자 전용 RPC) |
@@ -404,11 +408,15 @@ Supabase Auth는 이메일(또는 전화번호)과 비밀번호로 계정을 만
 2. 서버 액션이 PIN 형식(숫자 6자리)을 검사하고, 가상 이메일을 계산해 `supabase.auth.signUp()`을 호출합니다. 소속·이름·역할별 정보는 `options.data`로 넘깁니다.
 3. `handle_new_user()` 트리거가 다시 검사하고 `profiles`와 역할별 테이블을 만듭니다.
    - 이메일이 `login_email(login_group, login_name)`과 같은지 확인합니다. API를 직접 불러 임의의 이메일로 가입하는 것을 막습니다.
-   - 소속이 `admin`이면 거부합니다. `mentor`이면 멘토로 만들고, `dept:<id>`이면 쓰고 있는 학과인지 확인한 뒤 멘티로 만듭니다.
+   - 소속이 `admin`이면 거부합니다. 단, secret 키로만 넣을 수 있는 `app_metadata.role = 'admin'`이 있으면(첫 관리자 스크립트, `admin-users`) 관리자로 만듭니다. `mentor`이면 멘토로 만들고, `dept:<id>`이면 쓰고 있는 학과인지 확인한 뒤 멘티로 만듭니다.
    - 멘토는 `job_field_id`를 확인하고 `status = 'pending'`으로 만듭니다.
 4. 이메일 인증이 없으므로 가입 직후 바로 로그인됩니다.
 
 **동명이인**: `(login_group, login_name)`은 중복될 수 없습니다. 같은 소속에 같은 이름이 있으면 가입 화면이 구분 문자(영문·숫자 1~3자, 예: `A`)를 붙이라고 안내합니다. 화면에는 `홍길동A`처럼 이름과 구분 문자를 함께 보여 주고, 로그인할 때도 이름칸에 `홍길동A`라고 씁니다.
+
+**이름에 쓸 수 있는 글자**: 한글 음절·영문과 그 사이의 공백 한 칸, 30자까지입니다 (`profiles.name` CHECK). 보이지 않는 글자(폭 없는 공백 등)를 섞어 남과 같아 보이는 이름으로 가입하는 것을 막기 위해서입니다.
+
+**로그인 키 가로채기 방지**: 사용자가 `updateUser({ email })`로 이메일을 남의 가상 이메일로 바꾸면, 그 사람이 나중에 가입할 로그인 키를 미리 차지할 수 있습니다. `guard_login_email()` 트리거가 이메일은 늘 `login_email(profiles.login_group, profiles.login_name)`과 같아야 한다고 막습니다. 그래서 `admin-users`가 이름·소속을 바꿀 때는 `profiles`를 먼저 고친 뒤 이메일을 바꿉니다.
 
 **로그인**: 소속·이름·PIN을 받은 서버 액션이 가상 이메일을 계산해 `signInWithPassword()`를 호출합니다. 실패하면 "소속, 이름 또는 PIN이 맞지 않습니다"라고만 안내해 어느 값이 틀렸는지 알려 주지 않습니다.
 
@@ -485,8 +493,8 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 
 | 테이블 | 조회 | 생성 | 수정 | 삭제 |
 | --- | --- | --- | --- | --- |
-| `profiles` | 본인, 관리자, 공개 멘토의 이름, 같은 톡방 상대 | 트리거 | 본인(`must_change_pin` 해제만), 관리자 | 관리자 |
-| `mentee_profiles` | 본인, 관리자, 톡방 상대 멘토 | 트리거 | 관리자 | 관리자 |
+| `profiles` | 본인, 관리자, 공개 멘토의 이름, 같은 톡방 상대 | 트리거 | 본인(`must_change_pin` 해제만), 관리자(`must_change_pin`만). 이름·소속·역할은 `admin-users`만 | `admin-users`가 auth 계정을 지우면 함께 지워짐 |
+| `mentee_profiles` | 본인, 관리자, 톡방 상대 멘토 | 트리거 | `admin-users`만 (학과가 로그인 키라서) | `profiles`와 함께 |
 | `mentor_profiles` | `published`는 로그인 사용자 전체, 본인, 관리자 | 트리거 | 본인(보호 열 제외), 관리자 | 관리자 |
 | `colleges`, `departments`, `job_fields` | 모두 (비로그인 포함, 가입·로그인 화면의 선택 목록용) | 관리자 | 관리자 | 관리자 |
 | `semesters`, `app_settings` | 로그인 사용자 | 관리자 | 관리자 | 관리자 |
