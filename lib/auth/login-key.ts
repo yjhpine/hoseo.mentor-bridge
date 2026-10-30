@@ -10,9 +10,32 @@ export type LoginGroup = "admin" | "mentor" | `dept:${number}`;
 const WHITESPACE = /\s/g;
 
 const PIN_PATTERN = /^\d{6}$/;
+const LOGIN_GROUP_PATTERN = /^(admin|mentor|dept:[1-9][0-9]*)$/;
+
+// DB profiles 테이블의 CHECK와 같은 규칙입니다.
+export const NAME_MAX_LENGTH = 30;
+const NAME_PATTERN = /^[가-힣A-Za-z]+( [가-힣A-Za-z]+)*$/;
+const NAME_TAG_PATTERN = /^[A-Za-z0-9]{1,3}$/;
 
 export function departmentLoginGroup(departmentId: number): LoginGroup {
   return `dept:${departmentId}`;
+}
+
+export function parseLoginGroup(value: string): LoginGroup | null {
+  return LOGIN_GROUP_PATTERN.test(value) ? (value as LoginGroup) : null;
+}
+
+/** 가입할 때 받은 이름을 저장할 모양으로 다듬습니다: NFC, 앞뒤 공백 제거, 연속 공백은 한 칸. */
+export function cleanName(raw: string): string {
+  return raw.normalize("NFC").trim().replace(/\s+/g, " ");
+}
+
+export function isValidName(name: string): boolean {
+  return name.length <= NAME_MAX_LENGTH && NAME_PATTERN.test(name);
+}
+
+export function isValidNameTag(tag: string): boolean {
+  return NAME_TAG_PATTERN.test(tag);
 }
 
 /** 이름 + 구분 문자를 NFC로 정규화하고, 공백을 모두 빼고, 영문 대문자만 소문자로 바꿉니다. */
