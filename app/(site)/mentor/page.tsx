@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
+import { listMyRooms } from "@/features/chats/api/chats";
+import { RoomList } from "@/features/chats/components/room-list";
 import { getMentor } from "@/features/mentors/api/mentors";
 import { MentorPageForm } from "@/features/mentors/components/mentor-page-form";
 import { requireRole } from "@/lib/auth/current-user";
@@ -14,7 +16,7 @@ const STATUS = {
   hidden: { label: "비공개", note: "관리자가 비공개로 돌려 멘티에게 보이지 않습니다." },
 } as const;
 
-// 멘토 대시보드. 받은 질문은 3단계, 강의 관리는 4단계에서 붙입니다.
+// 멘토 대시보드: 받은 질문, 내 페이지 편집. 강의 관리는 4단계에서 붙입니다.
 export default function Page() {
   return (
     <Suspense fallback={<p className="py-6 text-sm text-muted-foreground">불러오는 중…</p>}>
@@ -25,7 +27,7 @@ export default function Page() {
 
 async function MentorDashboard() {
   const me = await requireRole("mentor");
-  const mentor = await getMentor(me.id);
+  const [mentor, rooms] = await Promise.all([getMentor(me.id), listMyRooms(me.id)]);
   if (!mentor) {
     return <p className="py-6">멘토 정보를 찾지 못했습니다. 관리자에게 문의하세요.</p>;
   }
@@ -51,6 +53,12 @@ async function MentorDashboard() {
           </Link>
         </p>
       </div>
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">받은 질문</h2>
+        <RoomList rooms={rooms} viewer="mentor" />
+      </section>
+
+      <h2 className="text-lg font-semibold">내 페이지 편집</h2>
       <MentorPageForm
         initial={{
           headline: mentor.headline,

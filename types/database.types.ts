@@ -50,6 +50,33 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_rooms: {
+        Row: {
+          created_at: string
+          id: number
+          last_message_at: string | null
+          mentee_id: string
+          mentor_id: string
+          semester_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          last_message_at?: string | null
+          mentee_id: string
+          mentor_id: string
+          semester_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          last_message_at?: string | null
+          mentee_id?: string
+          mentor_id?: string
+          semester_id?: number
+        }
+        Relationships: []
+      }
       colleges: {
         Row: {
           description: string | null
@@ -154,6 +181,36 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          body: string
+          created_at: string
+          hidden_at: string | null
+          id: number
+          room_id: number
+          sender_id: string
+          sender_role: Database["public"]["Enums"]["user_role"]
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          hidden_at?: string | null
+          id?: never
+          room_id: number
+          sender_id?: string
+          sender_role?: Database["public"]["Enums"]["user_role"]
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          hidden_at?: string | null
+          id?: never
+          room_id?: number
+          sender_id?: string
+          sender_role?: Database["public"]["Enums"]["user_role"]
+        }
+        Relationships: []
+      }
       mentor_profiles: {
         Row: {
           accepting_questions: boolean
@@ -251,6 +308,60 @@ export type Database = {
         }
         Relationships: []
       }
+      room_reads: {
+        Row: {
+          last_read_at: string
+          room_id: number
+          user_id: string
+        }
+        Insert: {
+          last_read_at?: string
+          room_id: number
+          user_id: string
+        }
+        Update: {
+          last_read_at?: string
+          room_id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      semesters: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          ends_on: string
+          id: number
+          is_current: boolean
+          name: string
+          starts_on: string
+          survey_closes_at: string | null
+          survey_opens_at: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          ends_on: string
+          id?: never
+          is_current?: boolean
+          name: string
+          starts_on: string
+          survey_closes_at?: string | null
+          survey_opens_at?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          ends_on?: string
+          id?: never
+          is_current?: boolean
+          name?: string
+          starts_on?: string
+          survey_closes_at?: string | null
+          survey_opens_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       mentor_directory: {
@@ -275,13 +386,33 @@ export type Database = {
       }
     }
     Functions: {
+      answer_length: { Args: { body: string }; Returns: number }
       is_admin: { Args: never; Returns: boolean }
+      is_room_member: { Args: { room_id: number }; Returns: boolean }
       is_backend: { Args: never; Returns: boolean }
       login_email: {
         Args: { login_group: string; login_name: string }
         Returns: string
       }
+      mark_room_read: { Args: { room_id: number }; Returns: undefined }
+      mentor_activity: {
+        Args: { mentor_id: string }
+        Returns: {
+          answer_count: number
+          answered_room_count: number
+          room_count: number
+        }[]
+      }
+      my_unread_counts: {
+        Args: never
+        Returns: {
+          room_id: number
+          unread: number
+        }[]
+      }
       normalize_login_name: { Args: { raw: string }; Returns: string }
+      open_chat_room: { Args: { mentor_id: string }; Returns: number }
+      set_current_semester: { Args: { semester_id: number }; Returns: undefined }
     }
     Enums: {
       mentor_status: "pending" | "published" | "hidden"

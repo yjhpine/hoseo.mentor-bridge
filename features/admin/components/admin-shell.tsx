@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/mentors", label: "멘토 개설" },
   { href: "/admin/colleges", label: "구역·학과" },
   { href: "/admin/job-fields", label: "직무 분야" },
+  { href: "/admin/semesters", label: "학기" },
   { href: "/admin/users", label: "사용자" },
 ];
 

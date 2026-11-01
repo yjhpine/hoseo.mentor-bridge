@@ -378,6 +378,10 @@ erDiagram
 | `guard_login_email()` | `auth.users`의 이메일이 바뀔 때 `profiles`의 로그인 키와 맞는지 확인 (트리거) |
 | `protect_profile_columns()`, `protect_mentor_columns()` | 보호 열 변경 차단 (트리거, 6.1·6.2) |
 | `open_chat_room(mentor_id)` | 멘티가 현재 학기 톡방을 열거나 기존 방 반환 (RPC) |
+| `set_current_semester(semester_id)` | 현재 학기 지정 (관리자 전용 RPC). 하나만 현재 학기가 되도록 기존 것을 내림 |
+| `mark_room_read(room_id)` | 내 읽은 위치를 지금으로 (RPC) |
+| `my_unread_counts()` | 내 톡방별 안 읽은 메시지 수 (RPC) |
+| `mentor_activity(mentor_id)` | 멘토 상세의 답변 수·질문 받은 톡방 수·답변한 톡방 수 (RPC, 집계만 돌려줌) |
 | `admin_semester_stats(semester_id)` | 멘토별 톡방 수, 질문 수, 답변 수, 마지막 답변 시각 (관리자 전용 RPC) |
 | `close_semester(semester_id)` | 학기 종료: `closed_at` 기록, 만족도 조사 기간 설정 (관리자 전용 RPC) |
 
@@ -464,6 +468,8 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 - 열 수 있는 조건: 멘티 본인, 현재 학기 존재, 멘토가 `published`이고 `accepting_questions = true`
 - 메시지를 쓸 수 있는 조건: 톡방 참여자이고 학기가 종료되지 않음
 - 메시지는 수정·삭제할 수 없습니다. 강사료 산정 근거가 되기 때문입니다. 부적절한 메시지는 관리자가 숨깁니다(`hidden_at`).
+- 메시지는 5000자까지입니다. 보낸 사람과 역할(`sender_role`)은 트리거가 로그인 정보로 채우므로 API로 바꿔 보낼 수 없습니다.
+- 3단계에서는 관리자 화면 `/admin/semesters`에 학기 만들기와 현재 학기 지정만 두었습니다. 학기 종료는 5단계입니다.
 - 수강 신청을 하지 않아도 질문할 수 있습니다. README에서 강의 수강과 질문은 별도 단계이기 때문입니다.
 
 ### 6.5 학기 운영

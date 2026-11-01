@@ -166,3 +166,15 @@ export async function getJobFields() {
     .order("name");
   return data ?? [];
 }
+
+/** 멘토 상세의 활동 지표 (4.2): 답변 수, 질문 받은 톡방 수, 답변한 톡방 수 */
+export async function getMentorActivity(id: string) {
+  const empty = { answerCount: 0, roomCount: 0, answeredRoomCount: 0 };
+  if (!UUID_PATTERN.test(id)) return empty;
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("mentor_activity", { mentor_id: id });
+  const row = data?.[0];
+  return row
+    ? { answerCount: row.answer_count, roomCount: row.room_count, answeredRoomCount: row.answered_room_count }
+    : empty;
+}
