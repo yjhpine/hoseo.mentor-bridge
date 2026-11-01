@@ -4,7 +4,14 @@
 
 멘티가 단과대학별 멘토의 이력과 강의를 살펴보고, 원하는 멘토를 선택해 강의를 수강하고 1:1로 질문할 수 있는 웹 서비스입니다. 관리자는 멘토 페이지와 질의응답 현황을 관리하고, 질문·답변 내용을 확인해 강사료를 책정합니다.
 
-이 문서는 초기 회의 내용을 정리한 요구사항이며, 구현 완료 여부를 나타내지는 않습니다.
+## 운영
+
+- 사이트: <https://hoseo-mentor-bridge.yjhpine123.workers.dev> (Cloudflare Workers, `main`에 병합하면 자동 배포)
+- 관리자 운영 안내: [docs/operations.md](docs/operations.md) — 처음 할 일, 한 학기 운영 순서, PIN 분실·탈퇴 요청 처리, 문제가 생겼을 때 볼 곳
+- 백업 절차: [docs/backup.md](docs/backup.md)
+- 개인정보 처리방침: 사이트의 `/privacy` (운영: 호서대학교 창업팀, 보호책임자 양정환 010-3830-5972)
+
+설계의 구현 단계 1~6(기반, 구역·멘토 페이지, 1:1 톡방, 강의, 운영, 배포)을 모두 구현했습니다. 도메인은 당분간 위 주소를 씁니다. 아래는 초기 회의에서 정한 요구사항입니다.
 
 ## 참고 서비스
 
@@ -93,7 +100,8 @@
 | 프런트엔드 | Next.js (App Router), React, TypeScript | MIT |
 | UI | Tailwind CSS, shadcn/ui | MIT |
 | 백엔드·DB | Supabase (Auth, Postgres, Realtime) | Apache-2.0 (클라이언트 라이브러리 MIT) |
-| 관리자 화면 | refine (관리자 기능 구현 때 도입) | MIT |
+| 관리자 화면 | refine (`@refinedev/core`, `@refinedev/supabase`) | MIT |
+| 배포 | Cloudflare Workers (`@opennextjs/cloudflare`), Turnstile CAPTCHA | MIT (OpenNext) |
 
 역공학에 참고하는 오픈소스 레포와 라이선스별 사용 규칙은 [docs/references.md](docs/references.md)에 있습니다. 역할, 화면, 데이터 모델, 보안, 구현 단계를 담은 서비스 구조 설계는 [docs/architecture.md](docs/architecture.md)에 있습니다.
 
@@ -104,6 +112,10 @@
 3. `.env.example`을 `.env.local`로 복사하고 Supabase 프로젝트의 URL과 publishable key를 넣습니다.
 4. 개발 서버를 실행합니다: `npm run dev` → http://localhost:3000
 5. (선택) 레퍼런스 레포를 받습니다: `npm run refs`
+
+Supabase에서 CAPTCHA를 켜 두었기 때문에, 로컬에서 실제 가입·로그인을 하려면 Cloudflare의 시험용 키가 아니라 운영 site key가 필요하고 위젯 호스트 이름에 `localhost`가 있어야 합니다. 화면만 볼 때는 `TURNSTILE_SITE_KEY=1x00000000000000000000AA`(항상 통과하는 시험용 키)로 위젯을 띄울 수 있습니다.
+
+배포 빌드를 확인하려면 `npx opennextjs-cloudflare build`를 실행합니다. Worker 진입점은 `worker/index.ts`이고, 설정은 `wrangler.jsonc`에 있습니다.
 
 DB 스키마는 `supabase/migrations/`의 SQL 파일로 관리합니다. 새 파일은 `npx supabase migration new <이름>`으로 만듭니다.
 
