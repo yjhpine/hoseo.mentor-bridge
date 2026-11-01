@@ -11,6 +11,7 @@ import {
   normalizeLoginName,
   parseLoginGroup,
 } from "@/lib/auth/login-key";
+import { PRIVACY_POLICY_VERSION } from "@/lib/privacy/policy";
 
 export type FormState = {
   error?: string;
@@ -94,7 +95,8 @@ export async function signUp(
   const pinConfirm = field(formData, "pinConfirm");
   const company = field(formData, "company").trim();
   const jobFieldId = field(formData, "jobFieldId");
-  const values = { group: group ?? "", name, nameTag, company, jobFieldId };
+  const privacyConsent = field(formData, "privacyConsent");
+  const values = { group: group ?? "", name, nameTag, company, jobFieldId, privacyConsent };
   const needsTag = nameTag !== "";
 
   // 가입 화면으로는 관리자가 될 수 없습니다 (DB 트리거도 막음).
@@ -130,6 +132,11 @@ export async function signUp(
     return { error: "직무 분야를 골라 주세요.", values, needsTag };
   }
 
+  // 개인정보 수집·이용 동의 (6.7). DB 가입 트리거도 동의한 처리방침 판이 없으면 거부합니다.
+  if (privacyConsent !== "yes") {
+    return { error: "개인정보 수집·이용에 동의해야 가입할 수 있습니다.", values, needsTag };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email: await loginEmail(group, normalizeLoginName(name + nameTag)),
@@ -140,6 +147,7 @@ export async function signUp(
         login_group: group,
         name,
         name_tag: nameTag || null,
+        privacy_policy_version: PRIVACY_POLICY_VERSION,
         ...(isMentor ? { company, job_field_id: Number(jobFieldId) } : {}),
       },
     },

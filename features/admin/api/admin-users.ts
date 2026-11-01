@@ -90,3 +90,16 @@ export async function updateIdentity(
     success: `${name}${nameTag}(으)로 바꿨습니다. 이제 이 이름${departmentId ? "과 학과" : ""}로 로그인합니다.`,
   };
 }
+
+/** 회원 탈퇴 (6.7, 11장 20번). 본인이 담당자에게 요청하면 관리자가 처리하고, 그 회원의 데이터가 모두 지워집니다. */
+export async function deleteUser(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const name = field(formData, "name");
+  const result = await callAdminUsers({ action: "delete_user", user_id: field(formData, "userId") });
+  if (result.error) {
+    return { error: result.error };
+  }
+  return { success: `${name} 계정과 데이터를 지웠습니다.` };
+}

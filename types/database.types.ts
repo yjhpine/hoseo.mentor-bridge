@@ -401,6 +401,20 @@ export type Database = {
           },
         ]
       }
+      privacy_consents: {
+        Row: { agreed_at: string; id: number; policy_version: string; user_id: string }
+        Insert: { agreed_at?: string; id?: never; policy_version: string; user_id: string }
+        Update: { agreed_at?: string; id?: never; policy_version?: string; user_id?: string }
+        Relationships: [
+          {
+            foreignKeyName: "privacy_consents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -542,6 +556,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_backup: { Args: never; Returns: Json }
       admin_semester_stats: {
         Args: { semester_id: number }
         Returns: {
@@ -569,6 +584,17 @@ export type Database = {
           position: number
           starts_at: string
           title: string
+        }[]
+      }
+      inactive_members: {
+        Args: { older_than?: string }
+        Returns: {
+          created_at: string
+          id: string
+          last_used_at: string
+          name: string
+          name_tag: string | null
+          role: Database["public"]["Enums"]["user_role"]
         }[]
       }
       is_admin: { Args: never; Returns: boolean }

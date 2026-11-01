@@ -4,6 +4,8 @@ import type { Database } from "@/types/database.types";
 
 const LOGIN_PATH = "/auth/login";
 const PIN_PATH = "/account/pin";
+// 개인정보 처리방침은 로그인과 상관없이 누구나 봅니다 (6.7).
+const PUBLIC_PATHS = new Set(["/privacy"]);
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -58,6 +60,10 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isAuthPage = pathname.startsWith("/auth");
+
+  if (PUBLIC_PATHS.has(pathname)) {
+    return supabaseResponse;
+  }
 
   // 비로그인 사용자는 로그인·회원가입 화면만 볼 수 있습니다 (docs/architecture.md 2.2).
   if (!user) {

@@ -11,6 +11,7 @@ import type {
   JobFieldOption,
 } from "@/features/auth/api/affiliations";
 import { NAME_MAX_LENGTH } from "@/lib/auth/login-key";
+import { PrivacyConsent } from "./privacy-consent";
 import {
   AffiliationSelect,
   FormMessage,
@@ -145,6 +146,8 @@ export function SignUpForm({
           멘토 페이지는 관리자가 단과대학 구역에 배치하고 개설한 뒤에 공개됩니다.
         </p>
       )}
+
+      <PrivacyConsent isMentor={isMentor} defaultChecked={state.values?.privacyConsent === "yes"} />
 
       <Turnstile siteKey={turnstileSiteKey} resetKey={state} onTokenChange={setCaptchaToken} />
       <FormMessage state={state} />

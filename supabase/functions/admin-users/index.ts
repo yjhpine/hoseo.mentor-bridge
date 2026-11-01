@@ -1,4 +1,4 @@
-// 관리자 계정 작업: PIN 초기화, 이름·소속 변경, 관리자 계정 생성 (docs/architecture.md 6.1)
+// 관리자 계정 작업: PIN 초기화, 이름·소속 변경, 관리자 계정 생성, 회원 탈퇴 (docs/architecture.md 6.1, 6.7)
 // Supabase 관리자 API가 필요해 secret 키를 쓰는 유일한 곳입니다. 호출한 사람이 관리자인지 먼저 확인합니다.
 // 새 API 키는 플랫폼의 verify_jwt 검사를 쓸 수 없어 verify_jwt = false로 두고 여기서 직접 확인합니다.
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
@@ -25,7 +25,8 @@ type Body =
     /** 멘티만. 멘토·관리자는 소속이 바뀌지 않습니다. */
     department_id?: number;
   }
-  | { action: "create_admin"; name: string; name_tag?: string | null; temp_pin: string };
+  | { action: "create_admin"; name: string; name_tag?: string | null; temp_pin: string }
+  | { action: "delete_user"; user_id: string };
 
 class HttpError extends Error {
   constructor(public status: number, message: string) {
@@ -184,6 +185,44 @@ async function updateIdentity(body: Extract<Body, { action: "update_identity" }>
   return { ok: true };
 }
 
+/**
+ * 회원 탈퇴 (11장 20번: 본인 탈퇴 없이 담당자에게 요청하면 관리자가 처리).
+ * 계정을 지우면 프로필·톡방·메시지·강의·수강·만족도·동의 기록이 DB에서 함께 지워집니다(on delete cascade).
+ * Storage의 강의 파일은 DB와 따로 있어서 먼저 지웁니다.
+ */
+async function deleteUser(callerId: string, body: Extract<Body, { action: "delete_user" }>) {
+  const target = await getProfile(body.user_id);
+  if (target.id === callerId) {
+    throw new HttpError(400, "내 계정은 지울 수 없습니다. 다른 관리자에게 요청하세요.");
+  }
+  if (target.role === "admin") {
+    const { count, error } = await admin
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("role", "admin");
+    if (error) throw error;
+    if ((count ?? 0) <= 1) throw new HttpError(400, "마지막 관리자는 지울 수 없습니다.");
+  }
+
+  if (target.role === "mentor") {
+    const { data: lessons, error } = await admin
+      .from("lessons")
+      .select("file_path, courses!inner(mentor_id)")
+      .eq("courses.mentor_id", target.id)
+      .not("file_path", "is", null);
+    if (error) throw error;
+    const paths = (lessons ?? []).map((l) => l.file_path as string);
+    for (let i = 0; i < paths.length; i += 100) {
+      const { error: e } = await admin.storage.from("course-files").remove(paths.slice(i, i + 100));
+      if (e) throw e;
+    }
+  }
+
+  const { error } = await admin.auth.admin.deleteUser(target.id);
+  if (error) throw error;
+  return { ok: true };
+}
+
 async function createAdmin(body: Extract<Body, { action: "create_admin" }>) {
   const name = cleanName(body.name);
   const nameTag = cleanTag(body.name_tag);
@@ -243,6 +282,9 @@ Deno.serve(async (req) => {
         break;
       case "create_admin":
         result = await createAdmin(body);
+        break;
+      case "delete_user":
+        result = await deleteUser(auth.user.id, body);
         break;
       default:
         throw new HttpError(400, "알 수 없는 작업입니다.");
