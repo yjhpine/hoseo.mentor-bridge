@@ -38,7 +38,7 @@ export function SurveyForm({
         rows={3}
         placeholder="멘토에게 도움이 된 점이나 아쉬운 점 (선택, 관리자만 봅니다)"
         aria-label={`${mentorName} 멘토 의견`}
-        className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
+        className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
       />
       <FormMessage state={state} />
       <Button type="submit" disabled={pending} className="w-fit">{pending ? "보내는 중…" : "응답하기"}</Button>

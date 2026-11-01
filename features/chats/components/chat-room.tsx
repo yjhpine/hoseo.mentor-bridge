@@ -146,7 +146,7 @@ export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }
           관리자는 톡방 내용을 읽기만 합니다.
         </p>
       ) : (
-        <form onSubmit={send} className="sticky bottom-0 flex flex-col gap-2 border-t bg-background py-3">
+        <form onSubmit={send} className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] flex flex-col gap-2 border-t bg-background py-3 sm:bottom-0">
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -154,7 +154,7 @@ export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }
             rows={isMentor ? 5 : 3}
             placeholder={isMentor ? `답변은 공백을 빼고 ${rule.minLength}자 이상 써 주세요.` : "질문을 입력하세요."}
             aria-label="메시지"
-            className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm"
+            className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm"
           />
           <div className="flex items-center justify-between gap-2">
             {isMentor ? (

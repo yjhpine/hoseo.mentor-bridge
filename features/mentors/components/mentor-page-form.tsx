@@ -9,7 +9,7 @@ import { FormMessage, submitWithoutReset } from "@/features/auth/components/fiel
 import { updateMyMentorPage } from "@/features/mentors/api/actions";
 
 const textareaClassName =
-  "flex min-h-32 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
+  "flex min-h-32 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm";
 
 export type MentorPageValues = {
   headline: string | null;

@@ -20,7 +20,7 @@ export function CourseList({
         <li key={course.id}>
           <Link
             href={`/courses/${course.id}`}
-            className="flex h-full flex-col gap-1 rounded-lg border p-4 transition-colors hover:bg-accent"
+            className="flex h-full flex-col gap-1 rounded-xl border p-4 transition-colors hover:border-primary/40 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <span className="flex items-center gap-2 font-semibold">
               {course.title}

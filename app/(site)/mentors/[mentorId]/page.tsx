@@ -101,7 +101,8 @@ function Section({ title, children }: { title: string; children: string | null }
     <section className="flex flex-col gap-2">
       <h2 className="text-lg font-semibold">{title}</h2>
       {children ? (
-        <p className="whitespace-pre-line leading-relaxed">{children}</p>
+        // 한 줄이 너무 길면 읽기 어려워 PC에서도 65자 안팎으로 줄을 바꿉니다 (line-length-control)
+        <p className="max-w-prose whitespace-pre-line leading-relaxed">{children}</p>
       ) : (
         <p className="text-muted-foreground">아직 작성하지 않았습니다.</p>
       )}
@@ -113,7 +114,7 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
   return (
     <div className="rounded-lg border px-4 py-3" title={hint}>
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="text-lg font-semibold">{value}</dd>
+      <dd className="text-lg font-semibold tabular-nums">{value}</dd>
     </div>
   );
 }

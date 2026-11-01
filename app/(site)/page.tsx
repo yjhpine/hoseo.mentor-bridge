@@ -1,4 +1,6 @@
+import { ArrowRight, MessageCircle, Search } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
 import { listOpenCourses } from "@/features/courses/api/courses";
 import { CourseList } from "@/features/courses/components/course-list";
@@ -84,9 +86,30 @@ async function Welcome() {
   }
 
   return (
-    <section className="flex flex-col gap-2">
-      <h1 className="text-2xl font-semibold">{displayName(user)}님, 반갑습니다.</h1>
-      <p className="text-muted-foreground">{notice}</p>
+    <section className="flex flex-col gap-4 rounded-2xl bg-accent px-5 py-6 sm:px-8 sm:py-8">
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-semibold text-brand">호서대학교 멘토링</p>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground [text-wrap:balance] sm:text-3xl">
+          {displayName(user)}님, 반갑습니다.
+        </h1>
+        <p className="max-w-prose text-foreground/80">{notice}</p>
+      </div>
+      {user.role === "mentee" && (
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button asChild size="lg">
+            <Link href="/mentors">
+              <Search aria-hidden />
+              멘토 찾기
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href="/chats">
+              <MessageCircle aria-hidden />
+              내 톡방
+            </Link>
+          </Button>
+        </div>
+      )}
     </section>
   );
 }
@@ -104,16 +127,23 @@ async function CollegeSection() {
           <li key={college.id}>
             <Link
               href={`/colleges/${college.id}`}
-              className="flex h-full flex-col gap-1 rounded-lg border p-4 transition-colors hover:bg-accent"
+              className="group flex h-full flex-col gap-1 rounded-xl border p-4 transition-colors hover:border-primary/40 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <span className="font-semibold">{college.name}</span>
+              <span className="flex items-center justify-between gap-2 font-semibold">
+                {college.name}
+                <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-brand" aria-hidden />
+              </span>
               {college.description && (
                 <span className="line-clamp-2 text-sm text-muted-foreground">
                   {college.description}
                 </span>
               )}
-              <span className="mt-auto pt-2 text-sm text-muted-foreground">
-                멘토 {college.mentorCount}명
+              <span className="mt-auto pt-2 text-sm">
+                {college.mentorCount > 0 ? (
+                  <span className="font-semibold text-brand">멘토 {college.mentorCount}명</span>
+                ) : (
+                  <span className="text-muted-foreground">멘토 준비 중</span>
+                )}
               </span>
             </Link>
           </li>
@@ -129,8 +159,9 @@ async function RecentMentorSection() {
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">새로 개설된 멘토</h2>
-        <Link href="/mentors" className="text-sm underline-offset-4 hover:underline">
-          멘토 찾기
+        <Link href="/mentors" className="flex h-10 items-center gap-1 text-sm font-medium text-brand underline-offset-4 hover:underline">
+          전체 보기
+          <ArrowRight className="size-4" aria-hidden />
         </Link>
       </div>
       {mentors.length > 0 ? (

@@ -11,7 +11,7 @@ type College = Tables<"colleges">;
 type Department = Tables<"departments">;
 
 const textareaClassName =
-  "flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
+  "flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm";
 
 // 단과대학 구역과 소속 학과 관리 (4.1 /admin/colleges).
 // 학과는 로그인 키에 쓰이므로 지우지 않고 숨깁니다 (5.2).

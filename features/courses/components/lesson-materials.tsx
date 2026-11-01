@@ -1,6 +1,8 @@
 import { FileText, PlayCircle, Video } from "lucide-react";
 import { LESSON_KIND_LABELS, type Lesson, type LessonKind, type OutlineItem } from "@/features/courses/api/courses";
+import { buttonVariants } from "@/components/ui/button";
 import { formatTime } from "@/lib/chat/answer-length";
+import { cn } from "@/lib/utils";
 
 const ICONS: Record<LessonKind, typeof Video> = {
   video_link: PlayCircle,
@@ -61,7 +63,7 @@ export function LessonMaterials({ lessons }: { lessons: Lesson[] }) {
               href={href}
               target={lesson.kind === "file" ? undefined : "_blank"}
               rel="noopener noreferrer"
-              className="rounded-md border px-3 py-1 text-xs font-medium hover:bg-accent"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "shrink-0")}
             >
               {action}
             </a>

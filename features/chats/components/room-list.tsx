@@ -25,7 +25,7 @@ export function RoomList({ rooms, viewer }: { rooms: RoomSummary[]; viewer: User
             : { name: room.mentor.name, sub: room.mentor.company };
         return (
           <li key={room.id}>
-            <Link href={`/chats/${room.id}`} className="flex items-center gap-3 p-4 transition-colors hover:bg-accent">
+            <Link href={`/chats/${room.id}`} className="flex items-center gap-3 p-4 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium">{other.name}</span>
