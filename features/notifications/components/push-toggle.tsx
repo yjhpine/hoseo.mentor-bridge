@@ -13,7 +13,9 @@ type State = "loading" | "unsupported" | "ios-needs-install" | "denied" | "off" 
 export function PushToggle({ role }: { role: "mentor" | "mentee" }) {
   const [state, setState] = useState<State>("loading");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; detail?: string } | null>(null);
+  // 버튼을 누른 순간 곧바로 권한 요청·구독을 해야 해서(사파리·파이어폭스) 공개 키는 미리 받아 둡니다.
+  const [publicKey, setPublicKey] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,6 +23,9 @@ export function PushToggle({ role }: { role: "mentor" | "mentee" }) {
       const support = pushSupport();
       if (support !== "supported") return setStateSafe(support);
       if (Notification.permission === "denied") return setStateSafe("denied");
+      getPushPublicKey().then((key) => {
+        if (!cancelled) setPublicKey(key);
+      }, () => undefined);
       const subscription = await currentSubscription().catch(() => null);
       if (!subscription) return setStateSafe("off");
       // 이 브라우저의 구독이 지금 로그인한 계정 것인지 확인합니다 (다른 계정으로 바꿔 로그인한 경우).
@@ -40,17 +45,28 @@ export function PushToggle({ role }: { role: "mentor" | "mentee" }) {
   }, []);
 
   async function turnOn() {
-    setBusy(true);
     setError(null);
+    if (!publicKey) {
+      setError({ message: "알림 준비가 아직 끝나지 않았습니다. 잠시 후 다시 눌러 주세요." });
+      getPushPublicKey().then(setPublicKey, () => undefined);
+      return;
+    }
+    setBusy(true);
     try {
-      const key = await getPushPublicKey();
-      if (!key) throw new Error("no key");
-      const result = await subscribePush(key);
+      const result = await subscribePush(publicKey);
       if (result.ok) setState("on");
       else if (result.reason === "denied") setState("denied");
-      else if (result.reason !== "default") setError("알림을 켜지 못했습니다. 잠시 후 다시 시도해 주세요.");
-    } catch {
-      setError("알림을 켜지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      else if (result.reason === "default")
+        setError({ message: "알림 허용 창이 닫혔습니다. 다시 누르고 \"허용\"을 골라 주세요." });
+      else if (result.reason === "subscribe-failed")
+        setError({
+          message:
+            "이 브라우저에서 알림 등록에 실패했습니다. 카카오톡 등 앱 안의 브라우저라면 크롬·사파리로 열어 주세요. 브레이브 브라우저는 설정에서 \"푸시 메시지에 Google 서비스 사용\"을 켜야 합니다.",
+          detail: result.detail,
+        });
+      else setError({ message: "알림 정보를 저장하지 못했습니다. 다시 로그인한 뒤 시도해 주세요.", detail: result.detail });
+    } catch (e) {
+      setError({ message: "알림을 켜지 못했습니다. 잠시 후 다시 시도해 주세요.", detail: String(e) });
     } finally {
       setBusy(false);
     }
@@ -99,9 +115,9 @@ export function PushToggle({ role }: { role: "mentor" | "mentee" }) {
       )}
       {state === "off" && (
         <div className="flex flex-col gap-2">
-          <Button onClick={turnOn} disabled={busy} className="w-full sm:w-fit">
+          <Button onClick={turnOn} disabled={busy || !publicKey} className="w-full sm:w-fit">
             <Bell aria-hidden />
-            {busy ? "켜는 중…" : "알림 받기"}
+            {busy ? "켜는 중…" : publicKey ? "알림 받기" : "준비하는 중…"}
           </Button>
           <p className="text-xs text-muted-foreground">
             켜면 알림을 보내는 데 필요한 이 브라우저의 수신 정보가 저장됩니다. 끄거나 로그아웃하면 지웁니다.
@@ -115,9 +131,10 @@ export function PushToggle({ role }: { role: "mentor" | "mentee" }) {
         </Button>
       )}
       {error && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-          {error}
-        </p>
+        <div role="alert" className="flex flex-col gap-1 text-sm text-red-600 dark:text-red-400">
+          <p>{error.message}</p>
+          {error.detail && <p className="break-all text-xs text-muted-foreground">원인: {error.detail}</p>}
+        </div>
       )}
     </section>
   );
