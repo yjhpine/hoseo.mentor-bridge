@@ -184,6 +184,42 @@ export type Database = {
         }
         Relationships: []
       }
+      fee_records: {
+        Row: {
+          amount: number
+          answer_count: number
+          decided_at: string
+          decided_by: string | null
+          id: number
+          memo: string | null
+          mentor_id: string
+          question_count: number
+          semester_id: number
+        }
+        Insert: {
+          amount: number
+          answer_count: number
+          decided_at?: string
+          decided_by?: string | null
+          id?: never
+          memo?: string | null
+          mentor_id: string
+          question_count: number
+          semester_id: number
+        }
+        Update: {
+          amount?: number
+          answer_count?: number
+          decided_at?: string
+          decided_by?: string | null
+          id?: never
+          memo?: string | null
+          mentor_id?: string
+          question_count?: number
+          semester_id?: number
+        }
+        Relationships: []
+      }
       job_fields: {
         Row: {
           id: number
@@ -452,6 +488,36 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_responses: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: number
+          mentee_id: string
+          mentor_id: string
+          rating: number
+          semester_id: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: never
+          mentee_id?: string
+          mentor_id: string
+          rating: number
+          semester_id: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: never
+          mentee_id?: string
+          mentor_id?: string
+          rating?: number
+          semester_id?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       mentor_directory: {
@@ -476,9 +542,23 @@ export type Database = {
       }
     }
     Functions: {
+      admin_semester_stats: {
+        Args: { semester_id: number }
+        Returns: {
+          answer_count: number
+          last_answer_at: string | null
+          mentor_id: string
+          question_count: number
+          room_count: number
+        }[]
+      }
       answer_length: { Args: { body: string }; Returns: number }
       can_access_course_materials: { Args: { course_id: number }; Returns: boolean }
       can_view_course: { Args: { course_id: number }; Returns: boolean }
+      close_semester: {
+        Args: { semester_id: number; survey_closes_at: string }
+        Returns: undefined
+      }
       course_enrollment_count: { Args: { course_id: number }; Returns: number }
       course_id_from_path: { Args: { path: string }; Returns: number }
       course_outline: {
@@ -508,6 +588,17 @@ export type Database = {
         }[]
       }
       mentor_student_count: { Args: { mentor_id: string }; Returns: number }
+      my_pending_surveys: {
+        Args: never
+        Returns: {
+          company: string
+          mentor_id: string
+          mentor_name: string
+          semester_id: number
+          semester_name: string
+          survey_closes_at: string
+        }[]
+      }
       my_unread_counts: {
         Args: never
         Returns: {

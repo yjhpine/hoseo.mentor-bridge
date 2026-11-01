@@ -14,6 +14,9 @@ const NAV = [
   { href: "/admin/colleges", label: "구역·학과" },
   { href: "/admin/job-fields", label: "직무 분야" },
   { href: "/admin/semesters", label: "학기" },
+  { href: "/admin/chats", label: "질의응답" },
+  { href: "/admin/fees", label: "강사료" },
+  { href: "/admin/surveys", label: "만족도" },
   { href: "/admin/users", label: "사용자" },
 ];
 

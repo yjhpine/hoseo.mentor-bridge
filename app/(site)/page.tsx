@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { listOpenCourses } from "@/features/courses/api/courses";
 import { CourseList } from "@/features/courses/components/course-list";
 import { getCollegeCards, getRecentMentors } from "@/features/mentors/api/mentors";
+import { listPendingSurveys } from "@/features/surveys/api/surveys";
 import { MentorGrid } from "@/features/mentors/components/mentor-card";
 import { displayName, getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
@@ -58,6 +59,18 @@ async function Welcome() {
           을 미리 써 둘 수 있습니다.
         </>
       );
+  } else if (user.role === "mentee") {
+    const surveys = await listPendingSurveys();
+    if (surveys.length > 0) {
+      notice = (
+        <>
+          지난 학기 멘토 만족도 조사가 {surveys.length}건 있습니다.{" "}
+          <Link href="/mypage" className="underline underline-offset-4">
+            마이페이지에서 응답하기
+          </Link>
+        </>
+      );
+    }
   } else if (user.role === "admin") {
     notice = (
       <>

@@ -34,6 +34,17 @@ export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }
   const length = answerLength(body, rule.countSpaces);
   const tooShort = isMentor && length < rule.minLength;
 
+  // 관리자: 부적절한 메시지를 숨기거나 되돌립니다 (6.4). 숨긴 메시지는 참여자에게 보이지 않고 건수에서도 빠집니다.
+  async function toggleHidden(message: ChatMessage) {
+    const hidden_at = message.hidden_at ? null : new Date().toISOString();
+    const { error: updateError } = await supabase.from("messages").update({ hidden_at }).eq("id", message.id);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    setMessages((current) => current.map((m) => (m.id === message.id ? { ...m, hidden_at } : m)));
+  }
+
   function addMessage(message: ChatMessage) {
     setMessages((current) =>
       current.some((m) => m.id === message.id) ? current : [...current, message],
@@ -75,7 +86,7 @@ export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }
     const { data, error: insertError } = await supabase
       .from("messages")
       .insert({ room_id: roomId, body: body.trim() })
-      .select("id, room_id, sender_id, sender_role, body, created_at")
+      .select("id, room_id, sender_id, sender_role, body, created_at, hidden_at")
       .single();
     setSending(false);
     if (insertError) {
@@ -100,15 +111,26 @@ export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }
             <li key={message.id} className={cn("flex flex-col gap-1", mine ? "items-end" : "items-start")}>
               <span className="text-xs text-muted-foreground">
                 {message.sender_role === "mentor" ? "멘토" : "멘티"} · {formatTime(message.created_at)}
+                {message.hidden_at && " · 숨김"}
               </span>
               <p
                 className={cn(
                   "max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2 text-sm leading-relaxed",
                   mine ? "bg-primary text-primary-foreground" : "bg-muted",
+                  message.hidden_at && "opacity-50 line-through",
                 )}
               >
                 {message.body}
               </p>
+              {myRole === "admin" && (
+                <button
+                  type="button"
+                  onClick={() => toggleHidden(message)}
+                  className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                >
+                  {message.hidden_at ? "숨김 해제" : "숨기기"}
+                </button>
+              )}
             </li>
           );
         })}
