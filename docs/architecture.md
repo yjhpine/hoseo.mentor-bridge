@@ -451,6 +451,10 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 - PIN 6자리는 경우의 수가 100만 개입니다. Supabase는 로그인 요청을 IP마다 시간당 1,800회(순간 30회)로 제한합니다.
 - 실패 횟수에 따라 계정을 잠그는 기능(Password Verification Hook)은 Supabase 유료(Teams 이상) 플랜에만 있어서 쓸 수 없습니다.
 - 그래서 Supabase에 내장된 **CAPTCHA(Cloudflare Turnstile, 무료)**를 가입·로그인에 켭니다. 우리 화면을 거치지 않고 API를 직접 부르는 공격도 CAPTCHA 토큰이 있어야 하므로 함께 막힙니다. 실제 사용자를 받기 전에 반드시 켭니다.
+  - 화면: 로그인·가입 화면에 Turnstile 위젯(관리형 모드)을 넣습니다. 위젯이 준 토큰을 서버 액션이 `signInWithPassword`·`signUp`의 `options.captchaToken`으로 넘깁니다. 토큰은 한 번만 쓸 수 있어 실패 응답이 오면 위젯을 새로 고치고, 토큰을 받기 전에는 제출 버튼을 끕니다.
+  - site key는 공개 값이라 `wrangler.jsonc`의 `TURNSTILE_SITE_KEY`에 둡니다(서버가 실행할 때 읽어 화면에 넘김). 값이 없으면 위젯을 그리지 않습니다. secret key는 Supabase 대시보드(Authentication → Bot and Abuse Protection)에만 넣고 저장소에는 두지 않습니다.
+  - 켜는 순서: ① Cloudflare에서 위젯을 만들고(호스트 이름: 배포 주소, `localhost`) ② site key를 넣은 코드를 배포한 뒤 ③ Supabase에서 CAPTCHA를 켭니다. 순서를 바꾸면 그 사이에는 아무도 로그인할 수 없습니다. Supabase는 CAPTCHA가 꺼져 있으면 토큰을 무시하므로 ②까지는 지금처럼 동작합니다.
+  - CAPTCHA를 켜면 공개 API로 가입·로그인하는 시험 스크립트도 토큰이 필요합니다. 자동 시험에는 Cloudflare의 시험용 키를 쓰는 로컬 환경이나 관리자 API(Edge Function)로 만든 계정을 씁니다.
 - 이름과 학과는 남이 알 수 있는 정보라 PIN이 유일한 비밀입니다. 생일·학번처럼 추측하기 쉬운 숫자는 피하라고 화면에서 안내합니다.
 
 ### 6.2 멘토 페이지 개설
@@ -626,7 +630,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 13 | PIN 형식과 변경 | 사용자 | 숫자 6자리. 사용자가 현재 PIN을 확인받고 언제든 바꿈 | 서버 액션 검사, Supabase 비밀번호 설정 |
 | 14 | PIN 분실 | 설계 기본값 | 관리자가 임시 PIN 설정 → 다음 로그인 때 사용자가 바꿈 | `/admin/users`, `admin-users` |
 | 15 | 이름·소속 변경 | 설계 기본값 | 관리자만 (로그인 키가 바뀌기 때문) | `/admin/users`, `admin-users` |
-| 16 | 무작위 대입 대책 | 설계 기본값 | 가입·로그인에 Cloudflare Turnstile CAPTCHA. 실사용 전 필수 | Supabase Auth 설정 |
+| 16 | 무작위 대입 대책 | 설계 기본값 | 가입·로그인에 Cloudflare Turnstile CAPTCHA(관리형 모드). 실사용 전 필수. 켜는 순서는 6.1 | Supabase Auth 설정, `wrangler.jsonc`의 `TURNSTILE_SITE_KEY`, `features/auth/components/turnstile.tsx` |
 | 17 | 가상 이메일 도메인 | 사용자 | `login.hoseo-mentor.invalid` (2026-10-30 확정, 가입·로그인·PIN 변경 시험 통과) | `lib/auth/login-key.ts`, DB `login_email()` |
 | 18 | 멘토 사진 | 사용자 | 처음에는 모두 기본 프로필 이미지(`public/avatar-default.svg`, 직접 그린 그림). 사진 업로드(Storage `avatars`)는 보류 | `mentor_profiles.photo_path`, 멘토 카드·상세 |
 

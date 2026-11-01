@@ -18,18 +18,23 @@ import {
   Select,
   submitWithoutReset,
 } from "./fields";
+import { Turnstile } from "./turnstile";
 
 export function SignUpForm({
   colleges,
   jobFields,
+  turnstileSiteKey,
 }: {
   colleges: CollegeOption[];
   jobFields: JobFieldOption[];
+  turnstileSiteKey?: string;
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
     signUp,
     {},
   );
+  const [captchaToken, setCaptchaToken] = useState("");
+  const waitingCaptcha = Boolean(turnstileSiteKey) && !captchaToken;
   // "멘토"를 골랐을 때만 기업명·직무 분야 칸을 보여 줍니다.
   const [selectedGroup, setSelectedGroup] = useState("");
   const group = selectedGroup || state.values?.group || "";
@@ -141,9 +146,10 @@ export function SignUpForm({
         </p>
       )}
 
+      <Turnstile siteKey={turnstileSiteKey} resetKey={state} onTokenChange={setCaptchaToken} />
       <FormMessage state={state} />
-      <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? "가입하는 중…" : "가입하기"}
+      <Button type="submit" className="w-full" disabled={pending || waitingCaptcha}>
+        {pending ? "가입하는 중…" : waitingCaptcha ? "자동 입력 방지 확인 중…" : "가입하기"}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         이미 계정이 있나요?{" "}

@@ -22,6 +22,17 @@ export type FormState = {
 };
 
 const RATE_LIMITED = "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.";
+const CAPTCHA_FAILED = "자동 입력 방지 확인에 실패했습니다. 다시 시도해 주세요.";
+
+/** Turnstile 토큰. Supabase에서 CAPTCHA를 켜기 전에는 Supabase가 이 값을 무시합니다. */
+function captchaToken(formData: FormData): string | undefined {
+  const value = formData.get("captchaToken");
+  return typeof value === "string" && value ? value : undefined;
+}
+
+function isCaptchaError(error: { code?: string; message: string }) {
+  return error.code === "captcha_failed" || /captcha/i.test(error.message);
+}
 
 function field(formData: FormData, name: string): string {
   const value = formData.get(name);
@@ -48,6 +59,7 @@ export async function login(
   const { data, error } = await supabase.auth.signInWithPassword({
     email: await loginEmail(group, normalizeLoginName(name)),
     password: pin,
+    options: { captchaToken: captchaToken(formData) },
   });
   if (error) {
     // 어느 값이 틀렸는지 알려 주지 않습니다 (6.1).
@@ -55,7 +67,9 @@ export async function login(
       error:
         error.status === 429
           ? RATE_LIMITED
-          : "소속, 이름 또는 PIN이 맞지 않습니다.",
+          : isCaptchaError(error)
+            ? CAPTCHA_FAILED
+            : "소속, 이름 또는 PIN이 맞지 않습니다.",
       values,
     };
   }
@@ -121,6 +135,7 @@ export async function signUp(
     email: await loginEmail(group, normalizeLoginName(name + nameTag)),
     password: pin,
     options: {
+      captchaToken: captchaToken(formData),
       data: {
         login_group: group,
         name,
@@ -144,7 +159,9 @@ export async function signUp(
       error:
         error.status === 429
           ? RATE_LIMITED
-          : "가입하지 못했습니다. 입력한 내용을 확인하고 다시 시도해 주세요.",
+          : isCaptchaError(error)
+            ? CAPTCHA_FAILED
+            : "가입하지 못했습니다. 입력한 내용을 확인하고 다시 시도해 주세요.",
       values,
       needsTag,
     };

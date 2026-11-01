@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,12 +13,21 @@ import {
   PinInput,
   submitWithoutReset,
 } from "./fields";
+import { Turnstile } from "./turnstile";
 
-export function LoginForm({ colleges }: { colleges: CollegeOption[] }) {
+export function LoginForm({
+  colleges,
+  turnstileSiteKey,
+}: {
+  colleges: CollegeOption[];
+  turnstileSiteKey?: string;
+}) {
   const [state, action, pending] = useActionState<FormState, FormData>(
     login,
     {},
   );
+  const [captchaToken, setCaptchaToken] = useState("");
+  const waitingCaptcha = Boolean(turnstileSiteKey) && !captchaToken;
 
   return (
     <form
@@ -53,9 +62,10 @@ export function LoginForm({ colleges }: { colleges: CollegeOption[] }) {
         <Label htmlFor="pin">PIN (숫자 6자리)</Label>
         <PinInput id="pin" name="pin" autoComplete="current-password" />
       </div>
+      <Turnstile siteKey={turnstileSiteKey} resetKey={state} onTokenChange={setCaptchaToken} />
       <FormMessage state={state} />
-      <Button type="submit" className="w-full" disabled={pending}>
-        {pending ? "로그인하는 중…" : "로그인"}
+      <Button type="submit" className="w-full" disabled={pending || waitingCaptcha}>
+        {pending ? "로그인하는 중…" : waitingCaptcha ? "자동 입력 방지 확인 중…" : "로그인"}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         처음이신가요?{" "}
