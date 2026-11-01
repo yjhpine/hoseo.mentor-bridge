@@ -2,8 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
-import { getMentor } from "@/features/mentors/api/mentors";
+import { hasOpenSemester } from "@/features/chats/api/chats";
+import { AskButton } from "@/features/chats/components/ask-button";
+import { getMentor, getMentorActivity } from "@/features/mentors/api/mentors";
 import { MentorAvatar, QuestionBadge } from "@/features/mentors/components/mentor-card";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
 type Params = Promise<{ mentorId: string }>;
 
@@ -20,13 +23,19 @@ export default function Page({ params }: { params: Params }) {
   );
 }
 
-// 활동 지표와 질문하기는 3단계(톡방), 등록한 강의는 4단계에서 붙입니다.
+// 등록한 강의와 수강생 수는 4단계에서 붙입니다.
 async function MentorProfile({ params }: { params: Params }) {
   const { mentorId } = await params;
-  const mentor = await getMentor(mentorId);
+  const [mentor, user, activity, semesterOpen] = await Promise.all([
+    getMentor(mentorId),
+    getCurrentUser(),
+    getMentorActivity(mentorId),
+    hasOpenSemester(),
+  ]);
   if (!mentor) {
     notFound();
   }
+  const canAsk = user?.role === "mentee" && mentor.status === "published" && mentor.acceptingQuestions;
 
   return (
     <article className="flex flex-col gap-8 py-6">
@@ -54,6 +63,22 @@ async function MentorProfile({ params }: { params: Params }) {
         </div>
       </header>
 
+      <dl className="grid grid-cols-2 gap-3 sm:w-fit sm:grid-cols-2">
+        <Stat label="답변 수" value={`${activity.answerCount}개`} />
+        <Stat
+          label="답변율"
+          value={activity.roomCount > 0 ? `${Math.round((activity.answeredRoomCount / activity.roomCount) * 100)}%` : "-"}
+          hint="질문 받은 톡방 중 답변한 비율"
+        />
+      </dl>
+
+      {canAsk &&
+        (semesterOpen ? (
+          <AskButton mentorId={mentor.id} />
+        ) : (
+          <p className="text-sm text-muted-foreground">지금은 질문을 받는 학기가 아닙니다.</p>
+        ))}
+
       <Section title="대표 멘토링 분야">{mentor.headline}</Section>
       <Section title="멘토 소개">{mentor.intro}</Section>
       <Section title="주요 경력">{mentor.career}</Section>
@@ -71,5 +96,14 @@ function Section({ title, children }: { title: string; children: string | null }
         <p className="text-muted-foreground">아직 작성하지 않았습니다.</p>
       )}
     </section>
+  );
+}
+
+function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className="rounded-lg border px-4 py-3" title={hint}>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="text-lg font-semibold">{value}</dd>
+    </div>
   );
 }
