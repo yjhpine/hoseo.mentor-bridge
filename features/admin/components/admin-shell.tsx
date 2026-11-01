@@ -18,6 +18,7 @@ const NAV = [
   { href: "/admin/fees", label: "강사료" },
   { href: "/admin/surveys", label: "만족도" },
   { href: "/admin/users", label: "사용자" },
+  { href: "/admin/backup", label: "백업" },
 ];
 
 // 관리자 화면 (docs/architecture.md 9장). refine이 브라우저 Supabase 클라이언트로 읽고 쓰며,

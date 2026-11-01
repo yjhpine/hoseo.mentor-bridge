@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/native-select";
-import { createAdmin, resetPin, updateIdentity } from "@/features/admin/api/admin-users";
+import { createAdmin, deleteUser, resetPin, updateIdentity } from "@/features/admin/api/admin-users";
 import type { FormState } from "@/features/auth/api/actions";
 import { FormMessage, submitWithoutReset } from "@/features/auth/components/fields";
 import { NAME_MAX_LENGTH } from "@/lib/auth/login-key";
@@ -44,6 +44,44 @@ export function ResetPinButton({
       <input type="hidden" name="userId" value={userId} />
       <Button type="submit" size="sm" variant="outline" disabled={pending}>
         {pending ? "초기화하는 중…" : "PIN 초기화"}
+      </Button>
+      <FormMessage state={state} />
+    </form>
+  );
+}
+
+/** 탈퇴 처리. 되돌릴 수 없어서 이름을 그대로 입력해야 지웁니다. */
+export function DeleteUserButton({
+  userId,
+  name,
+  onDone,
+}: {
+  userId: string;
+  name: string;
+  onDone?: () => void;
+}) {
+  const [state, action, pending] = useActionState<FormState, FormData>(deleteUser, {});
+  useOnSuccess(state, onDone);
+
+  return (
+    <form
+      action={action}
+      onSubmit={(event) => {
+        const typed = prompt(
+          `${name}님의 계정과 질문·답변, 강의, 수강·만족도 기록을 모두 지웁니다. 되돌릴 수 없습니다.\n` +
+            `지우기 전에 백업 화면에서 백업을 받아 두세요.\n\n확인하려면 이름(${name})을 입력하세요.`,
+        );
+        if (typed?.trim() !== name) {
+          event.preventDefault();
+          if (typed !== null) alert("이름이 맞지 않아 지우지 않았습니다.");
+        }
+      }}
+      className="flex flex-col items-end gap-1"
+    >
+      <input type="hidden" name="userId" value={userId} />
+      <input type="hidden" name="name" value={name} />
+      <Button type="submit" size="sm" variant="outline" disabled={pending} className="text-red-600 dark:text-red-400">
+        {pending ? "지우는 중…" : "탈퇴 처리"}
       </Button>
       <FormMessage state={state} />
     </form>

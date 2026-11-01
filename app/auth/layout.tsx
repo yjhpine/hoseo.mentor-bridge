@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteFooter } from "@/components/site-footer";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         호서대학교 멘토링
       </Link>
       <div className="w-full max-w-sm">{children}</div>
+      <SiteFooter />
     </div>
   );
 }

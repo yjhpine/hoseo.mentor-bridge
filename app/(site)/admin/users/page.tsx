@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import {
   CreateAdminForm,
+  DeleteUserButton,
   IdentityForm,
   ResetPinButton,
 } from "@/features/admin/components/user-actions";
@@ -28,7 +29,7 @@ type UserRow = Tables<"profiles"> & {
 const MENTOR_STATUS_LABELS = { pending: "개설 대기", published: "공개", hidden: "비공개" } as const;
 const ROLE_TABS: (UserRole | "all")[] = ["all", "mentee", "mentor", "admin"];
 
-// 사용자 목록, PIN 초기화, 이름·소속 변경, 관리자 만들기 (4.1 /admin/users).
+// 사용자 목록, PIN 초기화, 이름·소속 변경, 관리자 만들기, 탈퇴 처리 (4.1 /admin/users, 6.7).
 // 계정 작업은 서버 액션이 Edge Function admin-users를 부릅니다.
 export default function AdminUsersPage() {
   const [role, setRole] = useState<UserRole | "all">("all");
@@ -102,6 +103,7 @@ export default function AdminUsersPage() {
         <p className="text-sm text-muted-foreground">
           PIN을 잊은 사용자는 임시 PIN으로 초기화합니다. 임시 PIN은 화면에 한 번만 보입니다.
           이름·소속을 바꾸면 로그인할 때 쓰는 이름·소속도 바뀝니다.
+          탈퇴는 본인이 개인정보 보호책임자에게 요청했을 때만 처리합니다.
         </p>
         {users.query.isLoading ? (
           <p className="text-sm text-muted-foreground">불러오는 중…</p>
@@ -132,7 +134,10 @@ export default function AdminUsersPage() {
                       {user.must_change_pin && <Badge variant="outline">임시 PIN</Badge>}
                     </div>
                     {user.id !== myId && (
-                      <ResetPinButton userId={user.id} name={name} onDone={refetch} />
+                      <div className="flex flex-wrap items-start justify-end gap-2">
+                        <ResetPinButton userId={user.id} name={name} onDone={refetch} />
+                        <DeleteUserButton userId={user.id} name={name} onDone={refetch} />
+                      </div>
                     )}
                   </div>
                   <details className="text-sm">
