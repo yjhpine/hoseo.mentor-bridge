@@ -84,7 +84,7 @@ export async function getUnreadTotal(): Promise<number> {
 
 export type ChatMessage = Pick<
   Tables<"messages">,
-  "id" | "room_id" | "sender_id" | "sender_role" | "body" | "created_at"
+  "id" | "room_id" | "sender_id" | "sender_role" | "body" | "created_at" | "hidden_at"
 >;
 
 /** 톡방 하나와 메시지. 참여자나 관리자가 아니면 null. */
@@ -101,9 +101,9 @@ export async function getRoom(id: number) {
 
   const { data: messages } = await supabase
     .from("messages")
-    .select("id, room_id, sender_id, sender_role, body, created_at")
+    // 숨긴 메시지는 RLS가 관리자에게만 돌려줍니다.
+    .select("id, room_id, sender_id, sender_role, body, created_at, hidden_at")
     .eq("room_id", id)
-    .is("hidden_at", null)
     .order("created_at", { ascending: true })
     .limit(500);
 

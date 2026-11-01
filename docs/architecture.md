@@ -385,8 +385,9 @@ erDiagram
 | `course_outline(course_id)` | 강의 소개 화면의 차시 목록 (제목·종류·실시간 시각만, 링크·파일 제외) |
 | `course_enrollment_count(course_id)`, `mentor_student_count(mentor_id)` | 수강생 수 (숫자만) |
 | `can_view_course(course_id)`, `can_access_course_materials(course_id)` | 강의를 볼 수 있는지, 자료를 볼 수 있는지 (RLS·Storage 정책에서 사용) |
-| `admin_semester_stats(semester_id)` | 멘토별 톡방 수, 질문 수, 답변 수, 마지막 답변 시각 (관리자 전용 RPC) |
-| `close_semester(semester_id)` | 학기 종료: `closed_at` 기록, 만족도 조사 기간 설정 (관리자 전용 RPC) |
+| `admin_semester_stats(semester_id)` | 멘토별 톡방 수, 질문 수, 답변 수, 마지막 답변 시각 (관리자 전용 RPC). 관리자가 숨긴 메시지는 세지 않음 |
+| `close_semester(semester_id, survey_closes_at)` | 학기 종료: `closed_at` 기록, 만족도 조사 기간(지금 ~ 관리자가 정한 마감, 화면 기본값 2주 뒤) 설정 (관리자 전용 RPC) |
+| `my_pending_surveys()` | 내가 응답할 만족도 조사 (종료된 학기의 조사 기간 안, 그 학기 톡방이 있던 멘토마다) |
 
 Supabase Edge Function `admin-users`는 PIN 초기화, 이름·소속 변경, 관리자 계정 생성을 맡습니다. Supabase 관리자 API가 필요한 작업이라 DB 함수가 아니라 Edge Function으로 두고, 호출한 사람이 관리자인지 먼저 확인합니다.
 
@@ -493,6 +494,8 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 - `admin_semester_stats()`가 멘토별 톡방 수, 질문 수(멘티 메시지), 답변 수(멘토 메시지), 마지막 답변 시각을 돌려줍니다.
 - `/admin/fees`: 통계 옆에서 관리자가 금액을 입력하면 `fee_records`에 그 시점의 건수 스냅숏과 함께 저장합니다.
 - 강사료 기준이 "답변 1건당 금액"처럼 정해지면 추천 금액을 자동 계산해 보여 주고, 최종 금액은 관리자가 확정합니다.
+- 책정 뒤 건수가 바뀌면(관리자가 메시지를 숨기거나 되돌림) 강사료 화면에 "책정 뒤 건수가 바뀌었습니다"를 보여 줍니다.
+- 멘티는 학기가 종료되면 홈 안내와 `/mypage`에서 만족도 조사에 응답합니다. 결과(`/admin/surveys`)에는 응답자 이름을 보여 주지 않습니다.
 
 ### 6.7 사용자 PC 기억 (로그인 유지)
 
@@ -520,7 +523,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 | `room_reads` | 본인 | 본인 | 본인 | 없음 |
 | `fee_records` | 관리자 | 관리자 | 관리자 | 관리자 |
 | `admin_invites` | 없음 (secret 키만) | 없음 | 없음 | 없음 |
-| `survey_responses` | 관리자 | 조건을 갖춘 멘티 | 없음 | 없음 |
+| `survey_responses` | 관리자, 응답한 멘티 본인 | 조건을 갖춘 멘티 | 없음 | 없음 |
 
 **Storage 버킷**
 
