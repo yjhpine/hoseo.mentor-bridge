@@ -4,6 +4,8 @@
   "main": ".open-next/worker.js",
   "name": "hoseo-mentor-bridge",
   "compatibility_date": "2026-10-01",
+  // next-themes가 스크립트를 문자열로 바꿀 때 esbuild의 __name이 끼어 브라우저에서 오류가 나는 것을 막습니다.
+  "keep_names": false,
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
