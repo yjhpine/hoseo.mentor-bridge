@@ -149,7 +149,7 @@ export function SignUpForm({
       <Turnstile siteKey={turnstileSiteKey} resetKey={state} onTokenChange={setCaptchaToken} />
       <FormMessage state={state} />
       <Button type="submit" className="w-full" disabled={pending || waitingCaptcha}>
-        {pending ? "가입하는 중…" : waitingCaptcha ? "자동 입력 방지 확인 중…" : "가입하기"}
+        {pending ? "가입하는 중…" : waitingCaptcha ? "위의 확인을 먼저 해 주세요" : "가입하기"}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         이미 계정이 있나요?{" "}
