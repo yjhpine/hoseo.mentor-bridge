@@ -60,7 +60,11 @@ export async function SiteHeader() {
               관리자
             </Link>
           )}
-          <UserMenu name={displayName(user)} roleLabel={ROLE_LABELS[user.role]} />
+          <UserMenu
+            name={displayName(user)}
+            roleLabel={ROLE_LABELS[user.role]}
+            isMentee={user.role === "mentee"}
+          />
         </>
       )}
       <div className="hidden sm:block">

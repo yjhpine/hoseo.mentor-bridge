@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { hasOpenSemester } from "@/features/chats/api/chats";
 import { AskButton } from "@/features/chats/components/ask-button";
+import { getMentorStudentCount, listMentorCourses } from "@/features/courses/api/courses";
+import { CourseList } from "@/features/courses/components/course-list";
 import { getMentor, getMentorActivity } from "@/features/mentors/api/mentors";
 import { MentorAvatar, QuestionBadge } from "@/features/mentors/components/mentor-card";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -23,7 +25,6 @@ export default function Page({ params }: { params: Params }) {
   );
 }
 
-// 등록한 강의와 수강생 수는 4단계에서 붙입니다.
 async function MentorProfile({ params }: { params: Params }) {
   const { mentorId } = await params;
   const [mentor, user, activity, semesterOpen] = await Promise.all([
@@ -32,6 +33,9 @@ async function MentorProfile({ params }: { params: Params }) {
     getMentorActivity(mentorId),
     hasOpenSemester(),
   ]);
+  const [courses, studentCount] = mentor
+    ? await Promise.all([listMentorCourses(mentor.id), getMentorStudentCount(mentor.id)])
+    : [[], 0];
   if (!mentor) {
     notFound();
   }
@@ -63,13 +67,14 @@ async function MentorProfile({ params }: { params: Params }) {
         </div>
       </header>
 
-      <dl className="grid grid-cols-2 gap-3 sm:w-fit sm:grid-cols-2">
+      <dl className="grid grid-cols-3 gap-3 sm:w-fit">
         <Stat label="답변 수" value={`${activity.answerCount}개`} />
         <Stat
           label="답변율"
           value={activity.roomCount > 0 ? `${Math.round((activity.answeredRoomCount / activity.roomCount) * 100)}%` : "-"}
           hint="질문 받은 톡방 중 답변한 비율"
         />
+        <Stat label="수강생 수" value={`${studentCount}명`} />
       </dl>
 
       {canAsk &&
@@ -82,6 +87,11 @@ async function MentorProfile({ params }: { params: Params }) {
       <Section title="대표 멘토링 분야">{mentor.headline}</Section>
       <Section title="멘토 소개">{mentor.intro}</Section>
       <Section title="주요 경력">{mentor.career}</Section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">등록한 강의</h2>
+        <CourseList courses={courses} showMentor={false} empty="아직 등록한 강의가 없습니다." />
+      </section>
     </article>
   );
 }

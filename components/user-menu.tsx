@@ -15,7 +15,15 @@ import {
 import { logout } from "@/features/auth/api/actions";
 
 /** 상단 메뉴 오른쪽의 내 계정 메뉴: 이름·역할, PIN 변경, 로그아웃 */
-export function UserMenu({ name, roleLabel }: { name: string; roleLabel: string }) {
+export function UserMenu({
+  name,
+  roleLabel,
+  isMentee,
+}: {
+  name: string;
+  roleLabel: string;
+  isMentee: boolean;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -30,6 +38,11 @@ export function UserMenu({ name, roleLabel }: { name: string; roleLabel: string 
           <Badge variant="secondary">{roleLabel}</Badge>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {isMentee && (
+          <DropdownMenuItem asChild>
+            <Link href="/mypage">마이페이지 (내 강의)</Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem asChild>
           <Link href="/account/pin">PIN 변경</Link>
         </DropdownMenuItem>
