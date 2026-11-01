@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { listOpenCourses } from "@/features/courses/api/courses";
+import { CourseList } from "@/features/courses/components/course-list";
 import { getCollegeCards, getRecentMentors } from "@/features/mentors/api/mentors";
 import { MentorGrid } from "@/features/mentors/components/mentor-card";
 import { displayName, getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 
-// 홈: 단과대학 구역 카드, 추천 멘토 (4.1). 모집 중인 강의는 4단계에서 붙입니다.
+// 홈: 단과대학 구역 카드, 새로 개설된 멘토, 모집 중인 강의 (4.1)
 export default function Home() {
   return (
     <div className="flex flex-col gap-10 py-6">
@@ -17,6 +19,9 @@ export default function Home() {
       </Suspense>
       <Suspense fallback={null}>
         <RecentMentorSection />
+      </Suspense>
+      <Suspense fallback={null}>
+        <OpenCourseSection />
       </Suspense>
     </div>
   );
@@ -122,6 +127,16 @@ async function RecentMentorSection() {
           아직 개설된 멘토가 없습니다.
         </p>
       )}
+    </section>
+  );
+}
+
+async function OpenCourseSection() {
+  const courses = await listOpenCourses(6);
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="text-lg font-semibold">모집 중인 강의</h2>
+      <CourseList courses={courses} empty="아직 열린 강의가 없습니다." />
     </section>
   );
 }

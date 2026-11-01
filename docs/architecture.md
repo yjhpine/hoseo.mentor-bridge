@@ -382,6 +382,9 @@ erDiagram
 | `mark_room_read(room_id)` | 내 읽은 위치를 지금으로 (RPC) |
 | `my_unread_counts()` | 내 톡방별 안 읽은 메시지 수 (RPC) |
 | `mentor_activity(mentor_id)` | 멘토 상세의 답변 수·질문 받은 톡방 수·답변한 톡방 수 (RPC, 집계만 돌려줌) |
+| `course_outline(course_id)` | 강의 소개 화면의 차시 목록 (제목·종류·실시간 시각만, 링크·파일 제외) |
+| `course_enrollment_count(course_id)`, `mentor_student_count(mentor_id)` | 수강생 수 (숫자만) |
+| `can_view_course(course_id)`, `can_access_course_materials(course_id)` | 강의를 볼 수 있는지, 자료를 볼 수 있는지 (RLS·Storage 정책에서 사용) |
 | `admin_semester_stats(semester_id)` | 멘토별 톡방 수, 질문 수, 답변 수, 마지막 답변 시각 (관리자 전용 RPC) |
 | `close_semester(semester_id)` | 학기 종료: `closed_at` 기록, 만족도 조사 기간 설정 (관리자 전용 RPC) |
 
@@ -472,6 +475,8 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 - 3단계에서는 관리자 화면 `/admin/semesters`에 학기 만들기와 현재 학기 지정만 두었습니다. 학기 종료는 5단계입니다.
 - 수강 신청을 하지 않아도 질문할 수 있습니다. README에서 강의 수강과 질문은 별도 단계이기 때문입니다.
 
+**강의 (4단계)**: 멘토가 `/mentor`에서 강의를 만들고(처음은 비공개) 차시를 영상 링크·자료 파일·실시간 링크로 추가합니다. 수강 신청은 현재 학기가 있을 때만 되고, 신청한 멘티는 `/mypage`에서 수강 중인 강의를 봅니다. 수강을 취소하면 자료를 더 볼 수 없습니다.
+
 ### 6.5 학기 운영
 
 1. 관리자가 학기를 만들고 현재 학기로 지정합니다.
@@ -507,7 +512,8 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 | `mentor_profiles` | `published`는 로그인 사용자 전체, 본인, 관리자 | 트리거 | 본인(보호 열 제외), 관리자 | 관리자 |
 | `colleges`, `departments`, `job_fields` | 모두 (비로그인 포함, 가입·로그인 화면의 선택 목록용) | 관리자 | 관리자 | 관리자 |
 | `semesters`, `app_settings` | 로그인 사용자 | 관리자 | 관리자 | 관리자 |
-| `courses`, `lessons` | `published`는 로그인 사용자 전체, 작성 멘토, 관리자 | 작성 멘토 | 작성 멘토, 관리자 | 작성 멘토, 관리자 |
+| `courses` | `published`(멘토도 공개)는 로그인 사용자 전체, 작성 멘토, 관리자 | 작성 멘토 | 작성 멘토, 관리자 | 작성 멘토, 관리자 |
+| `lessons` | 수강 멘티, 작성 멘토, 관리자 (링크·파일). 다른 로그인 사용자는 `course_outline()`으로 제목·종류만 | 작성 멘토 | 작성 멘토, 관리자 | 작성 멘토, 관리자 |
 | `enrollments` | 본인 멘티, 강의 멘토, 관리자 | 멘티 본인 | 없음 | 멘티 본인, 관리자 |
 | `chat_rooms` | 참여자, 관리자 | `open_chat_room()`으로만 | 없음 | 없음 |
 | `messages` | 참여자, 관리자 (숨김 메시지는 관리자만) | 참여자 (열린 학기) | 관리자(숨김) | 없음 |
@@ -521,7 +527,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 | 버킷 | 공개 | 쓰기 | 읽기 |
 | --- | --- | --- | --- |
 | `avatars` | 공개 | 본인 폴더(`{user_id}/`)만 | 누구나 |
-| `course-files` | 비공개 | 강의 작성 멘토 | 수강 멘티, 작성 멘토, 관리자 |
+| `course-files` | 비공개, 파일당 20MB | 강의 작성 멘토 (경로 `{강의 id}/...`) | 수강 멘티, 작성 멘토, 관리자 (서명 URL `/files/lessons/[id]`) |
 
 **키 관리**: 브라우저와 Next.js 서버에는 publishable key만 씁니다. 관리자 기능은 대부분 RLS로 처리하고, 관리자 API가 꼭 필요한 계정 작업(PIN 초기화, 이름·소속 변경, 관리자 생성)만 Edge Function `admin-users`에서 secret 키로 처리합니다. secret 키는 Supabase의 Edge Function 비밀 값과, 운영자 PC에서 설치 스크립트를 돌릴 때의 환경 변수에만 둡니다.
 

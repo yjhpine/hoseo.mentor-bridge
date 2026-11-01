@@ -101,6 +101,36 @@ export type Database = {
         }
         Relationships: []
       }
+      courses: {
+        Row: {
+          created_at: string
+          id: number
+          mentor_id: string
+          published_at: string | null
+          status: Database["public"]["Enums"]["course_status"]
+          summary: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          mentor_id?: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["course_status"]
+          summary?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          mentor_id?: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["course_status"]
+          summary?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       departments: {
         Row: {
           college_id: number
@@ -133,6 +163,27 @@ export type Database = {
           },
         ]
       }
+      enrollments: {
+        Row: {
+          course_id: number
+          created_at: string
+          mentee_id: string
+          semester_id: number
+        }
+        Insert: {
+          course_id: number
+          created_at?: string
+          mentee_id?: string
+          semester_id?: number
+        }
+        Update: {
+          course_id?: number
+          created_at?: string
+          mentee_id?: string
+          semester_id?: number
+        }
+        Relationships: []
+      }
       job_fields: {
         Row: {
           id: number
@@ -148,6 +199,45 @@ export type Database = {
           id?: never
           name?: string
           position?: number
+        }
+        Relationships: []
+      }
+      lessons: {
+        Row: {
+          course_id: number
+          created_at: string
+          file_name: string | null
+          file_path: string | null
+          id: number
+          kind: Database["public"]["Enums"]["lesson_kind"]
+          position: number
+          starts_at: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          course_id: number
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: never
+          kind: Database["public"]["Enums"]["lesson_kind"]
+          position?: number
+          starts_at?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          course_id?: number
+          created_at?: string
+          file_name?: string | null
+          file_path?: string | null
+          id?: never
+          kind?: Database["public"]["Enums"]["lesson_kind"]
+          position?: number
+          starts_at?: string | null
+          title?: string
+          url?: string | null
         }
         Relationships: []
       }
@@ -387,6 +477,20 @@ export type Database = {
     }
     Functions: {
       answer_length: { Args: { body: string }; Returns: number }
+      can_access_course_materials: { Args: { course_id: number }; Returns: boolean }
+      can_view_course: { Args: { course_id: number }; Returns: boolean }
+      course_enrollment_count: { Args: { course_id: number }; Returns: number }
+      course_id_from_path: { Args: { path: string }; Returns: number }
+      course_outline: {
+        Args: { course_id: number }
+        Returns: {
+          id: number
+          kind: Database["public"]["Enums"]["lesson_kind"]
+          position: number
+          starts_at: string
+          title: string
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_room_member: { Args: { room_id: number }; Returns: boolean }
       is_backend: { Args: never; Returns: boolean }
@@ -403,6 +507,7 @@ export type Database = {
           room_count: number
         }[]
       }
+      mentor_student_count: { Args: { mentor_id: string }; Returns: number }
       my_unread_counts: {
         Args: never
         Returns: {
@@ -415,6 +520,8 @@ export type Database = {
       set_current_semester: { Args: { semester_id: number }; Returns: undefined }
     }
     Enums: {
+      course_status: "draft" | "published"
+      lesson_kind: "video_link" | "file" | "live_link"
       mentor_status: "pending" | "published" | "hidden"
       user_role: "admin" | "mentor" | "mentee"
     }
@@ -544,6 +651,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      course_status: ["draft", "published"],
+      lesson_kind: ["video_link", "file", "live_link"],
       mentor_status: ["pending", "published", "hidden"],
       user_role: ["admin", "mentor", "mentee"],
     },

@@ -3,6 +3,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { listMyRooms } from "@/features/chats/api/chats";
+import { listMentorCourses } from "@/features/courses/api/courses";
+import { NewCourseForm } from "@/features/courses/components/course-editor";
+import { CourseList } from "@/features/courses/components/course-list";
 import { RoomList } from "@/features/chats/components/room-list";
 import { getMentor } from "@/features/mentors/api/mentors";
 import { MentorPageForm } from "@/features/mentors/components/mentor-page-form";
@@ -16,7 +19,7 @@ const STATUS = {
   hidden: { label: "비공개", note: "관리자가 비공개로 돌려 멘티에게 보이지 않습니다." },
 } as const;
 
-// 멘토 대시보드: 받은 질문, 내 페이지 편집. 강의 관리는 4단계에서 붙입니다.
+// 멘토 대시보드: 받은 질문, 강의 관리, 내 페이지 편집 (4.1 /mentor)
 export default function Page() {
   return (
     <Suspense fallback={<p className="py-6 text-sm text-muted-foreground">불러오는 중…</p>}>
@@ -27,7 +30,11 @@ export default function Page() {
 
 async function MentorDashboard() {
   const me = await requireRole("mentor");
-  const [mentor, rooms] = await Promise.all([getMentor(me.id), listMyRooms(me.id)]);
+  const [mentor, rooms, courses] = await Promise.all([
+    getMentor(me.id),
+    listMyRooms(me.id),
+    listMentorCourses(me.id),
+  ]);
   if (!mentor) {
     return <p className="py-6">멘토 정보를 찾지 못했습니다. 관리자에게 문의하세요.</p>;
   }
@@ -56,6 +63,12 @@ async function MentorDashboard() {
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">받은 질문</h2>
         <RoomList rooms={rooms} viewer="mentor" />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">내 강의</h2>
+        <NewCourseForm />
+        <CourseList courses={courses} showMentor={false} empty="아직 등록한 강의가 없습니다." />
       </section>
 
       <h2 className="text-lg font-semibold">내 페이지 편집</h2>
