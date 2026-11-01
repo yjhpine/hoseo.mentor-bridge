@@ -49,7 +49,8 @@ export function Turnstile({
   onTokenChange: (token: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  // 숨은 입력칸은 value 속성이 곧 값이라, DOM에 직접 쓰면 React가 다시 그릴 때 지워집니다. 상태로 들고 있습니다.
+  const [token, setTokenState] = useState("");
   const widgetIdRef = useRef<string | null>(null);
   const [failed, setFailed] = useState(false);
   const onTokenRef = useRef(onTokenChange);
@@ -61,7 +62,7 @@ export function Turnstile({
     if (!siteKey) return;
     let cancelled = false;
     const setToken = (token: string) => {
-      if (inputRef.current) inputRef.current.value = token;
+      setTokenState(token);
       if (token) setFailed(false);
       onTokenRef.current(token);
     };
@@ -98,7 +99,7 @@ export function Turnstile({
       firstRender.current = false;
       return;
     }
-    if (inputRef.current) inputRef.current.value = "";
+    setTokenState("");
     onTokenRef.current("");
     if (widgetIdRef.current && window.turnstile) window.turnstile.reset(widgetIdRef.current);
   }, [resetKey]);
@@ -107,7 +108,7 @@ export function Turnstile({
   return (
     <div className="grid gap-1">
       <div ref={containerRef} className="min-h-[65px]" />
-      <input ref={inputRef} type="hidden" name="captchaToken" defaultValue="" />
+      <input type="hidden" name="captchaToken" value={token} />
       {failed && (
         <p role="alert" className="text-sm text-red-600 dark:text-red-400">
           자동 입력 방지 확인을 불러오지 못했습니다. 인터넷 연결을 확인하고 페이지를 새로 고쳐 주세요.
