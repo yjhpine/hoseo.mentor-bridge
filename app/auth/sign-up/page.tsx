@@ -38,5 +38,5 @@ async function SignUpFormWithOptions() {
     getCollegeOptions(),
     getJobFieldOptions(),
   ]);
-  return <SignUpForm colleges={colleges} jobFields={jobFields} />;
+  return <SignUpForm colleges={colleges} jobFields={jobFields} turnstileSiteKey={process.env.TURNSTILE_SITE_KEY || undefined} />;
 }

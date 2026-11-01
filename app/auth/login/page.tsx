@@ -30,5 +30,5 @@ export default function Page() {
 
 async function LoginFormWithOptions() {
   const colleges = await getCollegeOptions();
-  return <LoginForm colleges={colleges} />;
+  return <LoginForm colleges={colleges} turnstileSiteKey={process.env.TURNSTILE_SITE_KEY || undefined} />;
 }
