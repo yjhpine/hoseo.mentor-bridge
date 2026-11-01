@@ -7,7 +7,7 @@
 - Next.js 16 (App Router), React 19, TypeScript
 - Tailwind CSS 3, shadcn/ui (`components/ui/`)
 - Supabase: Auth(쿠키 세션), Postgres, Realtime(1:1 톡방에 사용 예정)
-- 관리자 화면: refine + `@refinedev/supabase` (관리자 기능을 만들 때 설치)
+- 관리자 화면: refine(headless) + `@refinedev/supabase`, 화면은 shadcn/ui로 그림
 
 Supabase 클라이언트는 용도별로 나뉘어 있습니다.
 
