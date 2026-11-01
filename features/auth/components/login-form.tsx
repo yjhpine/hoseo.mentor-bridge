@@ -65,7 +65,7 @@ export function LoginForm({
       <Turnstile siteKey={turnstileSiteKey} resetKey={state} onTokenChange={setCaptchaToken} />
       <FormMessage state={state} />
       <Button type="submit" className="w-full" disabled={pending || waitingCaptcha}>
-        {pending ? "로그인하는 중…" : waitingCaptcha ? "자동 입력 방지 확인 중…" : "로그인"}
+        {pending ? "로그인하는 중…" : waitingCaptcha ? "위의 확인을 먼저 해 주세요" : "로그인"}
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         처음이신가요?{" "}
