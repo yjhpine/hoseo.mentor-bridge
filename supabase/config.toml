@@ -418,3 +418,8 @@ enabled = true
 # 관리자 계정 작업. 새 API 키는 플랫폼 verify_jwt를 쓸 수 없어 함수 안에서 호출자를 확인합니다.
 [functions.admin-users]
 verify_jwt = false
+
+# 새 메시지 웹 푸시. DB 트리거(pg_net)가 메시지 번호만 넘겨 부릅니다. 함수가 DB에서 다시 확인하고
+# 메시지마다 한 번만 보내므로 JWT 확인 없이 둡니다. 공개 키 요청({"action":"public_key"})도 받습니다.
+[functions.push-notify]
+verify_jwt = false

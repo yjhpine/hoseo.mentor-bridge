@@ -9,6 +9,7 @@ import { CourseList } from "@/features/courses/components/course-list";
 import { RoomList } from "@/features/chats/components/room-list";
 import { getMentor } from "@/features/mentors/api/mentors";
 import { MentorPageForm } from "@/features/mentors/components/mentor-page-form";
+import { PushToggle } from "@/features/notifications/components/push-toggle";
 import { requireRole } from "@/lib/auth/current-user";
 
 export const metadata: Metadata = { title: "내 멘토 페이지" };
@@ -60,6 +61,7 @@ async function MentorDashboard() {
           </Link>
         </p>
       </div>
+      <PushToggle role="mentor" />
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">받은 질문</h2>
         <RoomList rooms={rooms} viewer="mentor" />

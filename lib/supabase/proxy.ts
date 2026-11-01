@@ -4,8 +4,8 @@ import type { Database } from "@/types/database.types";
 
 const LOGIN_PATH = "/auth/login";
 const PIN_PATH = "/account/pin";
-// 개인정보 처리방침은 로그인과 상관없이 누구나 봅니다 (6.7).
-const PUBLIC_PATHS = new Set(["/privacy"]);
+// 개인정보 처리방침(6.7), 웹 앱 매니페스트와 알림 서비스 워커(6.9)는 로그인과 상관없이 받을 수 있어야 합니다.
+const PUBLIC_PATHS = new Set(["/privacy", "/manifest.webmanifest", "/sw.js"]);
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
