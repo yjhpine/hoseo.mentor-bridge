@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import type { Enums } from "@/types/database.types";
+import { ROLE_LABELS, type UserRole } from "@/lib/auth/roles";
 
-export type UserRole = Enums<"user_role">;
+export { ROLE_LABELS, type UserRole };
 
 export type CurrentUser = {
   id: string;
@@ -11,12 +11,6 @@ export type CurrentUser = {
   name: string;
   nameTag: string | null;
   mustChangePin: boolean;
-};
-
-export const ROLE_LABELS: Record<UserRole, string> = {
-  admin: "관리자",
-  mentor: "멘토",
-  mentee: "멘티",
 };
 
 /** 로그인한 사용자의 프로필. 한 요청 안에서는 한 번만 조회합니다. 세션을 읽으므로 Suspense 안에서 부릅니다. */

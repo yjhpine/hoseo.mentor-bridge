@@ -43,3 +43,8 @@ next-env.d.ts
 
 # reverse-engineering reference repos (npm run refs, see docs/references.md)
 /references/
+
+# Cloudflare (OpenNext)
+.open-next
+.wrangler
+.dev.vars

@@ -107,7 +107,7 @@ stateDiagram-v2
 ```
 
 - `published`가 되려면 단과대학 구역(`college_id`)이 반드시 있어야 합니다.
-- 멘토 본인은 상태와 구역을 바꿀 수 없습니다. 소개, 경력, 사진, "질문 받기" 여부만 바꿉니다.
+- 멘토 본인은 상태와 구역을 바꿀 수 없습니다. 소개, 경력, 사진, "질문 받기" 여부만 바꿉니다. 기업명과 직무 분야도 관리자가 바꿉니다(`protect_mentor_columns()` 트리거).
 
 ### 3.3 1:1 질문과 답변
 
@@ -563,7 +563,7 @@ scripts/create-admin.mjs     첫 관리자 생성 (운영자 PC에서 한 번 �
 | 데이터 쓰기 | 서버 액션 또는 RPC 호출. 톡방 전송만 브라우저 클라이언트로 직접 INSERT (Realtime과 같은 경로) |
 | 실시간 | `features/chats/hooks`에서 브라우저 클라이언트로 구독 |
 | 접근 제어 | `proxy.ts`는 세션 갱신과 로그인 여부, `mentor/`·`admin/` 레이아웃은 역할 검사. 최종 판단은 RLS |
-| 관리자 | refine + `@refinedev/supabase`. 목록·수정 화면은 refine이 만들고, 통계·강사료는 직접 만든 화면 |
+| 관리자 | refine 헤드리스(`@refinedev/core`, `@refinedev/supabase`)의 데이터 훅(`useList`·`useCreate`·`useUpdate`)과 shadcn/ui로 화면을 만듭니다. 브라우저 Supabase 클라이언트를 쓰므로 권한은 관리자 세션의 RLS가 판단합니다. 계정 작업은 서버 액션이 `admin-users`를 부릅니다 |
 | 타입 | 스키마가 바뀔 때마다 Supabase 타입을 다시 생성 |
 | 뼈대 정리 | 튜토리얼 컴포넌트, Vercel 배포 버튼, `/protected` 예제 화면, 메일을 쓰는 인증 화면(비밀번호 찾기·재설정, 가입 확인 메일 안내)은 구현 1단계에서 지움 |
 
@@ -591,7 +591,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 
 ## 11. 결정 사항
 
-2026-10-29에 권장값으로 확정했습니다. 같은 날 로그인 방식이 소속·이름·PIN으로 바뀌어 6·7번을 고치고 12~16번을 더했습니다. 바뀌면 "바꿀 곳"만 고치면 되도록 설계했습니다. 출처가 "설계 기본값"인 항목은 설계하면서 정한 값이라 언제든 바꿀 수 있습니다.
+2026-10-29에 권장값으로 확정했습니다. 같은 날 로그인 방식이 소속·이름·PIN으로 바뀌어 6·7번을 고치고 12~16번을 더했습니다. 17·18번은 2026-10-30에 더했습니다. 바뀌면 "바꿀 곳"만 고치면 되도록 설계했습니다. 출처가 "설계 기본값"인 항목은 설계하면서 정한 값이라 언제든 바꿀 수 있습니다.
 
 | # | 항목 | 출처 | 확정값 | 바꿀 곳 |
 | --- | --- | --- | --- | --- |
@@ -612,6 +612,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 15 | 이름·소속 변경 | 설계 기본값 | 관리자만 (로그인 키가 바뀌기 때문) | `/admin/users`, `admin-users` |
 | 16 | 무작위 대입 대책 | 설계 기본값 | 가입·로그인에 Cloudflare Turnstile CAPTCHA. 실사용 전 필수 | Supabase Auth 설정 |
 | 17 | 가상 이메일 도메인 | 사용자 | `login.hoseo-mentor.invalid` (2026-10-30 확정, 가입·로그인·PIN 변경 시험 통과) | `lib/auth/login-key.ts`, DB `login_email()` |
+| 18 | 멘토 사진 | 사용자 | 처음에는 모두 기본 프로필 이미지(`public/avatar-default.svg`, 직접 그린 그림). 사진 업로드(Storage `avatars`)는 보류 | `mentor_profiles.photo_path`, 멘토 카드·상세 |
 
 ## 12. 구현 단계
 
@@ -626,4 +627,4 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 
 각 단계의 DB 변경은 `supabase/migrations/`에 SQL로 남기고, 적용 후 Supabase 보안 점검(advisors)으로 RLS 누락을 확인합니다.
 
-1단계에서는 PIN 초기화를 위해 refine 없이 최소 관리자 화면 `/admin/users`(사용자 목록, PIN 초기화, 관리자 만들기)를 두었습니다. 2단계에서 refine 관리자로 옮기면서 이름·소속 변경 화면을 붙입니다.
+1단계에서는 PIN 초기화를 위해 refine 없이 최소 관리자 화면 `/admin/users`를 두었고, 2단계에서 refine 관리자(`/admin/mentors`·`/admin/colleges`·`/admin/job-fields`·`/admin/users`)로 옮기며 이름·소속 변경 화면을 붙였습니다. 멘토 목록·검색은 `mentor_directory` 뷰(security_invoker)로 읽습니다.

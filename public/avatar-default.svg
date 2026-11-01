@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="기본 프로필 사진">
+  <!-- 사진이 없는 멘토의 기본 프로필. 이 프로젝트에서 직접 그린 그림입니다. -->
+  <rect width="128" height="128" fill="#E5E7EB"/>
+  <circle cx="64" cy="50" r="22" fill="#9CA3AF"/>
+  <path d="M22 118c0-23 19-38 42-38s42 15 42 38v10H22z" fill="#9CA3AF"/>
+</svg>

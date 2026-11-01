@@ -1,0 +1,23 @@
+// Cloudflare Workers 배포 설정 (@opennextjs/cloudflare). main·assets는 OpenNext 빌드 결과를 가리키므로 바꾸지 않습니다.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "hoseo-mentor-bridge",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "hoseo-mentor-bridge"
+    }
+  ],
+  // 브라우저에 그대로 보이는 공개 값입니다. secret 키는 넣지 않습니다.
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://gxcnjcqfykcpbtikhixs.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_rmealKeNWymyCvfvxdDRXA_lyJJ8X_c"
+  }
+}

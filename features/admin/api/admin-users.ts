@@ -1,7 +1,6 @@
 "use server";
 
 import { FunctionsHttpError } from "@supabase/supabase-js";
-import { revalidatePath } from "next/cache";
 import type { FormState } from "@/features/auth/api/actions";
 import { cleanName } from "@/lib/auth/login-key";
 import { createClient } from "@/lib/supabase/server";
@@ -45,7 +44,6 @@ export async function resetPin(
   if (result.error) {
     return { error: result.error };
   }
-  revalidatePath("/admin/users");
   return { success: `임시 PIN ${tempPin} — 본인에게 전해 주세요. 다음 로그인 때 새 PIN으로 바꾸게 됩니다.` };
 }
 
@@ -65,8 +63,30 @@ export async function createAdmin(
   if (result.error) {
     return { error: result.error, values: { name, nameTag } };
   }
-  revalidatePath("/admin/users");
   return {
     success: `관리자 ${name}${nameTag} 계정을 만들었습니다. 임시 PIN ${tempPin} — 소속 "관리자"로 로그인한 뒤 새 PIN으로 바꾸게 됩니다.`,
+  };
+}
+
+/** 이름·구분 문자·(멘티면) 학과 변경. 로그인 키가 바뀌므로 admin-users가 가상 이메일도 함께 바꿉니다. */
+export async function updateIdentity(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const name = cleanName(field(formData, "name"));
+  const nameTag = field(formData, "nameTag").trim();
+  const departmentId = field(formData, "departmentId");
+  const result = await callAdminUsers({
+    action: "update_identity",
+    user_id: field(formData, "userId"),
+    name,
+    name_tag: nameTag || null,
+    ...(departmentId ? { department_id: Number(departmentId) } : {}),
+  });
+  if (result.error) {
+    return { error: result.error, values: { name, nameTag, departmentId } };
+  }
+  return {
+    success: `${name}${nameTag}(으)로 바꿨습니다. 이제 이 이름${departmentId ? "과 학과" : ""}로 로그인합니다.`,
   };
 }
