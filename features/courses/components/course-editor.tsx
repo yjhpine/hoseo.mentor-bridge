@@ -12,7 +12,7 @@ import type { CourseStatus } from "@/features/courses/api/courses";
 import { createClient } from "@/lib/supabase/client";
 
 const textareaClassName =
-  "flex min-h-28 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring md:text-sm";
+  "flex min-h-28 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm";
 
 // 자료 파일 한도: course-files 버킷과 같은 20MB (10장 저장 용량)
 const MAX_FILE_BYTES = 20 * 1024 * 1024;

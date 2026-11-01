@@ -27,7 +27,7 @@ export function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1 px-2">
+        <Button variant="ghost" className="gap-1 px-2" aria-label={`${name} 계정 메뉴`}>
           <span className="max-w-24 truncate">{name}</span>
           <ChevronDown className="size-4" aria-hidden />
         </Button>

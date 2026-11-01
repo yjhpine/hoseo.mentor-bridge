@@ -1,5 +1,6 @@
 "use client";
 
+import { MessageCircle } from "lucide-react";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import type { FormState } from "@/features/auth/api/actions";
@@ -12,8 +13,10 @@ export function AskButton({ mentorId }: { mentorId: string }) {
   return (
     <form action={action} className="flex flex-col gap-2">
       <input type="hidden" name="mentorId" value={mentorId} />
-      <Button type="submit" disabled={pending} className="w-fit">
-        {pending ? "톡방 여는 중…" : "질문하기"}
+      {/* 이 화면의 주 행동이라 크게, 휴대폰에서는 가로 전체로 둡니다 (primary-action, touch-target-size) */}
+      <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-fit">
+        <MessageCircle aria-hidden />
+        {pending ? "톡방 여는 중…" : "1:1 질문하기"}
       </Button>
       <FormMessage state={state} />
     </form>

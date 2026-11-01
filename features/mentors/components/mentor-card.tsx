@@ -40,7 +40,7 @@ export function MentorCard({ mentor }: { mentor: MentorSummary }) {
   return (
     <Link
       href={`/mentors/${mentor.id}`}
-      className="flex h-full flex-col gap-3 rounded-lg border p-4 transition-colors hover:bg-accent"
+      className="flex h-full flex-col gap-3 rounded-xl border p-4 transition-colors hover:border-primary/40 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="flex items-center gap-3">
         <MentorAvatar src={mentor.photoUrl} name={mentor.displayName} size={56} />

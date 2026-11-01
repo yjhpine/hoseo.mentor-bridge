@@ -30,14 +30,14 @@ export function PrivacyConsent({ isMentor, defaultChecked }: { isMentor: boolean
         </Link>
         에 있습니다.
       </p>
-      <label className="flex items-center gap-2 text-sm">
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm">
         <input
           type="checkbox"
           name="privacyConsent"
           value="yes"
           required
           defaultChecked={defaultChecked}
-          className="size-4 accent-foreground"
+          className="size-5 shrink-0"
         />
         위 내용을 읽었고 동의합니다.
       </label>

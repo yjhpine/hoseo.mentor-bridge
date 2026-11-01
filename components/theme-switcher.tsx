@@ -21,16 +21,17 @@ const ThemeSwitcher = () => {
     setMounted(true);
   }, []);
 
+  // 자리를 미리 잡아 두어 버튼이 나타날 때 메뉴가 밀리지 않게 합니다.
   if (!mounted) {
-    return null;
+    return <span aria-hidden className="inline-block size-10" />;
   }
 
-  const ICON_SIZE = 16;
+  const ICON_SIZE = 18;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size={"sm"}>
+        <Button variant="ghost" size="icon" aria-label="화면 밝기 설정">
           {theme === "light" ? (
             <Sun
               key="light"

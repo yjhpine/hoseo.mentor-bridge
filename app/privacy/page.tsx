@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 import {
   COLLECTED_ITEMS,
   PRIVACY_OFFICER,
@@ -31,9 +31,7 @@ const TRUSTEES = [
 export default function PrivacyPage() {
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-col gap-6 p-5 md:p-10">
-      <Link href="/" className="text-lg font-semibold">
-        호서대학교 멘토링
-      </Link>
+      <div><BrandMark full /></div>
       <article className="flex flex-col gap-6 text-sm leading-relaxed">
         <header className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold">개인정보 처리방침</h1>
