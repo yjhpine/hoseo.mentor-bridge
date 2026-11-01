@@ -595,7 +595,7 @@ scripts/create-admin.mjs     첫 관리자 생성 (운영자 PC에서 한 번 �
 | 접근 제어 | `proxy.ts`는 세션 갱신과 로그인 여부, `mentor/`·`admin/` 레이아웃은 역할 검사. 최종 판단은 RLS |
 | 관리자 | refine 헤드리스(`@refinedev/core`, `@refinedev/supabase`)의 데이터 훅(`useList`·`useCreate`·`useUpdate`)과 shadcn/ui로 화면을 만듭니다. 브라우저 Supabase 클라이언트를 쓰므로 권한은 관리자 세션의 RLS가 판단합니다. 계정 작업은 서버 액션이 `admin-users`를 부릅니다 |
 | 타입 | 스키마가 바뀔 때마다 Supabase 타입을 다시 생성 |
-| 배포 | Cloudflare Workers(`@opennextjs/cloudflare`). Workers에서 렌더링이 멈춰 Next.js `cacheComponents`는 끕니다(`'use cache'`를 쓰지 않아 잃는 것 없음). next-themes의 `__name` 오류를 막으려 `wrangler.jsonc`에 `keep_names: false` |
+| 배포 | Cloudflare Workers(`@opennextjs/cloudflare`). Workers에서 렌더링이 멈춰 Next.js `cacheComponents`는 끕니다(`'use cache'`를 쓰지 않아 잃는 것 없음). next-themes의 `__name` 오류를 막으려 `wrangler.jsonc`에 `keep_names: false`. Worker 진입점은 OpenNext의 `.open-next/worker.js`를 감싼 `worker/index.ts`(요청은 그대로 넘기고 정기 실행만 덧붙임) |
 | 뼈대 정리 | 튜토리얼 컴포넌트, Vercel 배포 버튼, `/protected` 예제 화면, 메일을 쓰는 인증 화면(비밀번호 찾기·재설정, 가입 확인 메일 안내)은 구현 1단계에서 지움 |
 
 ## 10. 운영 제약
@@ -608,7 +608,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 파일 저장 | 1GB (조직 합산) | **강의 영상 직접 업로드는 어려움** → 영상은 외부 링크(예: 유튜브 일부 공개) 권장 |
 | 전송량 | 5GB/월 (조직 합산) | 사진은 작게 줄여 올림 |
 | Realtime 동시 접속 | 200 | 소규모 운영에 충분 |
-| 일시 정지 | 7일간 사용이 적으면 자동 정지 | **방학 중 정지될 수 있음**. 경고 메일이 오면 대시보드 방문으로 막고, 정지되면 90일 안에 대시보드에서 복구 |
+| 일시 정지 | 7일간 사용이 적으면 자동 정지 | Cloudflare Cron Trigger가 매일 03:17 UTC(한국 12:17)에 공개 키로 `colleges`를 한 줄 읽어 활동을 남김(`worker/index.ts`, `wrangler.jsonc`의 `triggers`). 실패하면 Cloudflare 대시보드의 Cron 기록과 Workers Logs에 남음. 그래도 경고 메일이 오면 대시보드 방문으로 막고, 정지되면 90일 안에 대시보드에서 복구 |
 | 세션 만료 설정 | Pro 플랜 기능 | 6.8 참고 |
 | 로그인 요청 제한 | IP마다 시간당 1,800회, 순간 30회 (바꿀 수 없음) | 학교 Wi-Fi는 여러 사람이 같은 IP를 씀. 오리엔테이션처럼 수십 명이 한꺼번에 로그인하면 잠깐 거부될 수 있고, 몇 초 뒤 다시 하면 됨 |
 | 로그인 실패 잠금 | 유료(Teams 이상) 플랜 기능 | CAPTCHA로 대신함 (6.1) |

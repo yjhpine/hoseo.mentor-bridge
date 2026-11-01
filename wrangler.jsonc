@@ -1,12 +1,21 @@
-// Cloudflare Workers 배포 설정 (@opennextjs/cloudflare). main·assets는 OpenNext 빌드 결과를 가리키므로 바꾸지 않습니다.
+// Cloudflare Workers 배포 설정 (@opennextjs/cloudflare). assets는 OpenNext 빌드 결과를 가리키므로 바꾸지 않습니다.
+// main은 OpenNext의 .open-next/worker.js를 감싸 정기 실행을 덧붙인 worker/index.ts입니다.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
+  "main": "worker/index.ts",
   "name": "hoseo-mentor-bridge",
   "compatibility_date": "2026-10-01",
   // next-themes가 스크립트를 문자열로 바꿀 때 esbuild의 __name이 끼어 브라우저에서 오류가 나는 것을 막습니다.
   "keep_names": false,
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // 매일 03:17 UTC(한국 12:17)에 Supabase를 한 번 읽어 무료 플랜 일시 정지를 막습니다 (worker/index.ts).
+  "triggers": {
+    "crons": ["17 3 * * *"]
+  },
+  // 정기 실행 결과(console.log)를 Cloudflare 대시보드의 Workers Logs에서 봅니다.
+  "observability": {
+    "enabled": true
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
