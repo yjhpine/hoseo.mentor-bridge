@@ -2,6 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { logout } from "@/features/auth/api/actions";
+import { unsubscribePush } from "@/lib/push/client";
 
 /** 상단 메뉴 오른쪽의 내 계정 메뉴: 이름·역할, PIN 변경, 로그아웃 */
 export function UserMenu({
@@ -24,6 +26,14 @@ export function UserMenu({
   roleLabel: string;
   isMentee: boolean;
 }) {
+  const [pending, startTransition] = useTransition();
+  // 로그아웃하면 이 브라우저의 알림 구독도 지웁니다. 공용 PC에서 다음 사람에게 내 알림이 가지 않게 합니다 (6.9).
+  const signOut = () =>
+    startTransition(async () => {
+      await unsubscribePush().catch(() => undefined);
+      await logout();
+    });
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -46,12 +56,14 @@ export function UserMenu({
         <DropdownMenuItem asChild>
           <Link href="/account/pin">PIN 변경</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <form action={logout} className="w-full">
-            <button type="submit" className="w-full text-left">
-              로그아웃
-            </button>
-          </form>
+        <DropdownMenuItem
+          disabled={pending}
+          onSelect={(event) => {
+            event.preventDefault();
+            signOut();
+          }}
+        >
+          {pending ? "로그아웃하는 중…" : "로그아웃"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

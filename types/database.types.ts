@@ -415,6 +415,20 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: { auth: string; created_at: string; endpoint: string; id: number; p256dh: string; user_agent: string | null; user_id: string }
+        Insert: { auth: string; created_at?: string; endpoint: string; id?: never; p256dh: string; user_agent?: string | null; user_id: string }
+        Update: { auth?: string; created_at?: string; endpoint?: string; id?: never; p256dh?: string; user_agent?: string | null; user_id?: string }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -596,6 +610,11 @@ export type Database = {
           name_tag: string | null
           role: Database["public"]["Enums"]["user_role"]
         }[]
+      }
+      delete_push_subscription: { Args: { endpoint: string }; Returns: undefined }
+      save_push_subscription: {
+        Args: { auth: string; endpoint: string; p256dh: string; user_agent?: string }
+        Returns: undefined
       }
       is_admin: { Args: never; Returns: boolean }
       is_room_member: { Args: { room_id: number }; Returns: boolean }

@@ -23,6 +23,11 @@ const TRUSTEES = [
     work: "웹사이트 전송, 자동 가입·로그인 방지(Turnstile)",
     items: "접속 IP 주소, 접속 일시, 브라우저 정보",
     period: "업체 정책에 따른 기간",
+  },  {
+    name: "브라우저 알림 서비스(이용자 브라우저에 따라 Google·Apple·Mozilla·Microsoft 등, 미국)",
+    work: "알림을 켠 이용자에게 새 메시지 알림 전달. 알림 내용은 암호화되어 이 업체들은 읽을 수 없음",
+    items: "알림 수신 주소, 암호화된 알림 내용",
+    period: "전달할 때까지 (최대 1일)",
   },
 ];
 

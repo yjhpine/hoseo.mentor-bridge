@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { listMyRooms } from "@/features/chats/api/chats";
 import { RoomList } from "@/features/chats/components/room-list";
+import { PushToggle } from "@/features/notifications/components/push-toggle";
 import { getCurrentUser } from "@/lib/auth/current-user";
 
 export const metadata: Metadata = { title: "톡방" };
@@ -24,5 +25,10 @@ async function MyRooms() {
   if (!user) redirect("/auth/login");
   if (user.role === "admin") redirect("/admin");
   const rooms = await listMyRooms(user.id);
-  return <RoomList rooms={rooms} viewer={user.role} />;
+  return (
+    <>
+      <PushToggle role={user.role} />
+      <RoomList rooms={rooms} viewer={user.role} />
+    </>
+  );
 }
