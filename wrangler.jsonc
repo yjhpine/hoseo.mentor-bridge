@@ -18,9 +18,10 @@
     }
   ],
   // 브라우저에 그대로 보이는 공개 값입니다. secret 키는 넣지 않습니다.
-  // Turnstile site key는 "TURNSTILE_SITE_KEY"로 여기에 넣습니다 (docs/architecture.md 6.1). secret key는 Supabase 대시보드에만 넣습니다.
+  // TURNSTILE_SITE_KEY: Cloudflare Turnstile 위젯의 site key (docs/architecture.md 6.1). secret key는 Supabase 대시보드에만 넣습니다.
   "vars": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://gxcnjcqfykcpbtikhixs.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_rmealKeNWymyCvfvxdDRXA_lyJJ8X_c"
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_rmealKeNWymyCvfvxdDRXA_lyJJ8X_c",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAFu1jPNYduGAEpLg"
   }
 }
