@@ -10,6 +10,7 @@ import { FormMessage, submitWithoutReset } from "@/features/auth/components/fiel
 import { addFileLesson, addLinkLesson, createCourse, updateCourse } from "@/features/courses/api/actions";
 import type { CourseStatus } from "@/features/courses/api/courses";
 import { createClient } from "@/lib/supabase/client";
+import { COURSE_FILE_ACCEPT, COURSE_FILE_LABEL, courseFileContentType, fileExtension } from "@/lib/files/course-file-types";
 
 const textareaClassName =
   "flex min-h-28 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:text-sm";
@@ -75,6 +76,11 @@ export function AddLessonForm({ courseId }: { courseId: number }) {
       setFileState({ error: "올릴 파일을 골라 주세요." });
       return;
     }
+    const contentType = courseFileContentType(file.name);
+    if (!contentType) {
+      setFileState({ error: `올릴 수 없는 파일 형식입니다. ${COURSE_FILE_LABEL} 파일만 올릴 수 있습니다.` });
+      return;
+    }
     if (file.size > MAX_FILE_BYTES) {
       setFileState({ error: "파일은 20MB까지 올릴 수 있습니다. 영상은 유튜브 등 외부 링크로 등록해 주세요." });
       return;
@@ -82,11 +88,11 @@ export function AddLessonForm({ courseId }: { courseId: number }) {
     setUploading(true);
     setFileState({});
     // 경로: "{강의 id}/{무작위}.{확장자}". 원래 파일 이름은 file_name에 따로 둡니다.
-    const extension = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
-    const path = `${courseId}/${crypto.randomUUID()}${extension ? `.${extension}` : ""}`;
+    // 허용 목록을 통과한 확장자라 영문 소문자·숫자만 들어갑니다.
+    const path = `${courseId}/${crypto.randomUUID()}.${fileExtension(file.name)}`;
     const { error } = await createClient()
       .storage.from("course-files")
-      .upload(path, file, { contentType: file.type || "application/octet-stream" });
+      .upload(path, file, { contentType });
     if (error) {
       setUploading(false);
       setFileState({ error: `파일을 올리지 못했습니다: ${error.message}` });
@@ -117,7 +123,8 @@ export function AddLessonForm({ courseId }: { courseId: number }) {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="lesson-file">파일</Label>
-            <Input id="lesson-file" name="file" type="file" required />
+            <Input id="lesson-file" name="file" type="file" accept={COURSE_FILE_ACCEPT} required aria-describedby="lesson-file-help" />
+            <p id="lesson-file-help" className="text-xs text-muted-foreground">{COURSE_FILE_LABEL} 파일을 20MB까지 올릴 수 있습니다.</p>
           </div>
           <FormMessage state={fileState} />
           <Button type="submit" disabled={uploading} className="sm:w-fit">{uploading ? "올리는 중…" : "파일 올리기"}</Button>
