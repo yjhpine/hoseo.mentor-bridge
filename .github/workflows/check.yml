@@ -1,4 +1,6 @@
 # 자동 검사 (docs/testing.md): PR을 올리거나 main에 병합하면 lint, 타입 검사, 단위 시험, 빌드를 돌립니다.
+# 실패하면 PR에 빨간 X가 뜨고, 실행 결과 첫 화면(Summary)에 실패한 단계와 오류 로그 끝부분을 한국어로 정리합니다.
+# lint·타입 오류와 실패한 시험은 PR의 "Files changed"에서 해당 줄에도 표시됩니다.
 # 비밀 값은 쓰지 않습니다. 빌드에 필요한 두 값은 브라우저에도 보이는 공개 값입니다 (wrangler.jsonc와 같음).
 name: 검사
 
@@ -14,6 +16,9 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://gxcnjcqfykcpbtikhixs.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rmealKeNWymyCvfvxdDRXA_lyJJ8X_c
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,14 +26,68 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+
+      # 각 단계의 출력을 logs/에 남겨, 실패하면 요약에 끝부분을 붙입니다.
+      # continue-on-error로 앞 단계가 실패해도 나머지를 돌려 문제를 한 번에 다 보여 줍니다.
       - name: lint
-        run: npm run lint
+        id: lint
+        continue-on-error: true
+        run: mkdir -p logs && set -o pipefail && npm run lint 2>&1 | tee logs/lint.log
       - name: 타입 검사
-        run: npm run typecheck
+        id: typecheck
+        continue-on-error: true
+        run: set -o pipefail && npx tsc --noEmit --pretty false 2>&1 | tee logs/typecheck.log
       - name: 단위 시험
-        run: npm test
+        id: test
+        continue-on-error: true
+        run: set -o pipefail && npm test 2>&1 | tee logs/test.log
       - name: 빌드
-        run: npm run build
+        id: build
+        continue-on-error: true
+        run: set -o pipefail && npm run build 2>&1 | tee logs/build.log
+
+      - name: 결과 요약
+        if: always()
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://gxcnjcqfykcpbtikhixs.supabase.co
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rmealKeNWymyCvfvxdDRXA_lyJJ8X_c
+          LINT: ${{ steps.lint.outcome }}
+          TYPECHECK: ${{ steps.typecheck.outcome }}
+          TEST: ${{ steps.test.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+        run: |
+          mark() { case "$1" in success) echo "✅ 통과";; failure) echo "❌ 실패";; *) echo "⏭️ 건너뜀";; esac; }
+          {
+            echo "## 검사 결과"
+            echo ""
+            echo "| 단계 | 결과 | 무엇을 보나 |"
+            echo "| --- | --- | --- |"
+            echo "| lint | $(mark "$LINT") | 코드 규칙 (eslint) |"
+            echo "| 타입 검사 | $(mark "$TYPECHECK") | TypeScript 타입 (tsc) |"
+            echo "| 단위 시험 | $(mark "$TEST") | tests/unit/ (vitest) |"
+            echo "| 빌드 | $(mark "$BUILD") | next build |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          failed=0
+          for pair in "lint:$LINT:lint" "타입 검사:$TYPECHECK:typecheck" "단위 시험:$TEST:test" "빌드:$BUILD:build"; do
+            name="${pair%%:*}"; rest="${pair#*:}"; outcome="${rest%%:*}"; file="${rest#*:}"
+            if [ "$outcome" = "failure" ]; then
+              failed=1
+              {
+                echo ""
+                echo "### ❌ ${name} 오류 로그 (끝 60줄)"
+                echo ""
+                echo '```text'
+                tail -n 60 "logs/${file}.log" 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g'
+                echo '```'
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+          if [ "$failed" = 1 ]; then
+            {
+              echo ""
+              echo "전체 로그는 이 화면 왼쪽의 **check** 작업에서 실패한 단계를 누르면 볼 수 있습니다."
+              echo "lint·타입 오류와 실패한 시험은 PR의 **Files changed**에서 해당 줄에도 표시됩니다."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=검사 실패::실패한 단계가 있습니다. 실행 결과의 Summary에서 오류 로그를 보세요."
+            exit 1
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "모든 검사를 통과했습니다." >> "$GITHUB_STEP_SUMMARY"
