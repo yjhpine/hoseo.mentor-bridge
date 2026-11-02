@@ -128,6 +128,8 @@ begin
   insert into r(step,expect,got) values ('멘티: 안 읽은 답변 수', '1', v::text);
   perform pg_temp.act(ma); perform public.mark_room_read(room); select coalesce(sum(unread), 0) into v from public.my_unread_counts() where room_id = room; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘티: 톡방을 읽은 뒤 안 읽은 수', '0', v::text);
+  -- 멘토가 이어서 한 번 더 보내도 답변은 1건 (11장 26번: 질문마다 1건)
+  perform pg_temp.act(m); insert into public.messages(room_id, body) values (room, long_answer || ' 덧붙여서 하나 더 말씀드리면 기초 실험 과목도 중요합니다.'); perform pg_temp.back();
 
   -- 4. 강의: 멘토가 만들고 공개, 수강 신청한 멘티만 자료를 봄
   perform pg_temp.act(m);
@@ -146,6 +148,18 @@ begin
   perform pg_temp.back();
   insert into r(step,expect,got) values ('멘토: 허용 안 된 형식(.exe) 자료 등록', '거부', t);
 
+  -- 자료 파일은 개설(공개)된 멘토만 올림 (11장 27번)
+  perform pg_temp.act(m);
+  begin insert into storage.objects(bucket_id, name) values ('course-files', crs || '/11111111-1111-1111-1111-111111111111.pdf'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('개설된 멘토: 자료 파일 올리기', '허용됨', t);
+  perform pg_temp.act(a); update public.mentor_profiles set status = 'hidden' where id = m; perform pg_temp.back();
+  perform pg_temp.act(m);
+  begin insert into storage.objects(bucket_id, name) values ('course-files', crs || '/22222222-2222-2222-2222-222222222222.pdf'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('개설 안 된(비공개) 멘토: 자료 파일 올리기', '거부', t);
+  perform pg_temp.act(a); update public.mentor_profiles set status = 'published' where id = m; perform pg_temp.back();
+
   perform pg_temp.act(mb); select count(*) into v from public.lessons where course_id = crs; perform pg_temp.back();
   insert into r(step,expect,got) values ('수강 안 한 멘티: 강의 자료 보기', '0', v::text);
   perform pg_temp.act(ma);
@@ -159,7 +173,10 @@ begin
   select question_count || '/' || answer_count || '/' || room_count into t from public.admin_semester_stats(sem) where mentor_id = m;
   select count(*) into v from public.messages where room_id = room;
   perform pg_temp.back();
-  insert into r(step,expect,got) values ('관리자: 멘토별 질문/답변/톡방 수', '1/1/1', t), ('관리자: 톡방 내용 열람', '2', v::text);
+  insert into r(step,expect,got) values ('관리자: 멘토별 질문/답변/톡방 수 (이어 보낸 답변은 1건)', '1/1/1', t), ('관리자: 톡방 내용 열람', '3', v::text);
+
+  -- 질문 없이 톡방만 연 멘티 (아래 만족도 자격 확인용)
+  perform pg_temp.act(mb); perform public.open_chat_room(m); perform pg_temp.back();
 
   -- 6. 강사료: 관리자만 책정·열람
   perform pg_temp.act(m);
@@ -194,7 +211,7 @@ begin
   perform pg_temp.act(mb);
   begin insert into public.survey_responses(semester_id, mentor_id, rating) values (sem, m, 1); t := '허용됨'; exception when others then t := '거부'; end;
   perform pg_temp.back();
-  insert into r(step,expect,got) values ('톡방 없던 멘티: 만족도 응답', '거부', t);
+  insert into r(step,expect,got) values ('질문 없이 톡방만 연 멘티: 만족도 응답', '거부', t);
 
   perform pg_temp.act(m); select count(*) into v from public.survey_responses; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘토: 만족도 결과 열람', '0', v::text);
