@@ -647,7 +647,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 
 ## 11. 결정 사항
 
-2026-10-29에 권장값으로 확정했습니다. 같은 날 로그인 방식이 소속·이름·PIN으로 바뀌어 6·7번을 고치고 12~16번을 더했습니다. 17·18번은 2026-10-30에 더했고, 11번과 19~23번은 2026-11-01에 정했습니다. 바뀌면 "바꿀 곳"만 고치면 되도록 설계했습니다. 출처가 "설계 기본값"인 항목은 설계하면서 정한 값이라 언제든 바꿀 수 있습니다.
+2026-10-29에 권장값으로 확정했습니다. 같은 날 로그인 방식이 소속·이름·PIN으로 바뀌어 6·7번을 고치고 12~16번을 더했습니다. 17·18번은 2026-10-30에 더했고, 11번과 19~23번은 2026-11-01에, 24번은 2026-11-02에 정했습니다. 바뀌면 "바꿀 곳"만 고치면 되도록 설계했습니다. 출처가 "설계 기본값"인 항목은 설계하면서 정한 값이라 언제든 바꿀 수 있습니다.
 
 | # | 항목 | 출처 | 확정값 | 바꿀 곳 |
 | --- | --- | --- | --- | --- |
@@ -674,6 +674,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 21 | 백업 방식 | 사용자 | 관리자 화면 버튼으로 전체 JSON(+표별 CSV) 내려받기. 학기 종료 뒤와 탈퇴 처리 전에 받고, 백업 파일도 1년 뒤 파기 | `/admin/backup`, `admin_backup()`, [backup.md](backup.md) |
 | 22 | 디자인 | 사용자 | 주 색은 호서대 UI 상징색 Passion RED `#89171A`(다크 모드 버튼 `#BD202F`, 다크 글자 강조 `#F2777F`). 학교 교표·로고는 쓰지 않음. 글꼴 Noto Sans KR. 휴대폰은 아래 탭 막대, PC는 상단 메뉴. 기준은 UI/UX Pro Max 스킬(대비 4.5:1, 터치 40~44px, 초점 표시, 움직임 줄이기) | `app/globals.css`, `app/layout.tsx`, `components/main-nav.tsx`, 9.1 |
 | 23 | 새 메시지 알림 | 사용자 | 웹 푸시(무료). 멘토(새 질문)·멘티(답변) 모두, 직접 켠 브라우저만. 알림에 보낸 사람 이름과 메시지 앞부분(40자) 표시 | 6.9, `supabase/functions/push-notify`, `features/notifications` |
+| 24 | 자동 시험 | 사용자 | GitHub Actions에서 lint·타입 검사·단위 시험(vitest)·빌드. 핵심 흐름 DB 시험(35단계, 자동으로 되돌림)은 DB를 고친 뒤 직접. 화면 클릭 시험은 CAPTCHA 때문에 하지 않음 | [testing.md](testing.md), `.github/workflows/check.yml`, `tests/unit/`, `supabase/tests/core_loop.sql` |
 
 ## 12. 구현 단계
 
@@ -686,6 +687,6 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 5. 운영 | 관리자 질의응답 열람·통계, 강사료, 학기 종료, 만족도 조사 | 한 학기를 처음부터 끝까지 테스트 데이터로 돌려 볼 수 있음 |
 | 6. 배포 | 호스팅, Turnstile CAPTCHA, 도메인, 개인정보 처리방침, 백업 절차 | 학교 사용자가 실제 주소로 가입하고 쓸 수 있음 |
 
-각 단계의 DB 변경은 `supabase/migrations/`에 SQL로 남기고, 적용 후 Supabase 보안 점검(advisors)으로 RLS 누락을 확인합니다.
+각 단계의 DB 변경은 `supabase/migrations/`에 SQL로 남기고, 적용 후 Supabase 보안 점검(advisors)으로 RLS 누락을 확인합니다. 그다음 핵심 흐름 DB 시험(`supabase/tests/core_loop.sql`, [testing.md](testing.md))을 돌립니다.
 
 1단계에서는 PIN 초기화를 위해 refine 없이 최소 관리자 화면 `/admin/users`를 두었고, 2단계에서 refine 관리자(`/admin/mentors`·`/admin/colleges`·`/admin/job-fields`·`/admin/users`)로 옮기며 이름·소속 변경 화면을 붙였습니다. 멘토 목록·검색은 `mentor_directory` 뷰(security_invoker)로 읽습니다.
