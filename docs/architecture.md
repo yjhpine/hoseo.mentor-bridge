@@ -354,7 +354,7 @@ erDiagram
 | `messages` | 톡방 메시지 | 멘토 메시지는 답변 길이 규칙 통과 필수. 수정·삭제 불가 (관리자 숨김만) |
 | `room_reads` | 사용자별 마지막 읽은 시각 | 안 읽은 수 계산용 |
 | `fee_records` | 학기별 멘토 강사료 | (학기, 멘토) 중복 불가 |
-| `survey_responses` | 학기 말 멘토 만족도 | (학기, 멘토, 멘티) 중복 불가. 그 학기에 해당 멘토와 톡방이 있던 멘티만 |
+| `survey_responses` | 학기 말 멘토 만족도 | (학기, 멘토, 멘티) 중복 불가. 그 학기에 해당 멘토에게 질문하고 답변을 받은 멘티만 (11장 28번) |
 | `app_settings` | 바뀔 수 있는 운영 규칙 | 한 줄만 존재 |
 | `admin_invites` | 관리자 계정 생성 허가 (6.1) | secret 키로만 읽고 씀. 가입 트리거가 쓰고 지움 |
 
@@ -383,13 +383,13 @@ erDiagram
 | `set_current_semester(semester_id)` | 현재 학기 지정 (관리자 전용 RPC). 하나만 현재 학기가 되도록 기존 것을 내림 |
 | `mark_room_read(room_id)` | 내 읽은 위치를 지금으로 (RPC) |
 | `my_unread_counts()` | 내 톡방별 안 읽은 메시지 수 (RPC) |
-| `mentor_activity(mentor_id)` | 멘토 상세의 답변 수·질문 받은 톡방 수·답변한 톡방 수 (RPC, 집계만 돌려줌) |
+| `mentor_activity(mentor_id)` | 멘토 상세의 답변 수(질문마다 1건, 11장 26번)·질문 받은 톡방 수·답변한 톡방 수 (RPC, 집계만 돌려줌) |
 | `course_outline(course_id)` | 강의 소개 화면의 차시 목록 (제목·종류·실시간 시각만, 링크·파일 제외) |
 | `course_enrollment_count(course_id)`, `mentor_student_count(mentor_id)` | 수강생 수 (숫자만) |
 | `can_view_course(course_id)`, `can_access_course_materials(course_id)` | 강의를 볼 수 있는지, 자료를 볼 수 있는지 (RLS·Storage 정책에서 사용) |
 | `admin_semester_stats(semester_id)` | 멘토별 톡방 수, 질문 수, 답변 수, 마지막 답변 시각 (관리자 전용 RPC). 관리자가 숨긴 메시지는 세지 않음 |
 | `close_semester(semester_id, survey_closes_at)` | 학기 종료: `closed_at` 기록, 만족도 조사 기간(지금 ~ 관리자가 정한 마감, 화면 기본값 2주 뒤) 설정 (관리자 전용 RPC) |
-| `my_pending_surveys()` | 내가 응답할 만족도 조사 (종료된 학기의 조사 기간 안, 그 학기 톡방이 있던 멘토마다) |
+| `my_pending_surveys()` | 내가 응답할 만족도 조사 (종료된 학기의 조사 기간 안, 그 학기에 질문하고 답변을 받은 멘토마다) |
 
 Supabase Edge Function `admin-users`는 PIN 초기화, 이름·소속 변경, 관리자 계정 생성을 맡습니다. Supabase 관리자 API가 필요한 작업이라 DB 함수가 아니라 Edge Function으로 두고, 호출한 사람이 관리자인지 먼저 확인합니다.
 
@@ -436,9 +436,10 @@ Supabase Auth는 이메일(또는 전화번호)과 비밀번호로 계정을 만
 - `/account/pin`에서 현재 PIN, 새 PIN, 새 PIN 확인을 받습니다.
 - Supabase의 "비밀번호를 바꿀 때 현재 비밀번호 요구(Require current password)"를 켜고 `updateUser({ current_password, password })`로 바꿉니다. 메일로 확인 코드를 보내는 "재인증(Secure password change)"은 메일이 없으므로 끕니다.
 - 새 PIN이 숫자 6자리인지는 서버 액션에서 검사합니다. Supabase는 비밀번호 원문을 DB에 넘기지 않으므로 DB에서는 검사할 수 없습니다.
-- 바꾸고 나면 `must_change_pin`을 `false`로 돌립니다.
+- PIN이 실제로 바뀌면 DB 트리거(`auth.users` 비밀번호 변경)가 `must_change_pin`을 `false`로 돌립니다. 본인이 표시만 직접 끌 수는 없습니다 (보안 검수 2차).
+- 바꾸고 나면 지금 쓰는 기기 말고 다른 기기의 로그인을 끊습니다(`revoke_other_sessions()`). PIN이 새어 나갔을 때 남의 기기에 로그인이 남지 않게 합니다.
 
-**PIN 분실**: 메일이 없어 스스로 찾을 수 없습니다. 관리자가 `/admin/users`에서 임시 PIN을 정해 주면 `must_change_pin = true`가 되고, 그 사용자는 다음 로그인 때 `/account/pin`으로 이동합니다.
+**PIN 분실**: 메일이 없어 스스로 찾을 수 없습니다. 관리자가 `/admin/users`에서 임시 PIN을 정해 주면 `must_change_pin = true`가 되고, 그 사용자는 다음 로그인 때 `/account/pin`으로 이동합니다. 초기화하면 그 사람의 모든 기기 로그인이 끊깁니다(`revoke_user_sessions()`, `admin-users`만 호출).
 
 **이름·소속 변경**: 로그인 키가 바뀌므로 관리자만 합니다. 가상 이메일도 함께 바꿉니다.
 
@@ -491,13 +492,13 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 3. 학기 종료(`close_semester`)
    - `closed_at`을 기록합니다. 이후 그 학기 톡방은 읽기 전용입니다.
    - 만족도 조사 기간(`survey_opens_at` ~ `survey_closes_at`)을 엽니다.
-4. 만족도 조사: 그 학기에 톡방이 있던 멘티만, 해당 멘토마다 한 번 응답합니다 (README "종료 시 멘티 한정"의 해석, 11장 4번).
+4. 만족도 조사: 그 학기에 그 멘토에게 질문하고 답변을 1번 이상 받은 멘티만, 해당 멘토마다 한 번 응답합니다 (README "종료 시 멘티 한정"의 해석, 11장 4번·28번).
 5. 다음 학기를 만들고 현재 학기로 바꿉니다.
 
 ### 6.6 질의응답 현황과 강사료
 
 - `/admin/chats`: 학기·구역·멘토로 걸러 전체 톡방을 보고, 톡방을 열어 내용을 확인합니다.
-- `admin_semester_stats()`가 멘토별 톡방 수, 질문 수(멘티 메시지), 답변 수(멘토 메시지), 마지막 답변 시각을 돌려줍니다.
+- `admin_semester_stats()`가 멘토별 톡방 수, 질문 수, 답변 수, 마지막 답변 시각을 돌려줍니다. 질문·답변은 "차례"로 셉니다(11장 26번): 멘티가 연달아 보낸 메시지 묶음이 질문 1건, 그 뒤 멘토가 연달아 보낸 메시지 묶음이 답변 1건입니다. 짧게 나눠 여러 번 보내도 건수가 늘지 않습니다.
 - `/admin/fees`: 통계 옆에서 관리자가 금액을 입력하면 `fee_records`에 그 시점의 건수 스냅숏과 함께 저장합니다.
 - 강사료 기준이 "답변 1건당 금액"처럼 정해지면 추천 금액을 자동 계산해 보여 주고, 최종 금액은 관리자가 확정합니다.
 - 책정 뒤 건수가 바뀌면(관리자가 메시지를 숨기거나 되돌림) 강사료 화면에 "책정 뒤 건수가 바뀌었습니다"를 보여 줍니다.
@@ -526,7 +527,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 - **흐름**: `messages` INSERT → 트리거 `notify_new_message`가 받는 사람의 구독이 있을 때만 pg_net으로 Edge Function `push-notify`에 메시지 번호를 넘김 → 함수가 secret 키로 메시지·받는 사람·구독을 다시 읽고 VAPID로 서명·암호화해 푸시 → 끊긴 구독(404/410)은 지움.
 - **남용 방지**: 함수는 JWT 없이 불리지만(`verify_jwt = false`), 메시지 번호만 받고 내용은 DB에서 읽으며, 메시지마다 한 번(`push_deliveries`), 만든 지 2분 안의 메시지만 보냅니다. 밖에서 불러도 원래 보낼 알림 외에는 보내지 않습니다.
 - **키**: VAPID 키는 함수가 처음 쓸 때 만들어 정책 없는 표 `push_vapid_keys`에 둡니다(secret 키로만 읽음, 백업에서 제외). 브라우저는 서버 액션 `getPushPublicKey()`로 공개 키만 받습니다.
-- **구독 저장**: `push_subscriptions`(브라우저마다 한 줄). 저장·삭제는 `save_push_subscription()`·`delete_push_subscription()`으로만 합니다. 같은 브라우저를 다른 계정이 쓰면 주인을 바꿉니다. 로그아웃하면 그 브라우저의 구독을 지웁니다(공용 PC).
+- **구독 저장**: `push_subscriptions`(브라우저마다 한 줄). 저장·삭제는 `save_push_subscription()`·`delete_push_subscription()`으로만 합니다. 같은 브라우저를 다른 계정이 쓰면 주인을 바꿉니다. 로그아웃하면 그 브라우저의 구독을 지웁니다(공용 PC). 주소는 실제 브라우저 푸시 서비스(FCM, Mozilla, Apple, Windows)만 받고, 한 사람당 최근 5개까지만 남깁니다 (보안 검수 2차, 아무 주소로나 요청을 보내게 하는 것 방지).
 - **아이폰**: iOS 16.4 이상에서 사파리 "홈 화면에 추가"로 설치한 웹 앱에서만 웹 푸시를 받습니다. 그래서 웹 앱 매니페스트(`app/manifest.ts`)와 아이콘(`public/icons/`)을 두고, 설치하지 않은 아이폰에는 설치 방법을 안내합니다.
 - **서비스 워커**: `public/sw.js`. 알림 표시와 누르기만 처리하고 페이지를 캐시하지 않습니다.
 - **개인정보**: 알림 수신 정보는 처리방침의 수집 항목(선택)과 위탁·국외 이전(브라우저 알림 서비스)에 적었습니다. 알림 내용은 암호화되어 알림 서비스 업체는 읽을 수 없습니다.
@@ -537,7 +538,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 
 | 테이블 | 조회 | 생성 | 수정 | 삭제 |
 | --- | --- | --- | --- | --- |
-| `profiles` | 본인, 관리자, 공개 멘토의 이름, 같은 톡방 상대 | 트리거 | 본인(`must_change_pin` 해제만), 관리자(`must_change_pin`만). 이름·소속·역할은 `admin-users`만 | `admin-users`가 auth 계정을 지우면 함께 지워짐 |
+| `profiles` | 본인, 관리자, 공개 멘토의 이름, 같은 톡방 상대 | 트리거 | 본인 없음(`must_change_pin`은 PIN을 바꾸면 트리거가 해제), 관리자(`must_change_pin`만). 이름·소속·역할은 `admin-users`만 | `admin-users`가 auth 계정을 지우면 함께 지워짐 |
 | `mentee_profiles` | 본인, 관리자, 톡방 상대 멘토 | 트리거 | `admin-users`만 (학과가 로그인 키라서) | `profiles`와 함께 |
 | `mentor_profiles` | `published`는 로그인 사용자 전체, 본인, 관리자 | 트리거 | 본인(보호 열 제외), 관리자 | 관리자 |
 | `colleges`, `departments`, `job_fields` | 모두 (비로그인 포함, 가입·로그인 화면의 선택 목록용) | 관리자 | 관리자 | 관리자 |
@@ -651,10 +652,10 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 
 | # | 항목 | 출처 | 확정값 | 바꿀 곳 |
 | --- | --- | --- | --- | --- |
-| 1 | 50자에 공백 포함 여부 | README | 공백 제외 (빈칸으로 글자 수 채우기 방지) | `app_settings.answer_count_spaces` |
+| 1 | 50자에 공백 포함 여부 | README | 공백 제외 (빈칸으로 글자 수 채우기 방지). 한글 채움 문자·폭 없는 공백처럼 보이지 않는 글자도 빼고 셈 (보안 검수 2차) | `app_settings.answer_count_spaces` |
 | 2 | 강의 제공 방식 | README | 영상 링크·자료 파일·실시간 링크 모두 지원. 영상은 외부 링크로 등록 | `lessons.kind` |
 | 3 | 강사료 책정 기준 | README | 질의응답 건수는 자동 집계, 금액은 관리자가 입력 | `/admin/fees` |
-| 4 | 학기 종료 시 "멘티 한정" 의미 | README | 만족도 조사는 그 학기 톡방이 있던 멘티만 응답 | `survey_responses` 정책 |
+| 4 | 학기 종료 시 "멘티 한정" 의미 | README | 만족도 조사는 그 학기 톡방이 있던 멘티만 응답. 28번에서 "질문하고 답변을 받은 멘티"로 좁힘 | `survey_responses` 정책 |
 | 5 | 사용자 PC 기억 범위 | README | 로그아웃할 때까지 로그인 유지 (Supabase 기본값), 유지 끄기 체크박스 없음 | 로그인 화면, 쿠키 처리 |
 | 6 | 로그인 수단 | README, 사용자 | 소속(학과 / "멘토" / "관리자") + 이름 + 개인 PIN. 이메일·소셜 로그인 없음 | 6.1, `lib/auth/login-key.ts` |
 | 7 | 학교 메일 사용 | 사용자 | **보류**. 가입할 때 이메일을 받지 않음 | — |
@@ -676,6 +677,9 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 23 | 새 메시지 알림 | 사용자 | 웹 푸시(무료). 멘토(새 질문)·멘티(답변) 모두, 직접 켠 브라우저만. 알림에 보낸 사람 이름과 메시지 앞부분(40자) 표시 | 6.9, `supabase/functions/push-notify`, `features/notifications` |
 | 24 | 자동 시험 | 사용자 | GitHub Actions에서 lint·타입 검사·단위 시험(vitest)·빌드. 핵심 흐름 DB 시험(35단계, 자동으로 되돌림)은 DB를 고친 뒤 직접. 화면 클릭 시험은 CAPTCHA 때문에 하지 않음 | [testing.md](testing.md), `.github/workflows/check.yml`, `tests/unit/`, `supabase/tests/core_loop.sql` |
 | 25 | 강의 자료 파일 형식 | 사용자 | PDF, 한글(HWP·HWPX), 워드, 엑셀, 파워포인트, 이미지(PNG·JPG), ZIP, TXT만. 화면과 Storage 버킷 양쪽에서 막음 (보안 검수 L2) | `lib/files/course-file-types.ts`, 마이그레이션 `security_hardening` |
+| 26 | 강사료용 질문·답변 건수 | 사용자 | 질문마다 1건. 멘티가 연달아 보낸 메시지 묶음이 질문 1건, 그 뒤 멘토의 첫 답변 묶음이 답변 1건 (나눠 보내도 1건). 숨긴 메시지는 세지 않음 (보안 검수 2차) | `admin_semester_stats()`, `mentor_activity()` |
+| 27 | 개설 전 멘토의 자료 파일 | 사용자 | 개설(공개)된 멘토만 강의 자료 파일을 올림. 개설 대기·비공개 멘토도 강의 소개·링크 차시는 만들 수 있음 (무료 저장 용량 보호, 보안 검수 2차) | Storage 정책 `course-files`, `/mentor/courses/[id]` |
+| 28 | 만족도 응답 자격 | 사용자 | 그 학기에 그 멘토에게 질문하고 멘토 답변을 1번 이상 받은 멘티만 (톡방만 연 계정으로 평점 몰아주기 방지, 보안 검수 2차) | `before_survey_insert()`, `my_pending_surveys()` |
 
 ## 12. 구현 단계
 

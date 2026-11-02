@@ -653,6 +653,8 @@ export type Database = {
       }
       normalize_login_name: { Args: { raw: string }; Returns: string }
       open_chat_room: { Args: { mentor_id: string }; Returns: number }
+      revoke_other_sessions: { Args: never; Returns: undefined }
+      revoke_user_sessions: { Args: { target: string }; Returns: undefined }
       set_current_semester: { Args: { semester_id: number }; Returns: undefined }
     }
     Enums: {

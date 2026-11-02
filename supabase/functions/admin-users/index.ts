@@ -94,7 +94,11 @@ async function resetPin(callerId: string, body: Extract<Body, { action: "reset_p
   const { error } = await admin.auth.admin.updateUserById(target.id, { password: pin });
   if (error) throw error;
 
-  // 다음 로그인 때 본인이 PIN을 바꾸게 합니다.
+  // 이미 로그인해 있던 기기는 모두 끊습니다 (PIN이 새어 나갔을 때 대비, 보안 검수 2차 C5).
+  const { error: e1 } = await admin.rpc("revoke_user_sessions", { target: target.id });
+  if (e1) throw e1;
+
+  // 다음 로그인 때 본인이 PIN을 바꾸게 합니다. (비밀번호를 바꾸면 DB 트리거가 표시를 끄므로 그 뒤에 켭니다.)
   const { error: e2 } = await admin
     .from("profiles")
     .update({ must_change_pin: true })
@@ -234,15 +238,19 @@ async function createAdmin(body: Extract<Body, { action: "create_admin" }>) {
     .from("admin_invites")
     .upsert({ email, created_at: new Date().toISOString() });
   if (e1) throw e1;
-  const { data, error } = await admin.auth.admin.createUser({
-    email,
-    password: pin,
-    email_confirm: true,
-    user_metadata: { login_group: "admin", name, name_tag: nameTag },
-  });
-  if (error) {
+  // 허가는 성공하면 가입 트리거가 지우고, 실패하거나 도중에 오류가 나도 여기서 꼭 지웁니다 (보안 검수 2차).
+  let result: Awaited<ReturnType<typeof admin.auth.admin.createUser>>;
+  try {
+    result = await admin.auth.admin.createUser({
+      email,
+      password: pin,
+      email_confirm: true,
+      user_metadata: { login_group: "admin", name, name_tag: nameTag },
+    });
+  } finally {
     await admin.from("admin_invites").delete().eq("email", email);
   }
+  const { data, error } = result;
   if (error?.code === "email_exists") {
     throw new HttpError(409, "같은 이름의 관리자가 이미 있습니다. 구분 문자를 붙여 주세요.");
   }

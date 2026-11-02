@@ -8,6 +8,7 @@ import { getCourseForEdit, LESSON_KIND_LABELS } from "@/features/courses/api/cou
 import { AddLessonForm, CourseInfoForm, DeleteCourseButton } from "@/features/courses/components/course-editor";
 import { formatTime } from "@/lib/chat/answer-length";
 import { requireRole } from "@/lib/auth/current-user";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "강의 편집" };
 
@@ -25,7 +26,11 @@ export default function Page({ params }: { params: Params }) {
 async function CourseEditPage({ params }: { params: Params }) {
   const { courseId } = await params;
   const me = await requireRole("mentor");
-  const data = await getCourseForEdit(Number(courseId), me.id);
+  const supabase = await createClient();
+  const [data, { data: mentor }] = await Promise.all([
+    getCourseForEdit(Number(courseId), me.id),
+    supabase.from("mentor_profiles").select("status").eq("id", me.id).maybeSingle(),
+  ]);
   if (!data) notFound();
   const { course, lessons, enrollmentCount } = data;
 
@@ -74,7 +79,7 @@ async function CourseEditPage({ params }: { params: Params }) {
             ))}
           </ol>
         )}
-        <AddLessonForm courseId={course.id} />
+        <AddLessonForm courseId={course.id} canUploadFiles={mentor?.status === "published"} />
       </section>
 
       <DeleteCourseButton courseId={course.id} action={deleteCourse} />

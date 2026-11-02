@@ -91,7 +91,7 @@ begin
 
   -- 3. 1:1 톡방: 멘티 질문 → 멘토 답변 (알림을 켠 멘토에게는 알림 요청이 쌓임)
   insert into public.push_subscriptions(user_id, endpoint, p256dh, auth)
-  values (m, 'https://push.example.invalid/core-loop-test', 'test', 'test');
+  values (m, 'https://fcm.googleapis.com/fcm/send/core-loop-test', 'test', 'test');
   select count(*) into v2 from net.http_request_queue;
 
   perform pg_temp.act(ma);
@@ -112,6 +112,11 @@ begin
   perform pg_temp.back();
   insert into r(step,expect,got) values ('멘토: 50자 미만 답변', '거부', t);
 
+  perform pg_temp.act(m);
+  begin insert into public.messages(room_id, body) values (room, repeat(U&'\3164', 60)); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 보이지 않는 글자로 채운 답변', '거부', t);
+
   -- 한 트랜잭션 안에서는 시각이 모두 같아서, 멘티가 마지막으로 읽은 시각을 1초 앞으로 돌려 둡니다.
   update public.room_reads set last_read_at = last_read_at - interval '1 second' where room_id = room and user_id = ma;
   perform pg_temp.act(m); insert into public.messages(room_id, body) values (room, long_answer); perform pg_temp.back();
@@ -123,6 +128,8 @@ begin
   insert into r(step,expect,got) values ('멘티: 안 읽은 답변 수', '1', v::text);
   perform pg_temp.act(ma); perform public.mark_room_read(room); select coalesce(sum(unread), 0) into v from public.my_unread_counts() where room_id = room; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘티: 톡방을 읽은 뒤 안 읽은 수', '0', v::text);
+  -- 멘토가 이어서 한 번 더 보내도 답변은 1건 (11장 26번: 질문마다 1건)
+  perform pg_temp.act(m); insert into public.messages(room_id, body) values (room, long_answer || ' 덧붙여서 하나 더 말씀드리면 기초 실험 과목도 중요합니다.'); perform pg_temp.back();
 
   -- 4. 강의: 멘토가 만들고 공개, 수강 신청한 멘티만 자료를 봄
   perform pg_temp.act(m);
@@ -131,6 +138,27 @@ begin
   update public.courses set status = 'published' where id = crs;
   perform pg_temp.back();
   insert into r(step,expect,got) select '멘토: 강의 만들고 공개', 'published', status::text from public.courses where id = crs;
+
+  perform pg_temp.act(m);
+  begin
+    insert into public.lessons(course_id, title, kind, file_path, file_name, position)
+    values (crs, '설치 파일', 'file', crs || '/00000000-0000-0000-0000-000000000000.pdf', '설치.exe', 2);
+    t := '허용됨';
+  exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 허용 안 된 형식(.exe) 자료 등록', '거부', t);
+
+  -- 자료 파일은 개설(공개)된 멘토만 올림 (11장 27번)
+  perform pg_temp.act(m);
+  begin insert into storage.objects(bucket_id, name) values ('course-files', crs || '/11111111-1111-1111-1111-111111111111.pdf'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('개설된 멘토: 자료 파일 올리기', '허용됨', t);
+  perform pg_temp.act(a); update public.mentor_profiles set status = 'hidden' where id = m; perform pg_temp.back();
+  perform pg_temp.act(m);
+  begin insert into storage.objects(bucket_id, name) values ('course-files', crs || '/22222222-2222-2222-2222-222222222222.pdf'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('개설 안 된(비공개) 멘토: 자료 파일 올리기', '거부', t);
+  perform pg_temp.act(a); update public.mentor_profiles set status = 'published' where id = m; perform pg_temp.back();
 
   perform pg_temp.act(mb); select count(*) into v from public.lessons where course_id = crs; perform pg_temp.back();
   insert into r(step,expect,got) values ('수강 안 한 멘티: 강의 자료 보기', '0', v::text);
@@ -145,7 +173,10 @@ begin
   select question_count || '/' || answer_count || '/' || room_count into t from public.admin_semester_stats(sem) where mentor_id = m;
   select count(*) into v from public.messages where room_id = room;
   perform pg_temp.back();
-  insert into r(step,expect,got) values ('관리자: 멘토별 질문/답변/톡방 수', '1/1/1', t), ('관리자: 톡방 내용 열람', '2', v::text);
+  insert into r(step,expect,got) values ('관리자: 멘토별 질문/답변/톡방 수 (이어 보낸 답변은 1건)', '1/1/1', t), ('관리자: 톡방 내용 열람', '3', v::text);
+
+  -- 질문 없이 톡방만 연 멘티 (아래 만족도 자격 확인용)
+  perform pg_temp.act(mb); perform public.open_chat_room(m); perform pg_temp.back();
 
   -- 6. 강사료: 관리자만 책정·열람
   perform pg_temp.act(m);
@@ -180,7 +211,7 @@ begin
   perform pg_temp.act(mb);
   begin insert into public.survey_responses(semester_id, mentor_id, rating) values (sem, m, 1); t := '허용됨'; exception when others then t := '거부'; end;
   perform pg_temp.back();
-  insert into r(step,expect,got) values ('톡방 없던 멘티: 만족도 응답', '거부', t);
+  insert into r(step,expect,got) values ('질문 없이 톡방만 연 멘티: 만족도 응답', '거부', t);
 
   perform pg_temp.act(m); select count(*) into v from public.survey_responses; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘토: 만족도 결과 열람', '0', v::text);
@@ -196,7 +227,22 @@ begin
   perform pg_temp.back();
   insert into r(step,expect,got) values ('멘티: 전체 백업', '거부', t);
 
-  -- 9. 알림 구독: 본인 것만 보임
+  -- 9. 알림 구독: 실제 푸시 서비스 주소만
+  perform pg_temp.act(ma);
+  begin perform public.save_push_subscription('https://attacker.example/hook', 'k', 'a'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 푸시 서비스가 아닌 주소로 알림 구독', '거부', t);
+
+  -- 10. 임시 PIN 표시는 본인이 끌 수 없음 (PIN을 바꾸면 자동으로 꺼짐)
+  update public.profiles set must_change_pin = true where id = ma;
+  perform pg_temp.act(ma);
+  begin update public.profiles set must_change_pin = false where id = ma; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 임시 PIN 표시를 직접 끄기', '거부', t);
+  update auth.users set encrypted_password = extensions.crypt('654321', extensions.gen_salt('bf')) where id = ma;
+  insert into r(step,expect,got) select '멘티: PIN을 바꾸면 임시 PIN 표시 꺼짐', 'false', must_change_pin::text from public.profiles where id = ma;
+
+  -- 11. 알림 구독: 본인 것만 보임
   perform pg_temp.act(ma); select count(*) into v from public.push_subscriptions; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘티: 남의 알림 구독 보기', '0', v::text);
 

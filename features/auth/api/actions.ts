@@ -227,12 +227,11 @@ export async function changePin(
     };
   }
 
-  await supabase
-    .from("profiles")
-    .update({ must_change_pin: false })
-    .eq("id", userId);
+  // 임시 PIN 표시(must_change_pin)는 DB 트리거가 PIN이 바뀐 것을 보고 끕니다 (보안 검수 2차 C4).
+  // PIN이 새어 나갔을 수 있으니 지금 쓰는 기기 말고 다른 기기의 로그인은 끊습니다 (C5).
+  await supabase.rpc("revoke_other_sessions");
 
-  return { success: "PIN을 바꿨습니다. 다음 로그인부터 새 PIN을 쓰세요." };
+  return { success: "PIN을 바꿨습니다. 다른 기기에서는 새 PIN으로 다시 로그인해 주세요." };
 }
 
 export async function logout() {

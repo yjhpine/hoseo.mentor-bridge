@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
+import { headers } from "next/headers";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
@@ -24,11 +25,14 @@ const notoSansKr = Noto_Sans_KR({
   preload: false,
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // proxy가 요청마다 만든 CSP nonce. 다크 모드 깜빡임을 막는 next-themes의 인라인 스크립트에 붙입니다.
+  // 요청 헤더를 읽으므로 모든 화면이 요청마다 렌더링됩니다 (nonce는 미리 만들어 둘 수 없음).
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className={`${notoSansKr.variable} font-sans antialiased`}>
@@ -37,6 +41,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          nonce={nonce}
         >
           {children}
         </ThemeProvider>

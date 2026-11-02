@@ -24,6 +24,19 @@ describe("답변 글자 수가 DB와 같음", () => {
     });
   }
 
+  // 보이지 않는 글자 (보안 검수 2차 C2). 기대값은 2026-11-02 마이그레이션 security_review_2 적용 뒤 운영 DB의 answer_length() 값입니다.
+  const INVISIBLE_DB_RESULTS = [
+    { body: "\u3164".repeat(50), withoutSpaces: 0 },
+    { body: "답변\u200B\u200B\u200B입니다", withoutSpaces: 5 },
+    { body: "하트\u2764\uFE0F", withoutSpaces: 3 },
+    { body: "\u2800\u2800가", withoutSpaces: 1 },
+  ];
+  for (const row of INVISIBLE_DB_RESULTS) {
+    it(`보이지 않는 글자 ${JSON.stringify(row.body.slice(0, 4))}`, () => {
+      expect(answerLength(row.body, false)).toBe(row.withoutSpaces);
+    });
+  }
+
   it("공백만으로는 글자 수를 채울 수 없음", () => {
     expect(answerLength(" ".repeat(100), false)).toBe(0);
   });

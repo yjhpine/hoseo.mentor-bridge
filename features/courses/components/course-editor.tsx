@@ -60,7 +60,8 @@ export function CourseInfoForm({
 }
 
 /** 차시 추가: 영상 링크·실시간 링크는 서버 액션으로, 자료 파일은 브라우저에서 Storage에 올린 뒤 기록합니다. */
-export function AddLessonForm({ courseId }: { courseId: number }) {
+/** canUploadFiles: 개설(공개)된 멘토만 자료 파일을 올릴 수 있습니다 (11장 27번). Storage 정책도 같은 기준으로 막습니다. */
+export function AddLessonForm({ courseId, canUploadFiles }: { courseId: number; canUploadFiles: boolean }) {
   const [kind, setKind] = useState<"video_link" | "live_link" | "file">("video_link");
   const [linkState, linkAction, linkPending] = useActionState<FormState, FormData>(addLinkLesson, {});
   const [fileState, setFileState] = useState<FormState>({});
@@ -115,7 +116,11 @@ export function AddLessonForm({ courseId }: { courseId: number }) {
         </Select>
       </div>
 
-      {kind === "file" ? (
+      {kind === "file" && !canUploadFiles ? (
+        <p className="text-sm text-muted-foreground">
+          자료 파일은 관리자가 멘토 페이지를 개설한 뒤에 올릴 수 있습니다. 그전에는 영상 링크나 실시간 수업 링크 차시를 만들 수 있습니다.
+        </p>
+      ) : kind === "file" ? (
         <form onSubmit={uploadFile} className="flex flex-col gap-3">
           <div className="grid gap-2">
             <Label htmlFor="lesson-title-file">차시 제목</Label>

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { FormState } from "@/features/auth/api/actions";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
+import { COURSE_FILE_LABEL, courseFileContentType, fileExtension } from "@/lib/files/course-file-types";
 
 // 강의 쓰기 (4.1, 7장). 권한은 RLS와 트리거가 최종 확인하고, 여기서는 입력 모양만 검사합니다.
 
@@ -126,6 +127,14 @@ export async function addFileLesson(input: {
 }): Promise<FormState> {
   const title = input.title.trim();
   if (!title || title.length > 100) return { error: "차시 제목을 100자까지 입력해 주세요." };
+  // 허용 형식만 (11장 25번). DB도 파일 이름 확장자와 경로 모양을 다시 검사합니다 (보안 검수 2차 C6).
+  if (!courseFileContentType(input.fileName) || !input.filePath.startsWith(`${input.courseId}/`)) {
+    return { error: `올릴 수 있는 파일은 ${COURSE_FILE_LABEL}입니다.` };
+  }
+  // 이름이 길면 줄이되 확장자는 남깁니다.
+  const ext = `.${fileExtension(input.fileName)}`;
+  const fileName =
+    input.fileName.length <= 200 ? input.fileName : input.fileName.slice(0, 200 - ext.length) + ext;
   const supabase = await createClient();
   const { count } = await supabase.from("lessons").select("id", { count: "exact", head: true }).eq("course_id", input.courseId);
   const { error } = await supabase.from("lessons").insert({
@@ -133,7 +142,7 @@ export async function addFileLesson(input: {
     title,
     kind: "file",
     file_path: input.filePath,
-    file_name: input.fileName.slice(0, 200),
+    file_name: fileName,
     position: ((count ?? 0) + 1) * 10,
   });
   if (error) {

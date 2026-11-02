@@ -1,16 +1,46 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database.types";
+import {
+  BASE_SECURITY_HEADERS,
+  buildContentSecurityPolicy,
+  createNonce,
+} from "@/lib/security/headers";
 
 const LOGIN_PATH = "/auth/login";
 const PIN_PATH = "/account/pin";
 // 개인정보 처리방침(6.7), 웹 앱 매니페스트와 알림 서비스 워커(6.9)는 로그인과 상관없이 받을 수 있어야 합니다.
 const PUBLIC_PATHS = new Set(["/privacy", "/manifest.webmanifest", "/sw.js"]);
 
+// 이 함수가 돌려주는 모든 응답(화면, 로그인 화면으로 보내는 이동 응답 포함)에 보안 헤더를 붙입니다.
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
+  const nonce = createNonce();
+  const csp = buildContentSecurityPolicy({
+    nonce,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    isDev: process.env.NODE_ENV === "development",
   });
+  const response = await route(request, { csp, nonce });
+  for (const { key, value } of BASE_SECURITY_HEADERS) {
+    response.headers.set(key, value);
+  }
+  response.headers.set("Content-Security-Policy", csp);
+  return response;
+}
+
+// Next.js는 요청 헤더의 CSP에서 nonce를 읽어 자기 스크립트에 붙입니다. 화면 코드는 x-nonce로 읽습니다.
+// 세션 쿠키를 갱신하면 request.cookies가 바뀌므로, 응답을 만들 때마다 그때의 요청 헤더를 복사합니다.
+type Csp = { csp: string; nonce: string };
+
+function nextWithCsp(request: NextRequest, { csp, nonce }: Csp) {
+  const headers = new Headers(request.headers);
+  headers.set("Content-Security-Policy", csp);
+  headers.set("x-nonce", nonce);
+  return NextResponse.next({ request: { headers } });
+}
+
+async function route(request: NextRequest, csp: Csp) {
+  let supabaseResponse = nextWithCsp(request, csp);
 
   // With Fluid compute, don't put this client in a global environment
   // variable. Always create a new one on each request.
@@ -26,9 +56,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          supabaseResponse = nextWithCsp(request, csp);
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
           );
