@@ -117,6 +117,8 @@ Supabase에서 CAPTCHA를 켜 두었기 때문에, 로컬에서 실제 가입·�
 
 배포 빌드를 확인하려면 `npx opennextjs-cloudflare build`를 실행합니다. Worker 진입점은 `worker/index.ts`이고, 설정은 `wrangler.jsonc`에 있습니다.
 
+시험은 `npm test`(단위 시험)와 `supabase/tests/core_loop.sql`(핵심 흐름 DB 시험)이 있고, PR마다 GitHub Actions가 lint·타입 검사·단위 시험·빌드를 돌립니다. 자세한 내용은 [docs/testing.md](docs/testing.md)에 있습니다.
+
 DB 스키마는 `supabase/migrations/`의 SQL 파일로 관리합니다. 새 파일은 `npx supabase migration new <이름>`으로 만듭니다.
 
 ## 추가 확인 사항

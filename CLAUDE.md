@@ -21,6 +21,8 @@ Supabase 클라이언트는 용도별로 나뉘어 있습니다.
 npm run dev      # http://localhost:3000
 npm run build
 npm run lint
+npm run typecheck
+npm test         # 단위 시험 (vitest, tests/unit/)
 npm run refs     # 레퍼런스 레포를 references/에 받기
 npx supabase migration new <이름>   # supabase/migrations/에 SQL 파일 생성
 node --env-file=.env.local scripts/create-admin.mjs   # 첫 관리자 생성 (secret 키는 실행할 때 입력)
@@ -38,7 +40,7 @@ Edge Function은 `supabase/functions/`에 있고 원격 프로젝트에 배포�
 
 ## 규칙
 
-- DB 스키마 변경은 항상 `supabase/migrations/`의 SQL 파일로 합니다.
+- DB 스키마 변경은 항상 `supabase/migrations/`의 SQL 파일로 합니다. 적용한 뒤 핵심 흐름 DB 시험(`supabase/tests/core_loop.sql`)을 돌려 `통과 N / 전체 N`인지 확인합니다 ([docs/testing.md](docs/testing.md)).
 - 모든 테이블에 RLS를 켜고, 관리자·멘토·멘티 권한은 RLS 정책으로 나눕니다.
 - 멘토 답변은 공백을 뺀 50자 이상이어야 합니다. DB 트리거와 화면 양쪽에서 검증하고, 기준값은 `app_settings`에서 읽습니다.
 - 로그인은 소속(학과 / "멘토" / "관리자") + 이름 + 숫자 6자리 PIN입니다. Supabase Auth에는 소속·이름으로 계산한 가상 이메일과 PIN을 넘깁니다 (`lib/auth/login-key.ts`와 DB `login_email()`이 같은 결과를 내야 함). 메일을 보내는 인증 기능(비밀번호 찾기 메일 등)은 쓰지 않습니다.
