@@ -20,8 +20,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://gxcnjcqfykcpbtikhixs.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_rmealKeNWymyCvfvxdDRXA_lyJJ8X_c
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
