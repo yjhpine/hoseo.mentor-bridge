@@ -36,6 +36,17 @@ describe("강의 자료 파일 형식 (11장 25번)", () => {
   });
 });
 
+describe("강의 자료 경로·이름 DB 검사 (2차 C6)", () => {
+  it("마이그레이션의 확장자 목록이 앱의 허용 목록과 같음", () => {
+    const dir = "supabase/migrations";
+    const file = readdirSync(dir).filter((f) => f.endsWith("_security_review_2.sql"))[0];
+    const sql = readFileSync(`${dir}/${file}`, "utf8");
+    const lists = [...sql.matchAll(/\\\.\(([a-z|]+)\)\$/g)].map((m) => m[1].split("|").sort());
+    expect(lists.length).toBe(3);
+    for (const list of lists) expect(list).toEqual(Object.keys(COURSE_FILE_TYPES).sort());
+  });
+});
+
 describe("보안 헤더 (M1)", () => {
   it("정적 파일 등 모든 경로에 클릭재킹 방지 등 기본 헤더를 붙이고 x-powered-by를 끔", async () => {
     expect(nextConfig.poweredByHeader).toBe(false);

@@ -436,9 +436,10 @@ Supabase Auth는 이메일(또는 전화번호)과 비밀번호로 계정을 만
 - `/account/pin`에서 현재 PIN, 새 PIN, 새 PIN 확인을 받습니다.
 - Supabase의 "비밀번호를 바꿀 때 현재 비밀번호 요구(Require current password)"를 켜고 `updateUser({ current_password, password })`로 바꿉니다. 메일로 확인 코드를 보내는 "재인증(Secure password change)"은 메일이 없으므로 끕니다.
 - 새 PIN이 숫자 6자리인지는 서버 액션에서 검사합니다. Supabase는 비밀번호 원문을 DB에 넘기지 않으므로 DB에서는 검사할 수 없습니다.
-- 바꾸고 나면 `must_change_pin`을 `false`로 돌립니다.
+- PIN이 실제로 바뀌면 DB 트리거(`auth.users` 비밀번호 변경)가 `must_change_pin`을 `false`로 돌립니다. 본인이 표시만 직접 끌 수는 없습니다 (보안 검수 2차).
+- 바꾸고 나면 지금 쓰는 기기 말고 다른 기기의 로그인을 끊습니다(`revoke_other_sessions()`). PIN이 새어 나갔을 때 남의 기기에 로그인이 남지 않게 합니다.
 
-**PIN 분실**: 메일이 없어 스스로 찾을 수 없습니다. 관리자가 `/admin/users`에서 임시 PIN을 정해 주면 `must_change_pin = true`가 되고, 그 사용자는 다음 로그인 때 `/account/pin`으로 이동합니다.
+**PIN 분실**: 메일이 없어 스스로 찾을 수 없습니다. 관리자가 `/admin/users`에서 임시 PIN을 정해 주면 `must_change_pin = true`가 되고, 그 사용자는 다음 로그인 때 `/account/pin`으로 이동합니다. 초기화하면 그 사람의 모든 기기 로그인이 끊깁니다(`revoke_user_sessions()`, `admin-users`만 호출).
 
 **이름·소속 변경**: 로그인 키가 바뀌므로 관리자만 합니다. 가상 이메일도 함께 바꿉니다.
 
@@ -526,7 +527,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 - **흐름**: `messages` INSERT → 트리거 `notify_new_message`가 받는 사람의 구독이 있을 때만 pg_net으로 Edge Function `push-notify`에 메시지 번호를 넘김 → 함수가 secret 키로 메시지·받는 사람·구독을 다시 읽고 VAPID로 서명·암호화해 푸시 → 끊긴 구독(404/410)은 지움.
 - **남용 방지**: 함수는 JWT 없이 불리지만(`verify_jwt = false`), 메시지 번호만 받고 내용은 DB에서 읽으며, 메시지마다 한 번(`push_deliveries`), 만든 지 2분 안의 메시지만 보냅니다. 밖에서 불러도 원래 보낼 알림 외에는 보내지 않습니다.
 - **키**: VAPID 키는 함수가 처음 쓸 때 만들어 정책 없는 표 `push_vapid_keys`에 둡니다(secret 키로만 읽음, 백업에서 제외). 브라우저는 서버 액션 `getPushPublicKey()`로 공개 키만 받습니다.
-- **구독 저장**: `push_subscriptions`(브라우저마다 한 줄). 저장·삭제는 `save_push_subscription()`·`delete_push_subscription()`으로만 합니다. 같은 브라우저를 다른 계정이 쓰면 주인을 바꿉니다. 로그아웃하면 그 브라우저의 구독을 지웁니다(공용 PC).
+- **구독 저장**: `push_subscriptions`(브라우저마다 한 줄). 저장·삭제는 `save_push_subscription()`·`delete_push_subscription()`으로만 합니다. 같은 브라우저를 다른 계정이 쓰면 주인을 바꿉니다. 로그아웃하면 그 브라우저의 구독을 지웁니다(공용 PC). 주소는 실제 브라우저 푸시 서비스(FCM, Mozilla, Apple, Windows)만 받고, 한 사람당 최근 5개까지만 남깁니다 (보안 검수 2차, 아무 주소로나 요청을 보내게 하는 것 방지).
 - **아이폰**: iOS 16.4 이상에서 사파리 "홈 화면에 추가"로 설치한 웹 앱에서만 웹 푸시를 받습니다. 그래서 웹 앱 매니페스트(`app/manifest.ts`)와 아이콘(`public/icons/`)을 두고, 설치하지 않은 아이폰에는 설치 방법을 안내합니다.
 - **서비스 워커**: `public/sw.js`. 알림 표시와 누르기만 처리하고 페이지를 캐시하지 않습니다.
 - **개인정보**: 알림 수신 정보는 처리방침의 수집 항목(선택)과 위탁·국외 이전(브라우저 알림 서비스)에 적었습니다. 알림 내용은 암호화되어 알림 서비스 업체는 읽을 수 없습니다.
@@ -537,7 +538,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 
 | 테이블 | 조회 | 생성 | 수정 | 삭제 |
 | --- | --- | --- | --- | --- |
-| `profiles` | 본인, 관리자, 공개 멘토의 이름, 같은 톡방 상대 | 트리거 | 본인(`must_change_pin` 해제만), 관리자(`must_change_pin`만). 이름·소속·역할은 `admin-users`만 | `admin-users`가 auth 계정을 지우면 함께 지워짐 |
+| `profiles` | 본인, 관리자, 공개 멘토의 이름, 같은 톡방 상대 | 트리거 | 본인 없음(`must_change_pin`은 PIN을 바꾸면 트리거가 해제), 관리자(`must_change_pin`만). 이름·소속·역할은 `admin-users`만 | `admin-users`가 auth 계정을 지우면 함께 지워짐 |
 | `mentee_profiles` | 본인, 관리자, 톡방 상대 멘토 | 트리거 | `admin-users`만 (학과가 로그인 키라서) | `profiles`와 함께 |
 | `mentor_profiles` | `published`는 로그인 사용자 전체, 본인, 관리자 | 트리거 | 본인(보호 열 제외), 관리자 | 관리자 |
 | `colleges`, `departments`, `job_fields` | 모두 (비로그인 포함, 가입·로그인 화면의 선택 목록용) | 관리자 | 관리자 | 관리자 |
@@ -651,7 +652,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 
 | # | 항목 | 출처 | 확정값 | 바꿀 곳 |
 | --- | --- | --- | --- | --- |
-| 1 | 50자에 공백 포함 여부 | README | 공백 제외 (빈칸으로 글자 수 채우기 방지) | `app_settings.answer_count_spaces` |
+| 1 | 50자에 공백 포함 여부 | README | 공백 제외 (빈칸으로 글자 수 채우기 방지). 한글 채움 문자·폭 없는 공백처럼 보이지 않는 글자도 빼고 셈 (보안 검수 2차) | `app_settings.answer_count_spaces` |
 | 2 | 강의 제공 방식 | README | 영상 링크·자료 파일·실시간 링크 모두 지원. 영상은 외부 링크로 등록 | `lessons.kind` |
 | 3 | 강사료 책정 기준 | README | 질의응답 건수는 자동 집계, 금액은 관리자가 입력 | `/admin/fees` |
 | 4 | 학기 종료 시 "멘티 한정" 의미 | README | 만족도 조사는 그 학기 톡방이 있던 멘티만 응답 | `survey_responses` 정책 |

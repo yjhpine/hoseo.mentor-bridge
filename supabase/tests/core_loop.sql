@@ -91,7 +91,7 @@ begin
 
   -- 3. 1:1 톡방: 멘티 질문 → 멘토 답변 (알림을 켠 멘토에게는 알림 요청이 쌓임)
   insert into public.push_subscriptions(user_id, endpoint, p256dh, auth)
-  values (m, 'https://push.example.invalid/core-loop-test', 'test', 'test');
+  values (m, 'https://fcm.googleapis.com/fcm/send/core-loop-test', 'test', 'test');
   select count(*) into v2 from net.http_request_queue;
 
   perform pg_temp.act(ma);
@@ -112,6 +112,11 @@ begin
   perform pg_temp.back();
   insert into r(step,expect,got) values ('멘토: 50자 미만 답변', '거부', t);
 
+  perform pg_temp.act(m);
+  begin insert into public.messages(room_id, body) values (room, repeat(U&'\3164', 60)); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 보이지 않는 글자로 채운 답변', '거부', t);
+
   -- 한 트랜잭션 안에서는 시각이 모두 같아서, 멘티가 마지막으로 읽은 시각을 1초 앞으로 돌려 둡니다.
   update public.room_reads set last_read_at = last_read_at - interval '1 second' where room_id = room and user_id = ma;
   perform pg_temp.act(m); insert into public.messages(room_id, body) values (room, long_answer); perform pg_temp.back();
@@ -131,6 +136,15 @@ begin
   update public.courses set status = 'published' where id = crs;
   perform pg_temp.back();
   insert into r(step,expect,got) select '멘토: 강의 만들고 공개', 'published', status::text from public.courses where id = crs;
+
+  perform pg_temp.act(m);
+  begin
+    insert into public.lessons(course_id, title, kind, file_path, file_name, position)
+    values (crs, '설치 파일', 'file', crs || '/00000000-0000-0000-0000-000000000000.pdf', '설치.exe', 2);
+    t := '허용됨';
+  exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 허용 안 된 형식(.exe) 자료 등록', '거부', t);
 
   perform pg_temp.act(mb); select count(*) into v from public.lessons where course_id = crs; perform pg_temp.back();
   insert into r(step,expect,got) values ('수강 안 한 멘티: 강의 자료 보기', '0', v::text);
@@ -196,7 +210,22 @@ begin
   perform pg_temp.back();
   insert into r(step,expect,got) values ('멘티: 전체 백업', '거부', t);
 
-  -- 9. 알림 구독: 본인 것만 보임
+  -- 9. 알림 구독: 실제 푸시 서비스 주소만
+  perform pg_temp.act(ma);
+  begin perform public.save_push_subscription('https://attacker.example/hook', 'k', 'a'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 푸시 서비스가 아닌 주소로 알림 구독', '거부', t);
+
+  -- 10. 임시 PIN 표시는 본인이 끌 수 없음 (PIN을 바꾸면 자동으로 꺼짐)
+  update public.profiles set must_change_pin = true where id = ma;
+  perform pg_temp.act(ma);
+  begin update public.profiles set must_change_pin = false where id = ma; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 임시 PIN 표시를 직접 끄기', '거부', t);
+  update auth.users set encrypted_password = extensions.crypt('654321', extensions.gen_salt('bf')) where id = ma;
+  insert into r(step,expect,got) select '멘티: PIN을 바꾸면 임시 PIN 표시 꺼짐', 'false', must_change_pin::text from public.profiles where id = ma;
+
+  -- 11. 알림 구독: 본인 것만 보임
   perform pg_temp.act(ma); select count(*) into v from public.push_subscriptions; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘티: 남의 알림 구독 보기', '0', v::text);
 
