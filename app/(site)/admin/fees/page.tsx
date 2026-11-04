@@ -18,7 +18,7 @@ import {
   type FeeRate,
 } from "@/features/admin/lib/fee";
 import { MentorAvatar } from "@/features/mentors/components/mentor-card";
-import { DEFAULT_AVATAR } from "@/features/mentors/lib/avatar";
+import { useAvatarUrls } from "@/features/admin/components/use-avatar-urls";
 import { formatTime } from "@/lib/chat/answer-length";
 import { createClient } from "@/lib/supabase/client";
 import type { Tables } from "@/types/database.types";
@@ -47,6 +47,7 @@ export default function AdminFeesPage() {
     filters: semesterId ? [{ field: "semester_id", operator: "eq", value: semesterId }] : [],
     queryOptions: { enabled },
   });
+  const photo = useAvatarUrls(rows.map((row) => row.photoPath));
   const rateRow = rates.result.data[0];
   const rate: FeeRate | null = rateRow ? { perAnswer: rateRow.per_answer, cap: rateRow.cap } : null;
 
@@ -100,6 +101,7 @@ export default function AdminFeesPage() {
               key={`${semesterId}-${row.mentorId}-${fee?.amount ?? ""}-${fee?.paid_at ?? ""}-${rate?.perAnswer ?? ""}-${rate?.cap ?? ""}`}
               semesterId={semesterId!}
               stats={row}
+              photoUrl={photo(row.photoPath)}
               fee={fee}
               rate={rate}
               onSaved={() => fees.query.refetch()}
@@ -182,12 +184,14 @@ function RateForm({
 function FeeRow({
   semesterId,
   stats,
+  photoUrl,
   fee,
   rate,
   onSaved,
 }: {
   semesterId: number;
   stats: MentorStats;
+  photoUrl: string;
   fee: Fee | undefined;
   rate: FeeRate | null;
   onSaved: () => void;
@@ -247,7 +251,7 @@ function FeeRow({
   return (
     <li className="flex flex-col gap-2 rounded-md border p-4">
       <div className="flex items-center gap-3">
-        <MentorAvatar src={DEFAULT_AVATAR} name={stats.name} size={48} />
+        <MentorAvatar src={photoUrl} name={stats.name} size={48} />
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex flex-wrap items-baseline gap-2">
             <span className="text-sm text-muted-foreground">{stats.company}</span>

@@ -5,6 +5,7 @@ import type { Tables } from "@/types/database.types";
 // 로그인 사용자에게는 공개 멘토만, 멘토 본인과 관리자에게는 더 많은 행이 돌아옵니다.
 // 목록은 공개 멘토만 보이도록 status를 한 번 더 거릅니다.
 
+import { avatarUrls } from "@/features/mentors/api/avatar-urls";
 import { DEFAULT_AVATAR } from "@/features/mentors/lib/avatar";
 
 export { DEFAULT_AVATAR };
@@ -26,6 +27,8 @@ export type MentorSummary = {
 };
 
 export type MentorDetail = MentorSummary & {
+  /** 기본 이미지가 아닌 직접 올린 사진이 있는지 */
+  hasPhoto: boolean;
   intro: string | null;
   career: string | null;
 };
@@ -33,7 +36,7 @@ export type MentorDetail = MentorSummary & {
 const SUMMARY_COLUMNS =
   "id, name, name_tag, company, job_field_name, college_id, college_name, headline, photo_path, accepting_questions, status";
 
-function toSummary(row: Partial<DirectoryRow>): MentorSummary {
+function toSummary(row: Partial<DirectoryRow>, photoUrl: string = DEFAULT_AVATAR): MentorSummary {
   return {
     id: row.id!,
     displayName: (row.name ?? "") + (row.name_tag ?? ""),
@@ -42,8 +45,8 @@ function toSummary(row: Partial<DirectoryRow>): MentorSummary {
     collegeId: row.college_id ?? null,
     collegeName: row.college_name ?? null,
     headline: row.headline ?? null,
-    // 사진 업로드는 보류라 모두 기본 이미지를 씁니다 (11장 18번).
-    photoUrl: DEFAULT_AVATAR,
+    // 사진이 있으면 서명 URL, 없으면 기본 이미지 (11장 18번)
+    photoUrl,
     acceptingQuestions: row.accepting_questions ?? false,
     status: row.status ?? "pending",
   };
@@ -84,8 +87,10 @@ export async function searchMentors(search: MentorSearch) {
     .range(from, from + MENTORS_PAGE_SIZE - 1);
 
   const total = count ?? 0;
+  const rows = data ?? [];
+  const photo = await avatarUrls(supabase, rows.map((r) => r.photo_path));
   return {
-    mentors: (data ?? []).map(toSummary),
+    mentors: rows.map((row) => toSummary(row, photo(row.photo_path))),
     total,
     page,
     pageCount: Math.max(1, Math.ceil(total / MENTORS_PAGE_SIZE)),
@@ -100,7 +105,9 @@ export async function getRecentMentors(limit: number) {
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(limit);
-  return (data ?? []).map(toSummary);
+  const rows = data ?? [];
+  const photo = await avatarUrls(supabase, rows.map((r) => r.photo_path));
+  return rows.map((row) => toSummary(row, photo(row.photo_path)));
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -115,7 +122,13 @@ export async function getMentor(id: string): Promise<MentorDetail | null> {
     .eq("id", id)
     .maybeSingle();
   if (!data) return null;
-  return { ...toSummary(data), intro: data.intro, career: data.career };
+  const photo = await avatarUrls(supabase, [data.photo_path]);
+  return {
+    ...toSummary(data, photo(data.photo_path)),
+    hasPhoto: Boolean(data.photo_path),
+    intro: data.intro,
+    career: data.career,
+  };
 }
 
 export type CollegeCard = {

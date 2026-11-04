@@ -160,6 +160,25 @@ begin
   insert into r(step,expect,got) values ('개설 안 된(비공개) 멘토: 자료 파일 올리기', '거부', t);
   perform pg_temp.act(a); update public.mentor_profiles set status = 'published' where id = m; perform pg_temp.back();
 
+  -- 프로필 사진: 멘토 본인 폴더에만 올리고, 로그인 사용자가 공개 멘토 사진을 봄 (11장 18번)
+  perform pg_temp.act(m);
+  begin
+    insert into storage.objects(bucket_id, name) values ('avatars', m || '/33333333-3333-3333-3333-333333333333.webp');
+    update public.mentor_profiles set photo_path = m || '/33333333-3333-3333-3333-333333333333.webp' where id = m;
+    t := '허용됨';
+  exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 내 프로필 사진 올리기', '허용됨', t);
+  perform pg_temp.act(m);
+  begin insert into storage.objects(bucket_id, name) values ('avatars', ma || '/44444444-4444-4444-4444-444444444444.webp'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 남의 폴더에 사진 올리기', '거부', t);
+  perform pg_temp.act(ma);
+  begin insert into storage.objects(bucket_id, name) values ('avatars', ma || '/55555555-5555-5555-5555-555555555555.webp'); t := '허용됨'; exception when others then t := '거부'; end;
+  select count(*) into v from storage.objects where bucket_id = 'avatars' and name like m || '/%';
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 프로필 사진 올리기', '거부', t), ('멘티: 공개 멘토 사진 보기', '1', v::text);
+
   perform pg_temp.act(mb); select count(*) into v from public.lessons where course_id = crs; perform pg_temp.back();
   insert into r(step,expect,got) values ('수강 안 한 멘티: 강의 자료 보기', '0', v::text);
   perform pg_temp.act(ma);

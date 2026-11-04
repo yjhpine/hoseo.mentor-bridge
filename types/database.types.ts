@@ -612,6 +612,7 @@ export type Database = {
         }[]
       }
       answer_length: { Args: { body: string }; Returns: number }
+      avatar_owner: { Args: { path: string }; Returns: string }
       can_access_course_materials: { Args: { course_id: number }; Returns: boolean }
       can_view_course: { Args: { course_id: number }; Returns: boolean }
       close_semester: {

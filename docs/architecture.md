@@ -107,7 +107,7 @@ stateDiagram-v2
 ```
 
 - `published`가 되려면 단과대학 구역(`college_id`)이 반드시 있어야 합니다.
-- 멘토 본인은 상태와 구역을 바꿀 수 없습니다. 소개, 경력, 사진, "질문 받기" 여부만 바꿉니다. 기업명과 직무 분야도 관리자가 바꿉니다(`protect_mentor_columns()` 트리거).
+- 멘토 본인은 상태와 구역을 바꿀 수 없습니다. 소개, 경력, 사진(11장 18번), "질문 받기" 여부만 바꿉니다. 기업명과 직무 분야도 관리자가 바꿉니다(`protect_mentor_columns()` 트리거).
 
 ### 3.3 1:1 질문과 답변
 
@@ -569,7 +569,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 
 | 버킷 | 공개 | 쓰기 | 읽기 |
 | --- | --- | --- | --- |
-| `avatars` | 공개 | 본인 폴더(`{user_id}/`)만 | 누구나 |
+| `avatars` | 비공개, 파일당 1MB, WEBP·JPG만 | 멘토 본인 폴더(`{멘토 id}/{무작위}.webp`)만. 지우기는 본인·관리자 | 로그인 사용자 (공개 멘토 사진, 본인, 관리자). 화면은 서버가 만든 1시간짜리 서명 URL로 보여 줌 (11장 18번) |
 | `course-files` | 비공개, 파일당 20MB | 강의 작성 멘토 (경로 `{강의 id}/...`) | 수강 멘티, 작성 멘토, 관리자 (서명 URL `/files/lessons/[id]`) |
 
 **키 관리**: 브라우저와 Next.js 서버에는 publishable key만 씁니다. 관리자 기능은 대부분 RLS로 처리하고, 관리자 API가 꼭 필요한 계정 작업(PIN 초기화, 이름·소속 변경, 관리자 생성)만 Edge Function `admin-users`에서 secret 키로 처리합니다. secret 키는 Supabase의 Edge Function 비밀 값과, 운영자 PC에서 설치 스크립트를 돌릴 때의 환경 변수에만 둡니다.
@@ -681,7 +681,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 15 | 이름·소속 변경 | 설계 기본값 | 관리자만 (로그인 키가 바뀌기 때문) | `/admin/users`, `admin-users` |
 | 16 | 무작위 대입 대책 | 설계 기본값 | 가입·로그인에 Cloudflare Turnstile CAPTCHA(관리형 모드). 실사용 전 필수. 켜는 순서는 6.1 | Supabase Auth 설정, `wrangler.jsonc`의 `TURNSTILE_SITE_KEY`, `features/auth/components/turnstile.tsx` |
 | 17 | 가상 이메일 도메인 | 사용자 | `login.hoseo-mentor.invalid` (2026-10-30 확정, 가입·로그인·PIN 변경 시험 통과) | `lib/auth/login-key.ts`, DB `login_email()` |
-| 18 | 멘토 사진 | 사용자 | 처음에는 모두 기본 프로필 이미지(`public/avatar-default.svg`, 직접 그린 그림). 사진 업로드(Storage `avatars`)는 보류 | `mentor_profiles.photo_path`, 멘토 카드·상세 |
+| 18 | 멘토 사진 | 사용자 | 사진이 없으면 기본 프로필 이미지(`public/avatar-default.svg`). 2026-11-04 사진 등록 확정: 멘토 본인이 `/mentor`에서 올리고 바꾸거나 지움, 관리자는 `/admin/mentors`에서 부적절한 사진을 지움. 올리면 바로 공개. 로그인 사용자만 봄(8번과 같은 기준, 비공개 버킷 + 서명 URL). JPG·PNG·WEBP(원본 10MB까지)를 브라우저가 가운데 정사각형으로 잘라 512px로 줄여 저장. 탈퇴하면 사진도 지움 | `mentor_profiles.photo_path`, Storage `avatars`, 멘토 카드·상세·관리자 화면 |
 | 19 | 개인정보 처리 주체·보관 기간 | 사용자 | 호서대학교 창업팀, 보호책임자 양정환(010-3830-5972). 보관 기간 1년: 마지막 이용 후 1년이 지나면 관리자가 확인하고 파기(자동 삭제 없음). 가입할 때 필수 동의 | `lib/privacy/policy.ts`, `/privacy`, `privacy_consents` |
 | 20 | 탈퇴 | 사용자 | 본인 탈퇴 기능 없음. 담당자에게 문의하면 관리자만 탈퇴 처리 | `/admin/users`, `admin-users`의 `delete_user` |
 | 21 | 백업 방식 | 사용자 | 관리자 화면 버튼으로 전체 JSON(+표별 CSV) 내려받기. 학기 종료 뒤와 탈퇴 처리 전에 받고, 백업 파일도 1년 뒤 파기 | `/admin/backup`, `admin_backup()`, [backup.md](backup.md) |

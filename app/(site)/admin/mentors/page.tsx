@@ -7,6 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/native-select";
+import { useAvatarUrls } from "@/features/admin/components/use-avatar-urls";
+import { MentorAvatar } from "@/features/mentors/components/mentor-card";
+import { AVATAR_BUCKET } from "@/features/mentors/lib/avatar";
+import { createClient } from "@/lib/supabase/client";
 import type { Enums, Tables } from "@/types/database.types";
 
 // 뷰의 열은 모두 nullable로 생성되지만 id는 늘 있습니다.
@@ -39,6 +43,7 @@ export default function AdminMentorsPage() {
   });
 
   const all = mentors.result.data;
+  const photo = useAvatarUrls(all.map((mentor) => mentor.photo_path));
   const shown = all.filter((mentor) => mentor.status === tab);
 
   return (
@@ -70,6 +75,7 @@ export default function AdminMentorsPage() {
             <MentorRow
               key={mentor.id}
               mentor={mentor}
+              photoUrl={photo(mentor.photo_path)}
               colleges={colleges.result.data.filter((college) => college.is_active)}
               jobFields={jobFields.result.data}
               onChanged={() => mentors.query.refetch()}
@@ -83,11 +89,13 @@ export default function AdminMentorsPage() {
 
 function MentorRow({
   mentor,
+  photoUrl,
   colleges,
   jobFields,
   onChanged,
 }: {
   mentor: Mentor;
+  photoUrl: string;
   colleges: Tables<"colleges">[];
   jobFields: Tables<"job_fields">[];
   onChanged: () => void;
@@ -115,19 +123,36 @@ function MentorRow({
     save({ status: "published", college_id: Number(collegeId) });
   }
 
+  // 부적절한 사진은 관리자가 지웁니다 (11장 18번). 경로를 먼저 비우고 파일을 지웁니다.
+  async function removePhoto() {
+    if (!mentor.photo_path) return;
+    if (!window.confirm(`${name} 멘토의 프로필 사진을 지울까요? 기본 이미지로 바뀝니다.`)) return;
+    const path = mentor.photo_path;
+    await save({ photo_path: null });
+    await createClient().storage.from(AVATAR_BUCKET).remove([path]);
+  }
+
   const name = (mentor.name ?? "") + (mentor.name_tag ?? "");
   const collegeChanged = String(mentor.college_id ?? "") !== collegeId;
 
   return (
     <li className="flex flex-col gap-3 p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Link href={`/mentors/${mentor.id}`} className="font-medium underline-offset-4 hover:underline">
-          {name}
-        </Link>
-        <span className="text-sm text-muted-foreground">
-          {mentor.company} · {mentor.job_field_name}
-        </span>
-        {mentor.college_name && <Badge variant="outline">{mentor.college_name}</Badge>}
+      <div className="flex flex-wrap items-center gap-3">
+        <MentorAvatar src={photoUrl} name={name} size={48} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href={`/mentors/${mentor.id}`} className="font-medium underline-offset-4 hover:underline">
+            {name}
+          </Link>
+          <span className="text-sm text-muted-foreground">
+            {mentor.company} · {mentor.job_field_name}
+          </span>
+          {mentor.college_name && <Badge variant="outline">{mentor.college_name}</Badge>}
+        </div>
+        {mentor.photo_path && (
+          <Button type="button" size="sm" variant="ghost" disabled={isPending} onClick={removePhoto} className="ml-auto">
+            사진 지우기
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
