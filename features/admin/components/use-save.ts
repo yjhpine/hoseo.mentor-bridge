@@ -36,5 +36,14 @@ export function useSave(onDone: () => void) {
     create: (resource: string, values: BaseRecord) => run(() => create({ resource, values })),
     update: (resource: string, id: number | string, values: BaseRecord) =>
       run(() => update({ resource, id, values })),
+    /** ↑↓ 버튼: moveItem()이 돌려준 줄들의 순서 값을 저장합니다. */
+    reorder: (resource: string, changes: { id: number; position: number }[]) =>
+      changes.length === 0
+        ? Promise.resolve(true)
+        : run(async () => {
+            for (const change of changes) {
+              await update({ resource, id: change.id, values: { position: change.position }, successNotification: false });
+            }
+          }),
   };
 }

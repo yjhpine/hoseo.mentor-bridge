@@ -4,7 +4,9 @@ import { useList, type HttpError } from "@refinedev/core";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MoveButtons } from "@/features/admin/components/move-buttons";
 import { useSave } from "@/features/admin/components/use-save";
+import { moveItem } from "@/features/admin/lib/reorder";
 import type { Tables } from "@/types/database.types";
 
 type College = Tables<"colleges">;
@@ -36,7 +38,7 @@ export default function AdminCollegesPage() {
     <section className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold">구역·학과</h1>
       <p className="text-sm text-muted-foreground">
-        단과대학 구역은 멘토 배치와 탐색에, 학과는 멘티 가입·로그인의 소속에 쓰입니다. 숨긴 학과는 새로 가입할 수 없지만 이미 가입한 멘티는 그대로 로그인합니다.
+        단과대학 구역은 멘토 배치와 탐색에, 학과는 멘티 가입·로그인의 소속에 쓰입니다. 숨긴 학과는 새로 가입할 수 없지만 이미 가입한 멘티는 그대로 로그인합니다. 구역은 ↑↓, 학과는 이름을 눌러 ←→로 순서를 바꿉니다.
       </p>
 
       <form
@@ -58,10 +60,13 @@ export default function AdminCollegesPage() {
         <p className="text-sm text-muted-foreground">불러오는 중…</p>
       ) : (
         <ul className="flex flex-col gap-4">
-          {colleges.result.data.map((college) => (
+          {colleges.result.data.map((college, index) => (
             <CollegeItem
               key={college.id}
               college={college}
+              index={index}
+              onMove={(direction) => save.reorder("colleges", moveItem(colleges.result.data, index, direction))}
+              count={colleges.result.data.length}
               departments={departments.result.data.filter((d) => d.college_id === college.id)}
               save={save}
             />
@@ -74,10 +79,16 @@ export default function AdminCollegesPage() {
 
 function CollegeItem({
   college,
+  index,
+  count,
+  onMove,
   departments,
   save,
 }: {
   college: College;
+  index: number;
+  count: number;
+  onMove: (direction: -1 | 1) => void;
   departments: Department[];
   save: ReturnType<typeof useSave>;
 }) {
@@ -86,6 +97,7 @@ function CollegeItem({
   return (
     <li className="flex flex-col gap-3 rounded-md border p-4">
       <div className="flex flex-wrap items-center gap-2">
+        <MoveButtons index={index} count={count} label={college.name} disabled={save.pending} onMove={onMove} />
         <h2 className="text-lg font-semibold">{college.name}</h2>
         {!college.is_active && <Badge variant="secondary">숨김</Badge>}
         <span className="text-sm text-muted-foreground">학과 {active}개{departments.length > active && ` (숨김 ${departments.length - active})`}</span>
@@ -101,7 +113,7 @@ function CollegeItem({
       </div>
 
       <details className="text-sm">
-        <summary className="cursor-pointer text-muted-foreground">이름·소개·순서 고치기</summary>
+        <summary className="cursor-pointer text-muted-foreground">이름·소개 고치기</summary>
         <form
           className="mt-2 grid gap-2"
           onSubmit={(event) => {
@@ -110,7 +122,6 @@ function CollegeItem({
             save.update("colleges", college.id, {
               name: String(data.get("name")).trim(),
               description: String(data.get("description")).trim() || null,
-              position: Number(data.get("position")) || 0,
             });
           }}
         >
@@ -121,16 +132,14 @@ function CollegeItem({
             placeholder="구역 소개 (홈과 구역 화면에 보입니다)"
             className={textareaClassName}
           />
-          <div className="flex items-center gap-2">
-            <Input name="position" type="number" defaultValue={college.position} className="w-24" aria-label="정렬 순서" />
-            <span className="text-muted-foreground">작은 수가 앞에 옵니다.</span>
-            <Button type="submit" size="sm" variant="outline" className="ml-auto" disabled={save.pending}>저장</Button>
+          <div className="flex justify-end">
+            <Button type="submit" size="sm" variant="outline" disabled={save.pending}>저장</Button>
           </div>
         </form>
       </details>
 
       <ul className="flex flex-wrap gap-2">
-        {departments.map((department) => (
+        {departments.map((department, departmentIndex) => (
           <li key={department.id}>
             <details className="rounded-md border px-2 py-1 text-sm">
               <summary className={department.is_active ? "cursor-pointer" : "cursor-pointer text-muted-foreground line-through"}>
@@ -145,7 +154,15 @@ function CollegeItem({
                 }}
               >
                 <Input name="name" defaultValue={department.name} maxLength={50} required aria-label="학과 이름" />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <MoveButtons
+                    horizontal
+                    index={departmentIndex}
+                    count={departments.length}
+                    label={department.name}
+                    disabled={save.pending}
+                    onMove={(direction) => save.reorder("departments", moveItem(departments, departmentIndex, direction))}
+                  />
                   <Button type="submit" size="sm" variant="outline" disabled={save.pending}>이름 저장</Button>
                   <Button
                     type="button"
