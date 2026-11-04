@@ -7,6 +7,7 @@ import { CourseList } from "@/features/courses/components/course-list";
 import { getCollegeCards, getRecentMentors } from "@/features/mentors/api/mentors";
 import { listPendingSurveys } from "@/features/surveys/api/surveys";
 import { MentorGrid } from "@/features/mentors/components/mentor-card";
+import { PushIntro } from "@/features/notifications/components/push-intro";
 import { displayName, getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 
@@ -87,6 +88,7 @@ async function Welcome() {
 
   return (
     <section className="flex flex-col gap-4 rounded-2xl bg-accent px-5 py-6 sm:px-8 sm:py-8">
+      {(user.role === "mentor" || user.role === "mentee") && <PushIntro role={user.role} />}
       <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-brand">호서대학교 멘토링</p>
         <h1 className="text-2xl font-bold tracking-tight text-foreground [text-wrap:balance] sm:text-3xl">
