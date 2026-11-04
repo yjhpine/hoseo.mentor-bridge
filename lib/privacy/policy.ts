@@ -1,9 +1,9 @@
 // 개인정보 처리방침의 기준 값 (docs/architecture.md 6.7, 11장 19번).
 // 처리방침 내용을 바꾸면 PRIVACY_POLICY_VERSION(시행일)을 새 날짜로 올립니다. 가입 동의 기록에 이 값이 남습니다.
 
-export const PRIVACY_POLICY_VERSION = "2026-11-01";
+export const PRIVACY_POLICY_VERSION = "2026-11-04";
 
-export const PRIVACY_OPERATOR = "호서대학교 창업팀";
+export const PRIVACY_OPERATOR = "호서대학교 취업팀";
 export const PRIVACY_OFFICER = { name: "양정환", phone: "010-3830-5972" };
 
 /** 보관 기간: 마지막 이용(로그인) 후 1년. 탈퇴를 요청하면 그때 바로 파기합니다. */

@@ -517,7 +517,7 @@ PIN 초기화, 이름·소속 변경, 관리자 생성에는 Supabase 관리자 
 
 ### 6.7 개인정보 처리와 백업
 
-- **운영자·담당자**: 호서대학교 창업팀, 개인정보 보호책임자 양정환(010-3830-5972). 값은 `lib/privacy/policy.ts` 한곳에 두고 처리방침·가입 화면·화면 아래 링크가 함께 씁니다.
+- **운영자·담당자**: 호서대학교 취업팀(2026-11-04 창업팀에서 바꿈, 처리방침 시행일 2026-11-04), 개인정보 보호책임자 양정환(010-3830-5972). 값은 `lib/privacy/policy.ts` 한곳에 두고 처리방침·가입 화면·화면 아래 링크가 함께 씁니다.
 - **처리방침**: `/privacy`. 로그인하지 않아도 볼 수 있고(`lib/supabase/proxy.ts`의 공개 경로), 모든 화면 아래에 링크가 있습니다. 내용을 바꾸면 `PRIVACY_POLICY_VERSION`(시행일)을 올립니다.
 - **가입 동의**: 회원가입 화면에서 수집 항목·목적·보유 기간·거부할 권리를 보여 주고 필수 체크를 받습니다. 서버 액션이 처리방침 판을 가입 정보에 넣고, 가입 트리거가 판이 없으면 거부한 뒤 `privacy_consents`에 기록합니다(API를 직접 불러도 동의 없이는 가입 불가). 관리자 계정은 운영진이라 동의를 받지 않습니다.
 - **보관 기간**: 마지막 이용(로그인 또는 세션 갱신) 후 1년. 기간이 지난 멘티·멘토는 `/admin/backup`의 "보관 기간이 지난 회원"에 나오고(`inactive_members()`), 관리자가 백업을 받은 뒤 탈퇴 처리합니다. 자동 삭제는 하지 않습니다.
@@ -682,7 +682,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 16 | 무작위 대입 대책 | 설계 기본값 | 가입·로그인에 Cloudflare Turnstile CAPTCHA(관리형 모드). 실사용 전 필수. 켜는 순서는 6.1 | Supabase Auth 설정, `wrangler.jsonc`의 `TURNSTILE_SITE_KEY`, `features/auth/components/turnstile.tsx` |
 | 17 | 가상 이메일 도메인 | 사용자 | `login.hoseo-mentor.invalid` (2026-10-30 확정, 가입·로그인·PIN 변경 시험 통과) | `lib/auth/login-key.ts`, DB `login_email()` |
 | 18 | 멘토 사진 | 사용자 | 사진이 없으면 기본 프로필 이미지(`public/avatar-default.svg`). 2026-11-04 사진 등록 확정: 멘토 본인이 `/mentor`에서 올리고 바꾸거나 지움, 관리자는 `/admin/mentors`에서 부적절한 사진을 지움. 올리면 바로 공개. 로그인 사용자만 봄(8번과 같은 기준, 비공개 버킷 + 서명 URL). JPG·PNG·WEBP(원본 10MB까지)를 브라우저가 가운데 정사각형으로 잘라 512px로 줄여 저장. 탈퇴하면 사진도 지움 | `mentor_profiles.photo_path`, Storage `avatars`, 멘토 카드·상세·관리자 화면 |
-| 19 | 개인정보 처리 주체·보관 기간 | 사용자 | 호서대학교 창업팀, 보호책임자 양정환(010-3830-5972). 보관 기간 1년: 마지막 이용 후 1년이 지나면 관리자가 확인하고 파기(자동 삭제 없음). 가입할 때 필수 동의 | `lib/privacy/policy.ts`, `/privacy`, `privacy_consents` |
+| 19 | 개인정보 처리 주체·보관 기간 | 사용자 | 호서대학교 취업팀(2026-11-04 창업팀에서 바꿈), 보호책임자 양정환(010-3830-5972). 보관 기간 1년: 마지막 이용 후 1년이 지나면 관리자가 확인하고 파기(자동 삭제 없음). 가입할 때 필수 동의 | `lib/privacy/policy.ts`, `/privacy`, `privacy_consents` |
 | 20 | 탈퇴 | 사용자 | 본인 탈퇴 기능 없음. 담당자에게 문의하면 관리자만 탈퇴 처리 | `/admin/users`, `admin-users`의 `delete_user` |
 | 21 | 백업 방식 | 사용자 | 관리자 화면 버튼으로 전체 JSON(+표별 CSV) 내려받기. 학기 종료 뒤와 탈퇴 처리 전에 받고, 백업 파일도 1년 뒤 파기 | `/admin/backup`, `admin_backup()`, [backup.md](backup.md) |
 | 22 | 디자인 | 사용자 | 주 색은 호서대 UI 상징색 Passion RED `#89171A`(다크 모드 버튼 `#BD202F`, 다크 글자 강조 `#F2777F`). 학교 교표·로고는 쓰지 않음. 글꼴 Noto Sans KR. 휴대폰은 아래 탭 막대, PC는 상단 메뉴. 기준은 UI/UX Pro Max 스킬(대비 4.5:1, 터치 40~44px, 초점 표시, 움직임 줄이기) | `app/globals.css`, `app/layout.tsx`, `components/main-nav.tsx`, 9.1 |

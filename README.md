@@ -9,7 +9,7 @@
 - 사이트: <https://hoseo-mentor-bridge.yjhpine123.workers.dev> (Cloudflare Workers, `main`에 병합하면 자동 배포)
 - 관리자 운영 안내: [docs/operations.md](docs/operations.md) — 처음 할 일, 한 학기 운영 순서, [강사료 책정과 지급](docs/operations.md#강사료-책정과-지급), PIN 분실·탈퇴 요청 처리, 문제가 생겼을 때 볼 곳
 - 백업 절차: [docs/backup.md](docs/backup.md)
-- 개인정보 처리방침: 사이트의 `/privacy` (운영: 호서대학교 창업팀, 보호책임자 양정환 010-3830-5972)
+- 개인정보 처리방침: 사이트의 `/privacy` (운영: 호서대학교 취업팀, 보호책임자 양정환 010-3830-5972)
 
 설계의 구현 단계 1~6(기반, 구역·멘토 페이지, 1:1 톡방, 강의, 운영, 배포)을 모두 구현했습니다. 도메인은 당분간 위 주소를 씁니다. 아래는 초기 회의에서 정한 요구사항입니다.
 
