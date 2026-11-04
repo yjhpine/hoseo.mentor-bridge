@@ -17,6 +17,8 @@ import {
   won,
   type FeeRate,
 } from "@/features/admin/lib/fee";
+import { MentorAvatar } from "@/features/mentors/components/mentor-card";
+import { DEFAULT_AVATAR } from "@/features/mentors/lib/avatar";
 import { formatTime } from "@/lib/chat/answer-length";
 import { createClient } from "@/lib/supabase/client";
 import type { Tables } from "@/types/database.types";
@@ -244,16 +246,19 @@ function FeeRow({
 
   return (
     <li className="flex flex-col gap-2 rounded-md border p-4">
-      <div className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-baseline gap-2">
-          <span className="text-sm text-muted-foreground">({stats.company})</span>
-          <span className="font-medium">{stats.name}</span>
-          {fee && (isPaid ? <Badge>지급 완료</Badge> : <Badge variant="secondary">미지급</Badge>)}
+      <div className="flex items-center gap-3">
+        <MentorAvatar src={DEFAULT_AVATAR} name={stats.name} size={48} />
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span className="text-sm text-muted-foreground">{stats.company}</span>
+            <span className="font-medium">{stats.name}</span>
+            {fee && (isPaid ? <Badge>지급 완료</Badge> : <Badge variant="secondary">미지급</Badge>)}
+          </div>
+          <p className="flex flex-wrap gap-x-4 text-sm">
+            <span>톡방 {stats.roomCount}</span>
+            <span>질문 {stats.questionCount} · 답변 {stats.answerCount}</span>
+          </p>
         </div>
-        <p className="flex flex-wrap gap-x-4 text-sm">
-          <span>톡방 {stats.roomCount}</span>
-          <span>질문 {stats.questionCount} · 답변 {stats.answerCount}</span>
-        </p>
       </div>
 
       {rate && calculated !== null ? (
