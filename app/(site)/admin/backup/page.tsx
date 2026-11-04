@@ -28,6 +28,7 @@ const TABLE_LABELS: Record<string, string> = {
   courses: "강의",
   lessons: "강의 차시",
   enrollments: "수강 신청",
+  fee_rates: "강사료 단가",
   fee_records: "강사료",
   survey_responses: "만족도 응답",
 };
