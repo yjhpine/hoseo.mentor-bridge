@@ -9,6 +9,7 @@ import { CourseList } from "@/features/courses/components/course-list";
 import { RoomList } from "@/features/chats/components/room-list";
 import { getMentor } from "@/features/mentors/api/mentors";
 import { MentorPageForm } from "@/features/mentors/components/mentor-page-form";
+import { PhotoUpload } from "@/features/mentors/components/photo-upload";
 import { PushToggle } from "@/features/notifications/components/push-toggle";
 import { requireRole } from "@/lib/auth/current-user";
 
@@ -62,6 +63,7 @@ async function MentorDashboard() {
         </p>
       </div>
       <PushToggle role="mentor" />
+      <PhotoUpload mentorId={mentor.id} name={mentor.displayName} photoUrl={mentor.photoUrl} hasPhoto={mentor.hasPhoto} />
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">받은 질문</h2>
         <RoomList rooms={rooms} viewer="mentor" />

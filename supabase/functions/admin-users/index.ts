@@ -192,7 +192,7 @@ async function updateIdentity(body: Extract<Body, { action: "update_identity" }>
 /**
  * 회원 탈퇴 (11장 20번: 본인 탈퇴 없이 담당자에게 요청하면 관리자가 처리).
  * 계정을 지우면 프로필·톡방·메시지·강의·수강·만족도·동의 기록이 DB에서 함께 지워집니다(on delete cascade).
- * Storage의 강의 파일은 DB와 따로 있어서 먼저 지웁니다.
+ * Storage의 강의 파일과 프로필 사진은 DB와 따로 있어서 먼저 지웁니다.
  */
 async function deleteUser(callerId: string, body: Extract<Body, { action: "delete_user" }>) {
   const target = await getProfile(body.user_id);
@@ -219,6 +219,15 @@ async function deleteUser(callerId: string, body: Extract<Body, { action: "delet
     for (let i = 0; i < paths.length; i += 100) {
       const { error: e } = await admin.storage.from("course-files").remove(paths.slice(i, i + 100));
       if (e) throw e;
+    }
+
+    // 프로필 사진 폴더 "{멘토 id}/" 안의 파일 (11장 18번)
+    const { data: photos, error: e2 } = await admin.storage.from("avatars").list(target.id, { limit: 100 });
+    if (e2) throw e2;
+    const photoPaths = (photos ?? []).map((f) => `${target.id}/${f.name}`);
+    if (photoPaths.length > 0) {
+      const { error: e3 } = await admin.storage.from("avatars").remove(photoPaths);
+      if (e3) throw e3;
     }
   }
 

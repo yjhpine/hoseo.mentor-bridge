@@ -15,6 +15,7 @@ export type MentorStats = {
   name: string;
   company: string;
   collegeName: string | null;
+  photoPath: string | null;
   roomCount: number;
   questionCount: number;
   answerCount: number;
@@ -73,6 +74,7 @@ export function useSemesterStats(semesterId: number | null) {
           name: mentor ? (mentor.name ?? "") + (mentor.name_tag ?? "") : "(알 수 없음)",
           company: mentor?.company ?? "",
           collegeName: mentor?.college_name ?? null,
+          photoPath: mentor?.photo_path ?? null,
           roomCount: s.room_count,
           questionCount: s.question_count,
           answerCount: s.answer_count,
