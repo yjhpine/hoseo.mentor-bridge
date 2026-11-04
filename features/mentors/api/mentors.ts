@@ -5,7 +5,9 @@ import type { Tables } from "@/types/database.types";
 // 로그인 사용자에게는 공개 멘토만, 멘토 본인과 관리자에게는 더 많은 행이 돌아옵니다.
 // 목록은 공개 멘토만 보이도록 status를 한 번 더 거릅니다.
 
-export const DEFAULT_AVATAR = "/avatar-default.svg";
+import { DEFAULT_AVATAR } from "@/features/mentors/lib/avatar";
+
+export { DEFAULT_AVATAR };
 export const MENTORS_PAGE_SIZE = 12;
 
 type DirectoryRow = Tables<"mentor_directory">;
