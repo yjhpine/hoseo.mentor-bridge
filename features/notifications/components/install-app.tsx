@@ -3,6 +3,7 @@
 import { Download, EllipsisVertical, Share, Smartphone, SquarePlus } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
+import { IosInstallGuide, iosGuideTarget, type IosTarget } from "@/features/notifications/components/ios-install-guide";
 import { installState, listenForInstallPrompt, promptInstall, subscribeInstall, type InstallState } from "@/lib/pwa/install";
 
 /** 레이아웃에 붙여 설치 이벤트를 페이지가 열릴 때부터 받아 둡니다. 화면에는 아무것도 그리지 않습니다. */
@@ -17,6 +18,7 @@ export function InstallApp() {
   const state = useSyncExternalStore<InstallState | null>(subscribeInstall, installState, () => null);
   const [message, setMessage] = useState<string | null>(null);
   const [showSteps, setShowSteps] = useState(false);
+  const [guide, setGuide] = useState<IosTarget | null>(null);
 
   if (state === null || state === "installed") return null;
 
@@ -48,6 +50,24 @@ export function InstallApp() {
           앱으로 설치
         </Button>
       )}
+
+      {state === "ios" && (
+        <Button
+          onClick={() =>
+            setGuide(
+              iosGuideTarget(
+                navigator.userAgent,
+                /iPad/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1),
+              ),
+            )
+          }
+          className="w-full sm:w-fit"
+        >
+          <Download aria-hidden />
+          앱으로 설치
+        </Button>
+      )}
+      {guide && <IosInstallGuide target={guide} onClose={() => setGuide(null)} />}
 
       {state === "ios" && (
         <ol className="flex flex-col gap-2 text-sm">
