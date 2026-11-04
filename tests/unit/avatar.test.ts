@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { avatarOwner, centerSquare } from "@/features/mentors/lib/avatar";
+import { avatarOwner, clampCrop, cropSource, initialCrop, zoomCrop } from "@/features/mentors/lib/avatar";
 
 // 멘토 프로필 사진 (11장 18번)
 
@@ -35,14 +35,32 @@ describe("사진 경로", () => {
   });
 });
 
-describe("가운데 정사각형 자르기", () => {
-  it("가로 사진은 가운데", () => {
-    expect(centerSquare(1200, 800)).toEqual({ sx: 200, sy: 0, side: 800 });
+describe("사진 위치 편집", () => {
+  const view = 300;
+
+  it("처음에는 가운데, 잘라 낼 영역은 가운데 정사각형과 같음", () => {
+    const state = initialCrop(1200, 800, view);
+    expect(cropSource(1200, 800, view, state)).toEqual({ sx: 200, sy: 0, side: 800 });
   });
-  it("세로 사진은 가운데", () => {
-    expect(centerSquare(600, 1000)).toEqual({ sx: 0, sy: 200, side: 600 });
+
+  it("틀 밖으로 끌어도 빈틈이 생기지 않게 막음", () => {
+    const state = clampCrop(1200, 800, view, { x: 50, y: -999, zoom: 1 });
+    expect(state.x).toBe(0);
+    expect(state.y).toBe(0); // 세로는 꼭 맞아서 움직일 수 없음
+    const right = clampCrop(1200, 800, view, { x: -9999, y: 0, zoom: 1 });
+    expect(cropSource(1200, 800, view, right)).toEqual({ sx: 400, sy: 0, side: 800 });
   });
-  it("정사각형은 그대로", () => {
-    expect(centerSquare(512, 512)).toEqual({ sx: 0, sy: 0, side: 512 });
+
+  it("2배 확대하면 가운데 기준으로 절반 크기 영역", () => {
+    const state = zoomCrop(1200, 800, view, initialCrop(1200, 800, view), 2);
+    const src = cropSource(1200, 800, view, state);
+    expect(src.side).toBeCloseTo(400);
+    expect(src.sx).toBeCloseTo(400);
+    expect(src.sy).toBeCloseTo(200);
+  });
+
+  it("확대 범위는 1~3배", () => {
+    expect(zoomCrop(800, 800, view, initialCrop(800, 800, view), 10).zoom).toBe(3);
+    expect(zoomCrop(800, 800, view, initialCrop(800, 800, view), 0.2).zoom).toBe(1);
   });
 });
