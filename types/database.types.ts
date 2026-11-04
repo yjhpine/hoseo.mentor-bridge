@@ -184,6 +184,27 @@ export type Database = {
         }
         Relationships: []
       }
+      fee_rates: {
+        Row: {
+          cap: number | null
+          per_answer: number
+          semester_id: number
+          updated_at: string
+        }
+        Insert: {
+          cap?: number | null
+          per_answer: number
+          semester_id: number
+          updated_at?: string
+        }
+        Update: {
+          cap?: number | null
+          per_answer?: number
+          semester_id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fee_records: {
         Row: {
           amount: number
@@ -193,8 +214,11 @@ export type Database = {
           id: number
           memo: string | null
           mentor_id: string
+          paid_at: string | null
+          paid_by: string | null
           question_count: number
           semester_id: number
+          unit_price: number | null
         }
         Insert: {
           amount: number
@@ -204,8 +228,11 @@ export type Database = {
           id?: never
           memo?: string | null
           mentor_id: string
+          paid_at?: string | null
+          paid_by?: string | null
           question_count: number
           semester_id: number
+          unit_price?: number | null
         }
         Update: {
           amount?: number
@@ -215,8 +242,11 @@ export type Database = {
           id?: never
           memo?: string | null
           mentor_id?: string
+          paid_at?: string | null
+          paid_by?: string | null
           question_count?: number
           semester_id?: number
+          unit_price?: number | null
         }
         Relationships: []
       }

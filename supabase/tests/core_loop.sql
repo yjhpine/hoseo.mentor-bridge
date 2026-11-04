@@ -194,6 +194,26 @@ begin
   insert into r(step,expect,got)
   select '관리자: 강사료 책정 (책정자 기록)', '50000/true', amount || '/' || (decided_by = a)::text from public.fee_records where semester_id = sem;
 
+  -- 단가는 관리자만 (11장 29·30번), 지급 완료 뒤에는 금액을 못 고침 (31번)
+  perform pg_temp.act(a);
+  insert into public.fee_rates(semester_id, per_answer, cap) values (sem, 10000, 50000);
+  perform pg_temp.back();
+  perform pg_temp.act(m); select count(*) into v from public.fee_rates; perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 강사료 단가 보기', '0', v::text);
+  perform pg_temp.act(a);
+  update public.fee_records set paid_at = now() where semester_id = sem and mentor_id = m;
+  begin update public.fee_records set amount = 60000 where semester_id = sem and mentor_id = m; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got)
+  select '관리자: 지급 완료 (처리자 기록)', 'true', (paid_at is not null and paid_by = a)::text from public.fee_records where semester_id = sem and mentor_id = m;
+  insert into r(step,expect,got) values ('관리자: 지급 완료 뒤 금액 고치기', '거부', t);
+  perform pg_temp.act(a);
+  update public.fee_records set paid_at = null where semester_id = sem and mentor_id = m;
+  update public.fee_records set amount = 10000, unit_price = 10000 where semester_id = sem and mentor_id = m;
+  perform pg_temp.back();
+  insert into r(step,expect,got)
+  select '관리자: 지급 취소 뒤 다시 책정', '10000/미지급', amount || '/' || case when paid_at is null and paid_by is null then '미지급' else '지급' end from public.fee_records where semester_id = sem and mentor_id = m;
+
   -- 7. 학기 종료 → 톡방 읽기 전용, 만족도 조사
   perform pg_temp.act(m);
   begin perform public.close_semester(sem, now() + interval '14 days'); t := '허용됨'; exception when others then t := '거부'; end;
