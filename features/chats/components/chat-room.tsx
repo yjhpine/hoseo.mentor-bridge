@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { ChatMessage } from "@/features/chats/api/chats";
+import { PushNudge } from "@/features/notifications/components/push-nudge";
 import { answerLength, formatTime, type AnswerRule } from "@/lib/chat/answer-length";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,8 @@ export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 이 화면에서 메시지를 한 번이라도 보냈는지. 보낸 뒤에 알림 켜기를 권합니다.
+  const [sentHere, setSentHere] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const isMentor = myRole === "mentor";
@@ -95,6 +98,7 @@ export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }
     }
     addMessage(data);
     setBody("");
+    setSentHere(true);
   }
 
   return (
@@ -136,6 +140,8 @@ export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }
         })}
       </ol>
       <div ref={bottomRef} />
+
+      {sentHere && (myRole === "mentor" || myRole === "mentee") && <PushNudge role={myRole} />}
 
       {closed ? (
         <p className="rounded-md border p-3 text-center text-sm text-muted-foreground">
