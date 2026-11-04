@@ -24,7 +24,7 @@
 | `login-key.test.ts` | 이름·소속으로 만든 가상 이메일이 DB `login_email()`과 같은지 (띄어쓰기, 대소문자, 전각·줄바꿈 공백, 풀어 쓴 한글), 이름·구분 문자·PIN 규칙 |
 | `answer-length.test.ts` | 멘토 답변 글자 수가 DB `answer_length()`와 같은지 (공백 제외·포함, 이모지, 보이지 않는 글자), 한국 시간 표시 |
 | `backup-files.test.ts` | 백업 CSV: 엑셀 한글 깨짐 방지, 따옴표 처리, 엑셀 수식 실행 방지 |
-| `avatar.test.ts` | 프로필 사진 경로 모양(앱과 DB 같은 규칙), 가운데 정사각형 자르기 |
+| `avatar.test.ts` | 프로필 사진 경로 모양(앱과 DB 같은 규칙), 위치 편집(빈틈 없이 옮기기, 가운데 기준 확대, 잘라 낼 영역) |
 | `fee.test.ts` | 강사료 계산 금액(답변 수 × 단가, 상한), 금액 입력 읽기 |
 | `security.test.ts` | 보안 검수 후속 조치: 강의 자료 허용 형식(앱과 마이그레이션 목록이 같은지), 보안 헤더와 `x-powered-by` 끄기, 전체 CSP 지시어와 nonce ([security-review.md](security-review.md)) |
 

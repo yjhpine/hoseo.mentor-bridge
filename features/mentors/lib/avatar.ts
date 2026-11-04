@@ -22,8 +22,54 @@ export function avatarOwner(path: string): string | null {
   return AVATAR_PATH.exec(path)?.[1] ?? null;
 }
 
-/** 원본 이미지에서 가운데 정사각형을 잘라낼 영역 */
-export function centerSquare(width: number, height: number) {
-  const side = Math.min(width, height);
-  return { sx: Math.floor((width - side) / 2), sy: Math.floor((height - side) / 2), side };
+// ---------------------------------------------------------------------------
+// 사진 위치 편집 (끌어서 옮기기, 확대·축소). 편집 틀은 한 변이 view인 정사각형이고,
+// 사진은 틀을 늘 빈틈없이 덮습니다. 저장할 때 틀에 보이는 부분을 원본 좌표로 바꿔 잘라 냅니다.
+// ---------------------------------------------------------------------------
+
+export const AVATAR_MAX_ZOOM = 3;
+
+export type CropState = {
+  /** 틀 기준 사진 왼쪽 위 위치(px). 0 이하 */
+  x: number;
+  y: number;
+  /** 1 = 짧은 변이 틀에 꼭 맞음 */
+  zoom: number;
+};
+
+/** 화면에 그릴 배율(원본 1px → 틀 몇 px) */
+export function cropScale(width: number, height: number, view: number, zoom: number) {
+  return (view / Math.min(width, height)) * zoom;
+}
+
+/** 사진이 틀 밖으로 빠져 빈틈이 생기지 않게 위치를 맞춥니다. */
+export function clampCrop(width: number, height: number, view: number, state: CropState): CropState {
+  const zoom = Math.min(AVATAR_MAX_ZOOM, Math.max(1, state.zoom));
+  const scale = cropScale(width, height, view, zoom);
+  const clamp = (value: number, size: number) => Math.min(0, Math.max(view - size * scale, value));
+  return { zoom, x: clamp(state.x, width), y: clamp(state.y, height) };
+}
+
+/** 처음 상태: 가운데, 확대 없음 */
+export function initialCrop(width: number, height: number, view: number): CropState {
+  const scale = cropScale(width, height, view, 1);
+  return { zoom: 1, x: (view - width * scale) / 2, y: (view - height * scale) / 2 };
+}
+
+/** 틀 가운데를 기준으로 확대·축소 */
+export function zoomCrop(width: number, height: number, view: number, state: CropState, zoom: number): CropState {
+  const before = cropScale(width, height, view, state.zoom);
+  const after = cropScale(width, height, view, Math.min(AVATAR_MAX_ZOOM, Math.max(1, zoom)));
+  const cx = (view / 2 - state.x) / before;
+  const cy = (view / 2 - state.y) / before;
+  return clampCrop(width, height, view, { zoom, x: view / 2 - cx * after, y: view / 2 - cy * after });
+}
+
+/** 틀에 보이는 부분을 원본 좌표로 (저장할 때 잘라 낼 영역) */
+export function cropSource(width: number, height: number, view: number, state: CropState) {
+  const scale = cropScale(width, height, view, state.zoom);
+  const side = Math.min(view / scale, width, height);
+  const sx = Math.min(Math.max(0, -state.x / scale), width - side);
+  const sy = Math.min(Math.max(0, -state.y / scale), height - side);
+  return { sx, sy, side };
 }
