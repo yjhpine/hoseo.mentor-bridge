@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { ChatMessage } from "@/features/chats/api/chats";
+import { MentorAvatar } from "@/features/mentors/components/mentor-card";
 import { PushNudge } from "@/features/notifications/components/push-nudge";
 import { answerLength, formatTime, type AnswerRule } from "@/lib/chat/answer-length";
 import { createClient } from "@/lib/supabase/client";
@@ -17,12 +18,17 @@ type Props = {
   closed: boolean;
   rule: AnswerRule;
   initialMessages: ChatMessage[];
+  /** 프로필 사진과 이름 (카카오톡처럼 상대 메시지 옆에 보입니다) */
+  people: Record<"mentor" | "mentee", { name: string; photoUrl: string }>;
 };
+
+/** 같은 사람이 3분 안에 이어 보낸 메시지는 사진·이름을 한 번만 붙입니다. */
+const GROUP_GAP_MS = 3 * 60 * 1000;
 
 // 1:1 톡방 (docs/architecture.md 3.3, 4.2, 8장).
 // 새 메시지는 Supabase Realtime으로 받고, 보내기는 브라우저 클라이언트로 messages에 바로 넣습니다.
 // 멘토 답변 길이는 여기서 먼저 막고, DB 트리거가 다시 검사합니다.
-export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }: Props) {
+export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages, people }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [body, setBody] = useState("");
@@ -109,32 +115,52 @@ export function ChatRoom({ roomId, myId, myRole, closed, rule, initialMessages }
             {myRole === "mentee" ? "궁금한 것을 편하게 물어보세요." : "아직 메시지가 없습니다."}
           </li>
         )}
-        {messages.map((message) => {
+        {messages.map((message, index) => {
           const mine = message.sender_id === myId;
+          const previous = messages[index - 1];
+          const startsGroup =
+            !previous ||
+            previous.sender_id !== message.sender_id ||
+            new Date(message.created_at).getTime() - new Date(previous.created_at).getTime() > GROUP_GAP_MS;
+          const person = people[message.sender_role === "mentor" ? "mentor" : "mentee"];
           return (
-            <li key={message.id} className={cn("flex flex-col gap-1", mine ? "items-end" : "items-start")}>
-              <span className="text-xs text-muted-foreground">
-                {message.sender_role === "mentor" ? "멘토" : "멘티"} · {formatTime(message.created_at)}
-                {message.hidden_at && " · 숨김"}
-              </span>
-              <p
-                className={cn(
-                  "max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-2 text-sm leading-relaxed",
-                  mine ? "bg-primary text-primary-foreground" : "bg-muted",
-                  message.hidden_at && "opacity-50 line-through",
+            <li
+              key={message.id}
+              className={cn("flex items-start gap-2", mine ? "justify-end" : "justify-start", !startsGroup && "-mt-1.5")}
+            >
+              {!mine &&
+                (startsGroup ? (
+                  <MentorAvatar src={person.photoUrl} name={person.name} size={40} className="mt-0.5 size-10" />
+                ) : (
+                  <span aria-hidden className="w-10 shrink-0" />
+                ))}
+              <div className={cn("flex min-w-0 max-w-[85%] flex-col gap-1", mine ? "items-end" : "items-start")}>
+                {startsGroup && (
+                  <span className="text-xs text-muted-foreground">
+                    {!mine && <span className="mr-1 font-medium text-foreground">{person.name}</span>}
+                    {message.sender_role === "mentor" ? "멘토" : "멘티"} · {formatTime(message.created_at)}
+                    {message.hidden_at && " · 숨김"}
+                  </span>
                 )}
-              >
-                {message.body}
-              </p>
-              {myRole === "admin" && (
-                <button
-                  type="button"
-                  onClick={() => toggleHidden(message)}
-                  className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                <p
+                  className={cn(
+                    "whitespace-pre-wrap break-words rounded-2xl px-4 py-2 text-sm leading-relaxed",
+                    mine ? "bg-primary text-primary-foreground" : "bg-muted",
+                    message.hidden_at && "opacity-50 line-through",
+                  )}
                 >
-                  {message.hidden_at ? "숨김 해제" : "숨기기"}
-                </button>
-              )}
+                  {message.body}
+                </p>
+                {myRole === "admin" && (
+                  <button
+                    type="button"
+                    onClick={() => toggleHidden(message)}
+                    className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                  >
+                    {message.hidden_at ? "숨김 해제" : "숨기기"}
+                  </button>
+                )}
+              </div>
             </li>
           );
         })}

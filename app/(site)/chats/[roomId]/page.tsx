@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getAnswerRule, getRoom } from "@/features/chats/api/chats";
 import { ChatRoom } from "@/features/chats/components/chat-room";
+import { MentorAvatar } from "@/features/mentors/components/mentor-card";
 import { getCurrentUser } from "@/lib/auth/current-user";
 
 type Params = Promise<{ roomId: string }>;
@@ -26,7 +27,7 @@ async function Room({ params }: { params: Params }) {
   if (!user || !data) {
     notFound();
   }
-  const { room, messages } = data;
+  const { room, people, messages } = data;
   const isMentor = user.id === room.mentor.id;
 
   return (
@@ -35,26 +36,35 @@ async function Room({ params }: { params: Params }) {
         <Link href="/chats" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
           ← 톡방 목록
         </Link>
-        {isMentor ? (
-          <h1 className="text-xl font-semibold">
-            {room.mentee.name} <span className="text-sm font-normal text-muted-foreground">{room.mentee.department}</span>
-          </h1>
-        ) : (
-          <h1 className="text-xl font-semibold">
-            {room.mentor.id ? (
-              <Link href={`/mentors/${room.mentor.id}`} className="underline-offset-4 hover:underline">
-                {room.mentor.name}
-              </Link>
+        <div className="flex items-center gap-3">
+          <MentorAvatar
+            src={isMentor ? people.mentee.photoUrl : people.mentor.photoUrl}
+            name={isMentor ? people.mentee.name : people.mentor.name}
+            size={44}
+          />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            {isMentor ? (
+              <h1 className="text-xl font-semibold">
+                {room.mentee.name} <span className="text-sm font-normal text-muted-foreground">{room.mentee.department}</span>
+              </h1>
             ) : (
-              room.mentor.name
-            )}{" "}
-            <span className="text-sm font-normal text-muted-foreground">{room.mentor.company}</span>
-            {user.role === "admin" && (
-              <span className="text-sm font-normal text-muted-foreground"> · 멘티 {room.mentee.name}</span>
+              <h1 className="text-xl font-semibold">
+                {room.mentor.id ? (
+                  <Link href={`/mentors/${room.mentor.id}`} className="underline-offset-4 hover:underline">
+                    {room.mentor.name}
+                  </Link>
+                ) : (
+                  room.mentor.name
+                )}{" "}
+                <span className="text-sm font-normal text-muted-foreground">{room.mentor.company}</span>
+                {user.role === "admin" && (
+                  <span className="text-sm font-normal text-muted-foreground"> · 멘티 {room.mentee.name}</span>
+                )}
+              </h1>
             )}
-          </h1>
-        )}
-        <p className="text-xs text-muted-foreground">{room.semesterName} 학기 톡방</p>
+            <p className="text-xs text-muted-foreground">{room.semesterName} 학기 톡방</p>
+          </div>
+        </div>
       </header>
       <ChatRoom
         roomId={room.id}
@@ -63,6 +73,7 @@ async function Room({ params }: { params: Params }) {
         closed={room.closed}
         rule={rule}
         initialMessages={messages}
+        people={people}
       />
     </div>
   );
