@@ -2,6 +2,7 @@
 
 import { Bell, BellOff, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PushHelp } from "@/features/notifications/components/push-help";
 import { usePush } from "@/features/notifications/components/use-push";
 
 // 새 메시지 알림 켜기·끄기 (docs/architecture.md 6.9). 켠 브라우저에만 알림이 갑니다.
@@ -65,6 +66,7 @@ export function PushToggle({ role }: { role: "mentor" | "mentee" }) {
           {error.detail && <p className="break-all text-xs text-muted-foreground">원인: {error.detail}</p>}
         </div>
       )}
+      {(state === "on" || state === "off" || state === "denied") && <PushHelp />}
     </section>
   );
 }
