@@ -244,13 +244,16 @@ function FeeRow({
 
   return (
     <li className="flex flex-col gap-2 rounded-md border p-4">
-      <div className="flex flex-wrap items-baseline gap-2">
-        <span className="font-medium">{stats.name}</span>
-        <span className="text-sm text-muted-foreground">{stats.company}</span>
-        <span className="text-sm">
-          톡방 {stats.roomCount} · 질문 {stats.questionCount} · 답변 {stats.answerCount}
-        </span>
-        {fee && (isPaid ? <Badge>지급 완료</Badge> : <Badge variant="secondary">미지급</Badge>)}
+      <div className="flex flex-col gap-1">
+        <div className="flex flex-wrap items-baseline gap-2">
+          <span className="text-sm text-muted-foreground">({stats.company})</span>
+          <span className="font-medium">{stats.name}</span>
+          {fee && (isPaid ? <Badge>지급 완료</Badge> : <Badge variant="secondary">미지급</Badge>)}
+        </div>
+        <p className="flex flex-wrap gap-x-4 text-sm">
+          <span>톡방 {stats.roomCount}</span>
+          <span>질문 {stats.questionCount} · 답변 {stats.answerCount}</span>
+        </p>
       </div>
 
       {rate && calculated !== null ? (
