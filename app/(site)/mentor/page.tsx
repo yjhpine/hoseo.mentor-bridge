@@ -10,6 +10,7 @@ import { RoomList } from "@/features/chats/components/room-list";
 import { getMentor } from "@/features/mentors/api/mentors";
 import { MentorPageForm } from "@/features/mentors/components/mentor-page-form";
 import { PhotoUpload } from "@/features/mentors/components/photo-upload";
+import { InstallApp } from "@/features/notifications/components/install-app";
 import { PushToggle } from "@/features/notifications/components/push-toggle";
 import { requireRole } from "@/lib/auth/current-user";
 
@@ -62,7 +63,10 @@ async function MentorDashboard() {
           </Link>
         </p>
       </div>
-      <PushToggle role="mentor" />
+      <div id="notifications" className="flex scroll-mt-20 flex-col gap-3">
+        <PushToggle role="mentor" />
+        <InstallApp />
+      </div>
       <PhotoUpload mentorId={mentor.id} name={mentor.displayName} photoUrl={mentor.photoUrl} hasPhoto={mentor.hasPhoto} />
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">받은 질문</h2>

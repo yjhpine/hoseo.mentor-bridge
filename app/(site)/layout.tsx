@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader, SiteHeaderFallback } from "@/components/site-header";
+import { InstallPromptListener } from "@/features/notifications/components/install-app";
 
 // 로그인한 사용자만 들어옵니다 (proxy.ts). 세션을 읽는 부분은 Suspense 안에 둡니다.
 // 휴대폰에서는 아래 탭 막대(64px)가 본문을 가리지 않도록 그만큼 아래 여백을 둡니다.
@@ -20,6 +21,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
       <SiteFooter />
+      <InstallPromptListener />
     </div>
   );
 }

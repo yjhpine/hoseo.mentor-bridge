@@ -4,12 +4,14 @@ import { listMyEnrollments } from "@/features/courses/api/courses";
 import { CourseList } from "@/features/courses/components/course-list";
 import { listPendingSurveys } from "@/features/surveys/api/surveys";
 import { SurveyForm } from "@/features/surveys/components/survey-form";
+import { InstallApp } from "@/features/notifications/components/install-app";
+import { PushToggle } from "@/features/notifications/components/push-toggle";
 import { formatTime } from "@/lib/chat/answer-length";
 import { displayName, requireRole } from "@/lib/auth/current-user";
 
 export const metadata: Metadata = { title: "마이페이지" };
 
-// 마이페이지 (4.1 /mypage, 멘티): 수강 중인 강의, 학기 말 만족도 조사 (6.5 4번)
+// 마이페이지 (4.1 /mypage, 멘티): 알림·앱 설치(6.9), 수강 중인 강의, 학기 말 만족도 조사 (6.5 4번)
 export default function Page() {
   return (
     <Suspense fallback={<p className="py-6 text-sm text-muted-foreground">불러오는 중…</p>}>
@@ -45,6 +47,11 @@ async function MyPage() {
           </ul>
         </section>
       )}
+
+      <div id="notifications" className="flex scroll-mt-20 flex-col gap-3">
+        <PushToggle role="mentee" />
+        <InstallApp />
+      </div>
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">수강 중인 강의</h2>
