@@ -41,23 +41,30 @@ async function HeroWithSession() {
   return <Hero loggedIn={Boolean(user)} />;
 }
 
-/** 대문: 호서대 상징색 빨강 그라데이션과 은은한 사선 무늬. 화면 폭 전체를 씁니다. */
+/**
+ * 대문: 호서대학교 교정 사진(학교 홈페이지 캠퍼스갤러리, 강석규교육관) 위에 상징색 빨강 반투명 덮개.
+ * 글자가 있는 왼쪽은 진하게 덮어 사진 위에서도 흰 글자 대비(4.5:1 이상)를 지킵니다. 화면 폭 전체를 씁니다.
+ */
 function Hero({ loggedIn }: { loggedIn: boolean }) {
   return (
     <section
       aria-labelledby="hero-title"
-      className="relative -mt-5 mx-[calc(50%-50vw)] w-screen overflow-hidden bg-[linear-gradient(135deg,#a3161d_0%,#7d1016_55%,#4f0a0e_100%)] text-white"
+      className="relative -mt-5 mx-[calc(50%-50vw)] w-screen overflow-hidden bg-[#7d1016] text-white"
     >
+      <picture>
+        <source media="(min-width: 640px)" srcSet="/brand/campus-1920.webp" />
+        {/* 휴대폰과 PC에 크기가 다른 사진을 주려고 picture를 씁니다 (next/image는 화면 폭별 다른 파일을 못 고름). */}
+        <img
+          src="/brand/campus-960.webp"
+          alt=""
+          fetchPriority="high"
+          className="absolute inset-0 size-full object-cover object-[50%_40%]"
+        />
+      </picture>
       <div
         aria-hidden
-        className="absolute inset-0 bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.05)_0_2px,transparent_2px_22px)]"
+        className="absolute inset-0 bg-[linear-gradient(100deg,rgba(125,16,22,0.94)_0%,rgba(125,16,22,0.86)_40%,rgba(80,10,14,0.5)_70%,rgba(30,4,6,0.2)_100%)] max-sm:bg-[linear-gradient(180deg,rgba(125,16,22,0.88)_0%,rgba(110,14,20,0.82)_100%)]"
       />
-      <p
-        aria-hidden
-        className="pointer-events-none absolute -right-6 bottom-0 hidden select-none text-[9rem] font-black leading-none tracking-tighter text-white/[0.07] md:block lg:text-[11rem]"
-      >
-        Venture 1st
-      </p>
       <div className="relative mx-auto flex max-w-6xl flex-col gap-5 px-4 py-14 sm:px-5 sm:py-20">
         <p className="w-fit rounded-full border border-white/40 px-3 py-1 text-sm font-medium">
           호서대학교 취업팀 · 현직 멘토 1:1 멘토링
