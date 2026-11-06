@@ -52,17 +52,22 @@ function toSummary(row: CourseRow): CourseSummary {
   };
 }
 
-/** 모집 중인 강의 (홈) */
+/**
+ * 모집 중인 강의 (메인, /courses). 로그인하지 않은 방문자도 봅니다 (11장 32번).
+ * 공개 DB 함수(public_open_courses)가 제목·소개·멘토 이름·기업만 돌려줍니다. 차시는 로그인 후 강의 상세에서 봅니다.
+ */
 export async function listOpenCourses(limit: number): Promise<CourseSummary[]> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("courses")
-    .select(COURSE_SELECT)
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
-    .limit(limit)
-    .returns<CourseRow[]>();
-  return (data ?? []).map(toSummary);
+  const { data } = await supabase.rpc("public_open_courses", { lim: limit });
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    title: row.title,
+    summary: row.summary,
+    status: "published",
+    mentorId: row.mentor_id,
+    mentorName: row.mentor_name,
+    company: row.mentor_company,
+  }));
 }
 
 /** 멘토의 강의. 본인이 보면 비공개(draft)도 함께 나옵니다. */

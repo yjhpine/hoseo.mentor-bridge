@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Tables } from "@/types/database.types";
+import type { Database, Tables } from "@/types/database.types";
 
-// 멘토 탐색 조회 (docs/architecture.md 4.1, 4.2). mentor_directory 뷰는 RLS를 따르므로
-// 로그인 사용자에게는 공개 멘토만, 멘토 본인과 관리자에게는 더 많은 행이 돌아옵니다.
-// 목록은 공개 멘토만 보이도록 status를 한 번 더 거릅니다.
+// 멘토 탐색 조회 (docs/architecture.md 4.1, 4.2).
+// 목록은 공개 DB 함수로, 상세(getMentor)는 로그인한 사람만 mentor_directory 뷰로 읽습니다.
+// mentor_directory 뷰는 RLS를 따르므로 멘토 본인과 관리자에게는 비공개 멘토도 돌아옵니다.
 
 import { avatarUrls } from "@/features/mentors/api/avatar-urls";
 import { DEFAULT_AVATAR } from "@/features/mentors/lib/avatar";
@@ -64,33 +64,32 @@ export type MentorSearch = {
   page?: number;
 };
 
+type PublicMentorRow = Database["public"]["Functions"]["public_mentors"]["Returns"][number];
+
+function publicToSummary(row: PublicMentorRow, photoUrl: string): MentorSummary {
+  return toSummary({ ...row, status: "published" }, photoUrl);
+}
+
+// 목록·최근 멘토·구역별 수는 로그인하지 않은 방문자도 봅니다 (11장 8번, 32번).
+// 멘토 표는 잠가 두고, 공개 멘토의 공개 필드만 돌려주는 DB 함수(public_mentors)를 씁니다.
+// 관리자가 공개 설정(public_browsing)을 끄면 비로그인 방문자에게는 빈 목록이 돌아옵니다.
 export async function searchMentors(search: MentorSearch) {
   const supabase = await createClient();
   const page = Math.max(1, search.page ?? 1);
-  const from = (page - 1) * MENTORS_PAGE_SIZE;
-
-  let query = supabase
-    .from("mentor_directory")
-    .select(SUMMARY_COLUMNS, { count: "exact" })
-    .eq("status", "published");
-  if (search.collegeId) query = query.eq("college_id", search.collegeId);
-  if (search.jobFieldId) query = query.eq("job_field_id", search.jobFieldId);
   const q = cleanQuery(search.q);
-  if (q) {
-    query = query.or(
-      `name.ilike.*${q}*,company.ilike.*${q}*,headline.ilike.*${q}*,job_field_name.ilike.*${q}*`,
-    );
-  }
+  const { data } = await supabase.rpc("public_mentors", {
+    college_id: search.collegeId,
+    job_field_id: search.jobFieldId,
+    q: q || undefined,
+    lim: MENTORS_PAGE_SIZE,
+    off: (page - 1) * MENTORS_PAGE_SIZE,
+  });
 
-  const { data, count } = await query
-    .order("published_at", { ascending: false })
-    .range(from, from + MENTORS_PAGE_SIZE - 1);
-
-  const total = count ?? 0;
   const rows = data ?? [];
+  const total = rows[0]?.total ?? 0;
   const photo = await avatarUrls(supabase, rows.map((r) => r.photo_path));
   return {
-    mentors: rows.map((row) => toSummary(row, photo(row.photo_path))),
+    mentors: rows.map((row) => publicToSummary(row, photo(row.photo_path))),
     total,
     page,
     pageCount: Math.max(1, Math.ceil(total / MENTORS_PAGE_SIZE)),
@@ -99,15 +98,10 @@ export async function searchMentors(search: MentorSearch) {
 
 export async function getRecentMentors(limit: number) {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("mentor_directory")
-    .select(SUMMARY_COLUMNS)
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
-    .limit(limit);
+  const { data } = await supabase.rpc("public_mentors", { lim: limit });
   const rows = data ?? [];
   const photo = await avatarUrls(supabase, rows.map((r) => r.photo_path));
-  return rows.map((row) => toSummary(row, photo(row.photo_path)));
+  return rows.map((row) => publicToSummary(row, photo(row.photo_path)));
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -148,11 +142,11 @@ export async function getCollegeCards(): Promise<CollegeCard[]> {
       .eq("is_active", true)
       .order("position")
       .order("name"),
-    supabase.from("mentor_directory").select("college_id").eq("status", "published"),
+    supabase.rpc("public_college_mentor_counts"),
   ]);
   const counts = new Map<number, number>();
   for (const row of mentors.data ?? []) {
-    if (row.college_id) counts.set(row.college_id, (counts.get(row.college_id) ?? 0) + 1);
+    if (row.college_id) counts.set(row.college_id, Number(row.mentor_count));
   }
   return (colleges.data ?? []).map((college) => ({
     ...college,

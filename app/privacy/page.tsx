@@ -7,6 +7,7 @@ import {
   PRIVACY_POLICY_VERSION,
   PURPOSES,
   RETENTION_TEXT,
+  MENTOR_PUBLIC_TEXT,
 } from "@/lib/privacy/policy";
 
 export const metadata: Metadata = { title: "개인정보 처리방침" };
@@ -36,7 +37,7 @@ const TRUSTEES = [
 export default function PrivacyPage() {
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-col gap-6 p-5 md:p-10">
-      <div><BrandMark full /></div>
+      <div><BrandMark /></div>
       <article className="flex flex-col gap-6 text-sm leading-relaxed">
         <header className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold">개인정보 처리방침</h1>
@@ -96,6 +97,10 @@ export default function PrivacyPage() {
 
         <Section title="5. 제3자 제공">
           <p>이용자의 개인정보를 제3자에게 제공하지 않습니다. 법령에 따른 요청이 있을 때만 예외로 합니다.</p>
+          <p>
+            다만 멘토 연결이라는 서비스 목적에 따라, {MENTOR_PUBLIC_TEXT} 멘토는 관리자에게 요청해 공개를 멈출 수
+            있습니다.
+          </p>
         </Section>
 
         <Section title="6. 처리 위탁과 국외 이전">

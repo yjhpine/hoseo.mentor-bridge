@@ -11,6 +11,7 @@ import {
   normalizeLoginName,
   parseLoginGroup,
 } from "@/lib/auth/login-key";
+import { safeNextPath } from "@/lib/auth/public-paths";
 import { PRIVACY_POLICY_VERSION } from "@/lib/privacy/policy";
 
 export type FormState = {
@@ -81,7 +82,8 @@ export async function login(
     .select("must_change_pin")
     .eq("id", data.user.id)
     .maybeSingle();
-  redirect(profile?.must_change_pin ? "/account/pin" : "/");
+  // 로그인 전에 보려던 화면이 있으면 그리로 돌려보냅니다. 사이트 안의 경로만 받습니다.
+  redirect(profile?.must_change_pin ? "/account/pin" : (safeNextPath(field(formData, "next")) ?? "/"));
 }
 
 export async function signUp(
@@ -237,5 +239,6 @@ export async function changePin(
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/auth/login");
+  // 메인 페이지는 누구나 볼 수 있으므로 로그아웃하면 메인으로 갑니다.
+  redirect("/");
 }

@@ -30,7 +30,7 @@ export type NavItem = {
   badge?: number;
 };
 
-function isActive(pathname: string, item: NavItem) {
+export function isActive(pathname: string, item: Pick<NavItem, "href" | "match">) {
   if (item.href === "/") return pathname === "/";
   return [item.href, ...(item.match ?? [])].some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
@@ -78,7 +78,8 @@ export function MobileTabBar({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   return (
     <nav
-      aria-label="주 메뉴"
+      aria-label="아래 탭 메뉴"
+      data-tab-bar
       className="fixed inset-x-0 bottom-0 z-40 border-t bg-background pb-[env(safe-area-inset-bottom)] sm:hidden"
     >
       <ul className="mx-auto flex max-w-md">

@@ -7,10 +7,10 @@ import {
   createNonce,
 } from "@/lib/security/headers";
 
-const LOGIN_PATH = "/auth/login";
+import { LOGIN_PATH, isPublicPath } from "@/lib/auth/public-paths";
+
 const PIN_PATH = "/account/pin";
-// 개인정보 처리방침(6.7), 웹 앱 매니페스트와 알림 서비스 워커(6.9)는 로그인과 상관없이 받을 수 있어야 합니다.
-const PUBLIC_PATHS = new Set(["/privacy", "/manifest.webmanifest", "/sw.js"]);
+const ALWAYS_OPEN = new Set(["/privacy", "/manifest.webmanifest", "/sw.js"]);
 
 // 이 함수가 돌려주는 모든 응답(화면, 로그인 화면으로 보내는 이동 응답 포함)에 보안 헤더를 붙입니다.
 export async function updateSession(request: NextRequest) {
@@ -75,10 +75,10 @@ async function route(request: NextRequest, csp: Csp) {
   const user = data?.claims;
 
   // 세션 쿠키를 갱신했을 수 있으므로 이동 응답에도 쿠키를 옮겨 담습니다.
-  const redirectTo = (pathname: string) => {
+  const redirectTo = (pathname: string, next?: string) => {
     const url = request.nextUrl.clone();
     url.pathname = pathname;
-    url.search = "";
+    url.search = next ? `?next=${encodeURIComponent(next)}` : "";
     const response = NextResponse.redirect(url);
     supabaseResponse.cookies
       .getAll()
@@ -89,13 +89,17 @@ async function route(request: NextRequest, csp: Csp) {
   const { pathname } = request.nextUrl;
   const isAuthPage = pathname.startsWith("/auth");
 
-  if (PUBLIC_PATHS.has(pathname)) {
-    return supabaseResponse;
+  // 공개 화면(메인, 소개, 멘토 카드 목록 등)은 누구나 봅니다.
+  if (!user) {
+    if (isAuthPage || isPublicPath(pathname)) return supabaseResponse;
+    // 그 밖의 화면은 로그인으로 안내하고, 로그인한 뒤 원래 화면으로 돌려보냅니다 (docs/architecture.md 2.2).
+    const next = pathname + request.nextUrl.search;
+    return redirectTo(LOGIN_PATH, request.method === "GET" && next !== "/" ? next : undefined);
   }
 
-  // 비로그인 사용자는 로그인·회원가입 화면만 볼 수 있습니다 (docs/architecture.md 2.2).
-  if (!user) {
-    return isAuthPage ? supabaseResponse : redirectTo(LOGIN_PATH);
+  // 처리방침·매니페스트·서비스 워커는 임시 PIN 상태여도 받을 수 있어야 합니다.
+  if (ALWAYS_OPEN.has(pathname)) {
+    return supabaseResponse;
   }
 
   if (isAuthPage) {
