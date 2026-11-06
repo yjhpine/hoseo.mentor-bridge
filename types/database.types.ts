@@ -650,6 +650,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_room_member: { Args: { room_id: number }; Returns: boolean }
       is_backend: { Args: never; Returns: boolean }
+      is_published_mentor: { Args: { mentor_id: string }; Returns: boolean }
       login_email: {
         Args: { login_group: string; login_name: string }
         Returns: string
@@ -684,6 +685,40 @@ export type Database = {
       }
       normalize_login_name: { Args: { raw: string }; Returns: string }
       open_chat_room: { Args: { mentor_id: string }; Returns: number }
+      public_browsing_on: { Args: never; Returns: boolean }
+      public_college_mentor_counts: {
+        Args: never
+        Returns: { college_id: number; mentor_count: number }[]
+      }
+      public_mentors: {
+        Args: { college_id?: number; job_field_id?: number; lim?: number; off?: number; q?: string }
+        Returns: {
+          accepting_questions: boolean
+          college_id: number
+          college_name: string
+          company: string
+          headline: string
+          id: string
+          job_field_name: string
+          name: string
+          name_tag: string
+          photo_path: string
+          published_at: string
+          total: number
+        }[]
+      }
+      public_open_courses: {
+        Args: { lim?: number }
+        Returns: {
+          id: number
+          mentor_company: string
+          mentor_id: string
+          mentor_name: string
+          published_at: string
+          summary: string
+          title: string
+        }[]
+      }
       revoke_other_sessions: { Args: never; Returns: undefined }
       revoke_user_sessions: { Args: { target: string }; Returns: undefined }
       set_current_semester: { Args: { semester_id: number }; Returns: undefined }

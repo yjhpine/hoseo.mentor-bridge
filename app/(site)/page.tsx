@@ -1,4 +1,4 @@
-import { ArrowRight, MessageCircle, Search } from "lucide-react";
+import { ArrowRight, BellRing, LogIn, MessageCircle, Search, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Suspense } from "react";
@@ -11,11 +11,15 @@ import { PushIntro } from "@/features/notifications/components/push-intro";
 import { displayName, getCurrentUser } from "@/lib/auth/current-user";
 import { createClient } from "@/lib/supabase/server";
 
-// 홈: 단과대학 구역 카드, 새로 개설된 멘토, 모집 중인 강의 (4.1)
+// 메인: 누구나 보는 첫 화면 (4.1, 11장 32번).
+// 빨간 대문, (로그인했으면) 환영 안내, 단과대학 구역 카드, 새로 개설된 멘토, 모집 중인 강의, 이용 순서
 export default function Home() {
   return (
-    <div className="flex flex-col gap-10 py-6">
-      <Suspense fallback={<p className="text-sm text-muted-foreground">불러오는 중…</p>}>
+    <div className="flex flex-col gap-12 pb-6">
+      <Suspense fallback={<Hero loggedIn={false} />}>
+        <HeroWithSession />
+      </Suspense>
+      <Suspense fallback={null}>
         <Welcome />
       </Suspense>
       <Suspense fallback={null}>
@@ -27,7 +31,126 @@ export default function Home() {
       <Suspense fallback={null}>
         <OpenCourseSection />
       </Suspense>
+      <StepsSection />
     </div>
+  );
+}
+
+async function HeroWithSession() {
+  const user = await getCurrentUser();
+  return <Hero loggedIn={Boolean(user)} />;
+}
+
+/** 대문: 호서대 상징색 빨강 그라데이션과 은은한 사선 무늬. 화면 폭 전체를 씁니다. */
+function Hero({ loggedIn }: { loggedIn: boolean }) {
+  return (
+    <section
+      aria-labelledby="hero-title"
+      className="relative -mt-5 mx-[calc(50%-50vw)] w-screen overflow-hidden bg-[linear-gradient(135deg,#a3161d_0%,#7d1016_55%,#4f0a0e_100%)] text-white"
+    >
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-[repeating-linear-gradient(135deg,rgba(255,255,255,0.05)_0_2px,transparent_2px_22px)]"
+      />
+      <p
+        aria-hidden
+        className="pointer-events-none absolute -right-6 bottom-0 hidden select-none text-[9rem] font-black leading-none tracking-tighter text-white/[0.07] md:block lg:text-[11rem]"
+      >
+        Venture 1st
+      </p>
+      <div className="relative mx-auto flex max-w-6xl flex-col gap-5 px-4 py-14 sm:px-5 sm:py-20">
+        <p className="w-fit rounded-full border border-white/40 px-3 py-1 text-sm font-medium">
+          호서대학교 취업팀 · 현직 멘토 1:1 멘토링
+        </p>
+        <h1 id="hero-title" className="max-w-2xl text-3xl font-bold leading-tight tracking-tight [text-wrap:balance] sm:text-5xl">
+          현직 선배에게 묻고,
+          <br />
+          나의 진로를 설계하세요
+        </h1>
+        <p className="max-w-xl text-base text-white/85 sm:text-lg">
+          단과대학별로 배치된 현직 멘토에게 궁금한 점을 1:1로 묻고, 성의 있는 답변을 받아 보세요.
+        </p>
+        <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+          <Button asChild size="lg" className="bg-white text-[#8f141a] hover:bg-white/90">
+            <Link href="/mentors">
+              <Search aria-hidden />
+              멘토 찾기
+            </Link>
+          </Button>
+          {loggedIn ? (
+            <Button asChild size="lg" variant="outline" className="border-white/70 bg-transparent text-white hover:bg-white/10 hover:text-white">
+              <Link href="/guide">
+                이용 안내
+                <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+          ) : (
+            <Button asChild size="lg" variant="outline" className="border-white/70 bg-transparent text-white hover:bg-white/10 hover:text-white">
+              <Link href="/auth/login">
+                <LogIn aria-hidden />
+                로그인
+              </Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SectionTitle({ title, href, linkLabel = "전체 보기" }: { title: string; href?: string; linkLabel?: string }) {
+  return (
+    <div className="flex items-end justify-between gap-3 border-b-2 border-foreground pb-2">
+      <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{title}</h2>
+      {href && (
+        <Link href={href} className="flex h-10 items-center gap-1 text-sm font-medium text-brand underline-offset-4 hover:underline">
+          {linkLabel}
+          <ArrowRight className="size-4" aria-hidden />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+const STEPS = [
+  {
+    icon: UserRoundPlus,
+    title: "회원가입·로그인",
+    body: "소속 학과와 이름, 숫자 6자리 PIN으로 가입합니다. 이메일은 받지 않습니다.",
+  },
+  {
+    icon: MessageCircle,
+    title: "멘토 찾고 질문하기",
+    body: "단과대학 구역에서 멘토를 골라 1:1 톡방에서 질문합니다.",
+  },
+  {
+    icon: BellRing,
+    title: "답변 받기",
+    body: "멘토는 공백을 뺀 50자 이상으로 답합니다. 알림을 켜 두면 답변이 오면 바로 알려 드립니다.",
+  },
+];
+
+function StepsSection() {
+  return (
+    <section className="flex flex-col gap-4">
+      <SectionTitle title="이용 순서" href="/guide" linkLabel="이용 안내" />
+      <ol className="grid gap-3 sm:grid-cols-3">
+        {STEPS.map((step, index) => (
+          <li key={step.title} className="flex gap-3 rounded-xl border bg-card p-4 sm:flex-col">
+            <span className="flex items-center gap-2">
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
+                {index + 1}
+              </span>
+              <step.icon className="hidden size-5 text-brand sm:block" aria-hidden />
+            </span>
+            <span className="flex flex-col gap-1">
+              <span className="font-semibold">{step.title}</span>
+              <span className="text-sm text-muted-foreground">{step.body}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -91,9 +214,9 @@ async function Welcome() {
       {(user.role === "mentor" || user.role === "mentee") && <PushIntro role={user.role} />}
       <div className="flex flex-col gap-2">
         <p className="text-sm font-semibold text-brand">호서대학교 멘토링</p>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground [text-wrap:balance] sm:text-3xl">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground [text-wrap:balance] sm:text-3xl">
           {displayName(user)}님, 반갑습니다.
-        </h1>
+        </h2>
         <p className="max-w-prose text-foreground/80">{notice}</p>
       </div>
       {user.role === "mentee" && (
@@ -122,14 +245,14 @@ async function CollegeSection() {
     return null;
   }
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">단과대학 구역</h2>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <section className="flex flex-col gap-4">
+      <SectionTitle title="단과대학 구역" href="/mentors" linkLabel="전체 멘토" />
+      <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {colleges.map((college) => (
           <li key={college.id}>
             <Link
               href={`/colleges/${college.id}`}
-              className="group flex h-full flex-col gap-1 rounded-xl border p-4 transition-colors hover:border-primary/40 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group flex h-full flex-col gap-1 rounded-xl border border-t-4 border-t-primary bg-card p-4 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="flex items-center justify-between gap-2 font-semibold">
                 {college.name}
@@ -156,18 +279,12 @@ async function CollegeSection() {
 }
 
 async function RecentMentorSection() {
-  const mentors = await getRecentMentors(6);
+  const [mentors, user] = await Promise.all([getRecentMentors(8), getCurrentUser()]);
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">새로 개설된 멘토</h2>
-        <Link href="/mentors" className="flex h-10 items-center gap-1 text-sm font-medium text-brand underline-offset-4 hover:underline">
-          전체 보기
-          <ArrowRight className="size-4" aria-hidden />
-        </Link>
-      </div>
+    <section className="flex flex-col gap-4">
+      <SectionTitle title="새로 개설된 멘토" href="/mentors" />
       {mentors.length > 0 ? (
-        <MentorGrid mentors={mentors} />
+        <MentorGrid mentors={mentors} locked={!user} />
       ) : (
         <p className="rounded-lg border p-8 text-center text-muted-foreground">
           아직 개설된 멘토가 없습니다.
@@ -178,11 +295,11 @@ async function RecentMentorSection() {
 }
 
 async function OpenCourseSection() {
-  const courses = await listOpenCourses(6);
+  const [courses, user] = await Promise.all([listOpenCourses(6), getCurrentUser()]);
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold">모집 중인 강의</h2>
-      <CourseList courses={courses} empty="아직 열린 강의가 없습니다." />
+    <section className="flex flex-col gap-4">
+      <SectionTitle title="모집 중인 강의" href="/courses" />
+      <CourseList courses={courses} locked={!user} empty="아직 열린 강의가 없습니다." />
     </section>
   );
 }

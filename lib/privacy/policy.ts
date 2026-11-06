@@ -1,7 +1,7 @@
 // 개인정보 처리방침의 기준 값 (docs/architecture.md 6.7, 11장 19번).
 // 처리방침 내용을 바꾸면 PRIVACY_POLICY_VERSION(시행일)을 새 날짜로 올립니다. 가입 동의 기록에 이 값이 남습니다.
 
-export const PRIVACY_POLICY_VERSION = "2026-11-04";
+export const PRIVACY_POLICY_VERSION = "2026-11-06";
 
 export const PRIVACY_OPERATOR = "호서대학교 취업팀";
 export const PRIVACY_OFFICER = { name: "양정환", phone: "010-3830-5972" };
@@ -14,11 +14,18 @@ export const PRIVACY_PATH = "/privacy";
 /** 가입 화면 동의 요약과 처리방침 본문이 같은 내용을 쓰도록 한곳에 둡니다. */
 export const COLLECTED_ITEMS = [
   { who: "멘티(재학생)", items: "학과, 이름, 구분 문자(같은 이름이 있을 때), PIN" },
-  { who: "멘토(기업 현직자)", items: "이름, 구분 문자(같은 이름이 있을 때), PIN, 기업명, 직무 분야, 멘토 페이지에 직접 쓴 소개·경력" },
+  { who: "멘토(기업 현직자)", items: "이름, 구분 문자(같은 이름이 있을 때), PIN, 기업명, 직무 분야, 멘토 페이지에 직접 쓴 소개·경력, 프로필 사진(올린 경우)" },
   { who: "이용하면서 생기는 정보", items: "1:1 질문·답변 내용, 강의 자료와 수강 신청 기록, 만족도 조사 응답, (멘토) 질의응답 건수와 강사료 책정 기록" },
   { who: "자동으로 생기는 정보", items: "접속 IP 주소, 접속 일시, 브라우저 정보, 로그인 상태를 유지하는 쿠키" },
   { who: "알림을 켠 경우(선택)", items: "새 메시지 알림을 받을 브라우저의 수신 정보(알림 주소와 암호화 키). 알림을 끄거나 로그아웃하면 지웁니다" },
 ] as const;
+
+/**
+ * 멘토 정보 공개 범위 (11장 8번, 2026-11-06). 관리자가 개설한 멘토의 카드 정보는 로그인하지 않은 방문자에게도 보입니다.
+ * 소개·경력과 질문·답변은 로그인한 사용자만 봅니다.
+ */
+export const MENTOR_PUBLIC_ITEMS = "프로필 사진, 이름, 기업명, 직무 분야, 대표 멘토링 분야, 단과대학 구역";
+export const MENTOR_PUBLIC_TEXT = `관리자가 개설한 멘토의 ${MENTOR_PUBLIC_ITEMS}은(는) 서비스 화면에 공개되어 로그인하지 않은 방문자도 볼 수 있습니다. 소개·경력과 질문·답변은 로그인한 이용자만 봅니다.`;
 
 export const PURPOSES =
   "회원 식별과 로그인, 단과대학별 멘토·멘티 연결, 1:1 질의응답과 강의 운영, 새 메시지 알림, 멘토 강사료 산정, 만족도 조사, 부정 이용 방지";

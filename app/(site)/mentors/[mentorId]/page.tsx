@@ -50,7 +50,7 @@ async function MentorProfile({ params }: { params: Params }) {
       )}
 
       <header className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        <MentorAvatar src={mentor.photoUrl} name={mentor.displayName} size={96} />
+        <MentorAvatar src={mentor.photoUrl} name={mentor.displayName} size={160} className="size-32 sm:size-40" />
         <div className="flex flex-col gap-1">
           {mentor.collegeName && mentor.collegeId && (
             <Link href={`/colleges/${mentor.collegeId}`} className="w-fit">

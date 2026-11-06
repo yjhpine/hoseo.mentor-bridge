@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getCollege, searchMentors } from "@/features/mentors/api/mentors";
 import { MentorGrid } from "@/features/mentors/components/mentor-card";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
 type Params = Promise<{ collegeId: string }>;
 
@@ -21,7 +22,7 @@ async function CollegeZone({ params }: { params: Params }) {
   if (!college) {
     notFound();
   }
-  const { mentors, total } = await searchMentors({ collegeId: id });
+  const [{ mentors, total }, user] = await Promise.all([searchMentors({ collegeId: id }), getCurrentUser()]);
 
   return (
     <div className="flex flex-col gap-6 py-6">
@@ -43,7 +44,7 @@ async function CollegeZone({ params }: { params: Params }) {
         )}
       </div>
       {mentors.length > 0 ? (
-        <MentorGrid mentors={mentors} />
+        <MentorGrid mentors={mentors} locked={!user} />
       ) : (
         <p className="rounded-lg border p-8 text-center text-muted-foreground">
           아직 이 구역에 개설된 멘토가 없습니다.

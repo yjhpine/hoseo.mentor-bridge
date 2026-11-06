@@ -17,9 +17,12 @@ import { Turnstile } from "./turnstile";
 
 export function LoginForm({
   colleges,
+  next,
   turnstileSiteKey,
 }: {
   colleges: CollegeOption[];
+  /** 로그인한 뒤 돌아갈 화면 */
+  next?: string;
   turnstileSiteKey?: string;
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(
@@ -35,6 +38,7 @@ export function LoginForm({
       onSubmit={submitWithoutReset(action)}
       className="flex flex-col gap-5"
     >
+      {next && <input type="hidden" name="next" value={next} />}
       <div className="grid gap-2">
         <Label htmlFor="group">소속</Label>
         <AffiliationSelect

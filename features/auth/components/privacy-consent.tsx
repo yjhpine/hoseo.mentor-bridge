@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   COLLECTED_ITEMS,
+  MENTOR_PUBLIC_TEXT,
   PRIVACY_PATH,
   PURPOSES,
   RETENTION_TEXT,
@@ -22,6 +23,12 @@ export function PrivacyConsent({ isMentor, defaultChecked }: { isMentor: boolean
         <dd>{PURPOSES}</dd>
         <dt className="text-muted-foreground">보유 기간</dt>
         <dd>{RETENTION_TEXT}</dd>
+        {isMentor && (
+          <>
+            <dt className="text-muted-foreground">공개 범위</dt>
+            <dd>{MENTOR_PUBLIC_TEXT}</dd>
+          </>
+        )}
       </dl>
       <p className="text-muted-foreground">
         동의하지 않을 수 있지만, 그러면 가입할 수 없습니다. 자세한 내용은{" "}

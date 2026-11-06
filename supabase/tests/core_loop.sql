@@ -12,6 +12,12 @@ begin
   execute 'set local role authenticated';
 end $f$;
 create function pg_temp.back() returns void language plpgsql as $f$ begin execute 'reset role'; end $f$;
+-- 비로그인 방문자 (공개 메인·멘토 카드)
+create function pg_temp.anon() returns void language plpgsql as $f$
+begin
+  perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
+  execute 'set local role anon';
+end $f$;
 create temp table r (n serial, step text, expect text, got text);
 grant all on r to authenticated;
 grant usage on sequence r_n_seq to authenticated;
@@ -77,6 +83,8 @@ begin
   -- 2. 멘토 페이지: 개설 전에는 안 보이고, 멘토는 스스로 공개할 수 없음
   perform pg_temp.act(ma); select count(*) into v from public.mentor_directory where id = m; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘티: 개설 전 멘토 목록에 안 보임', '0', v::text);
+  perform pg_temp.anon(); select count(*) into v from public.public_mentors(null, null, null, 50, 0) where id = m; perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 개설 전 멘토 카드 안 보임', '0', v::text);
 
   perform pg_temp.act(m);
   update public.mentor_profiles set headline = '반도체 공정 엔지니어', intro = '소개입니다' where id = m;
@@ -88,6 +96,18 @@ begin
   perform pg_temp.act(a); update public.mentor_profiles set college_id = college, status = 'published' where id = m; perform pg_temp.back();
   perform pg_temp.act(ma); select count(*) into v from public.mentor_directory where id = m; perform pg_temp.back();
   insert into r(step,expect,got) values ('관리자 개설 뒤 멘티 목록에 보임', '1', v::text);
+
+  -- 비로그인 공개 범위 (11장 8번): 공개 함수로 카드만, 멘토 표는 직접 못 읽음, 공개 설정을 끄면 숨김
+  perform pg_temp.anon(); select count(*) into v from public.public_mentors(null, null, null, 50, 0) where id = m; perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 공개 멘토 카드 보임', '1', v::text);
+  perform pg_temp.anon();
+  begin perform count(*) from public.mentor_profiles; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 멘토 표 직접 읽기', '거부', t);
+  update public.app_settings set public_browsing = false;
+  perform pg_temp.anon(); select count(*) into v from public.public_mentors(null, null, null, 50, 0) where id = m; perform pg_temp.back();
+  update public.app_settings set public_browsing = true;
+  insert into r(step,expect,got) values ('공개 설정을 끄면 비로그인 멘토 카드 숨김', '0', v::text);
 
   -- 3. 1:1 톡방: 멘티 질문 → 멘토 답변 (알림을 켠 멘토에게는 알림 요청이 쌓임)
   insert into public.push_subscriptions(user_id, endpoint, p256dh, auth)

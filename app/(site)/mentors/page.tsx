@@ -7,6 +7,7 @@ import {
 } from "@/features/mentors/api/mentors";
 import { MentorGrid } from "@/features/mentors/components/mentor-card";
 import { MentorFilter, Pagination } from "@/features/mentors/components/mentor-filter";
+import { getCurrentUser } from "@/lib/auth/current-user";
 
 export const metadata: Metadata = { title: "멘토 찾기" };
 
@@ -41,7 +42,8 @@ async function MentorSearch({ searchParams }: { searchParams: SearchParams }) {
   };
   const page = positiveInt(single(params.page)) ?? 1;
 
-  const [colleges, jobFields, result] = await Promise.all([
+  const [user, colleges, jobFields, result] = await Promise.all([
+    getCurrentUser(),
     getCollegeCards(),
     getJobFields(),
     searchMentors({ collegeId: value.college, jobFieldId: value.field, q: value.q, page }),
@@ -62,7 +64,7 @@ async function MentorSearch({ searchParams }: { searchParams: SearchParams }) {
       <MentorFilter colleges={colleges} jobFields={jobFields} value={value} />
       <p className="text-sm text-muted-foreground">멘토 {result.total}명</p>
       {result.mentors.length > 0 ? (
-        <MentorGrid mentors={result.mentors} />
+        <MentorGrid mentors={result.mentors} locked={!user} />
       ) : (
         <p className="rounded-lg border p-8 text-center text-muted-foreground">
           조건에 맞는 멘토가 없습니다.
