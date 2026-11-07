@@ -12,10 +12,10 @@ export function SiteFooter() {
           <Image
             src="/brand/hoseo-logo-white.png"
             alt="호서대학교"
-            width={222}
-            height={60}
+            width={178}
+            height={48}
             unoptimized
-            className="h-10 w-auto"
+            className="h-12 w-[178px]"
           />
           <p className="text-sm">{PRIVACY_OPERATOR} 멘토링 · 단과대학별 현직 멘토 1:1 질문</p>
         </div>

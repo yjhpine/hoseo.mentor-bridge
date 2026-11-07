@@ -74,9 +74,6 @@ function Hero({ loggedIn }: { loggedIn: boolean }) {
           <br />
           나의 진로를 설계하세요
         </h1>
-        <p className="max-w-xl text-base text-white/85 sm:text-lg">
-          단과대학별로 배치된 현직 멘토에게 궁금한 점을 1:1로 묻고, 성의 있는 답변을 받아 보세요.
-        </p>
         <div className="flex flex-col gap-2 pt-2 sm:flex-row">
           <Button asChild size="lg" className="bg-white text-[#8f141a] hover:bg-white/90">
             <Link href="/mentors">
