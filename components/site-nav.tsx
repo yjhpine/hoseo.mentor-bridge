@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { isActive } from "@/components/main-nav";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -193,6 +194,10 @@ export function MobileSiteMenu({
               </li>
             )}
             {after.map(renderLink)}
+            <li className="flex h-12 items-center justify-between px-3 sm:hidden">
+              <span className="text-base">화면 밝기</span>
+              <ThemeSwitcher />
+            </li>
           </ul>
         </nav>
       )}

@@ -108,7 +108,10 @@ export async function SiteHeader() {
     <>
       <TopBar loggedIn={Boolean(user)} />
       <HeaderFrame nav={<SiteNav before={before} after={after} colleges={colleges} />}>
-        <ThemeSwitcher />
+        {/* 휴대폰은 폭이 좁아 밝기 설정을 ☰ 메뉴 안에 둡니다. */}
+        <span className="hidden sm:inline-flex">
+          <ThemeSwitcher />
+        </span>
         {user ? (
           <UserMenu
             name={displayName(user)}
