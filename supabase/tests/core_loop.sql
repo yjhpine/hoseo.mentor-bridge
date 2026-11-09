@@ -305,6 +305,50 @@ begin
   perform pg_temp.act(ma); select count(*) into v from public.push_subscriptions; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘티: 남의 알림 구독 보기', '0', v::text);
 
+  -- 12. 오류·신고 (11장 34번): 기록은 함수로만, 읽기·처리는 관리자만
+  perform pg_temp.anon(); perform public.report_error('client', '시험 오류 core_loop', 'stack', '/core-loop-test?q=개인정보', 'test-agent'); perform pg_temp.back();
+  select count(*) into v from public.issue_reports where path = '/core-loop-test' and kind = 'error';
+  insert into r(step,expect,got) values ('비로그인: 화면 오류 기록 (주소의 ? 뒤는 버림)', '1', v::text);
+  perform pg_temp.anon(); perform public.report_error('client', '시험 오류 core_loop', 'stack', '/core-loop-test', 'test-agent'); perform pg_temp.back();
+  select occurrences into v from public.issue_reports where path = '/core-loop-test' and kind = 'error';
+  insert into r(step,expect,got) values ('같은 오류는 한 줄로 묶고 횟수만 올림', '2', v::text);
+  perform pg_temp.anon();
+  begin select count(*) into v from public.issue_reports; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 오류 기록 직접 읽기', '거부', t);
+  perform pg_temp.anon();
+  begin perform public.submit_issue_report('비로그인 신고 시험입니다', '/core-loop-test'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 문제 알리기', '거부', t);
+  perform pg_temp.act(ma); perform public.submit_issue_report('멘토 상세가 안 열려요', '/core-loop-test', 'test-agent'); perform pg_temp.back();
+  select count(*) into v from public.issue_reports where path = '/core-loop-test' and kind = 'report' and user_id = ma;
+  insert into r(step,expect,got) values ('멘티: 문제 알리기', '1', v::text);
+  perform pg_temp.act(ma);
+  begin perform public.submit_issue_report('  짧 음 ', '/core-loop-test'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 너무 짧은 문제 알리기', '거부', t);
+  perform pg_temp.act(ma); select count(*) into v from public.issue_reports; perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 오류·신고 기록 읽기', '0', v::text);
+  perform pg_temp.act(ma); update public.issue_reports set status = 'done' where path = '/core-loop-test'; perform pg_temp.back();
+  select count(*) into v from public.issue_reports where path = '/core-loop-test' and status = 'done';
+  insert into r(step,expect,got) values ('멘티: 처리 완료로 바꾸기 (바뀌지 않음)', '0', v::text);
+  perform pg_temp.act(a); select count(*) into v from public.issue_reports where path = '/core-loop-test'; perform pg_temp.back();
+  insert into r(step,expect,got) values ('관리자: 오류·신고 읽기', '2', v::text);
+  perform pg_temp.act(a);
+  update public.issue_reports set status = 'done', resolved_at = now() where path = '/core-loop-test';
+  begin update public.issue_reports set message = '고침' where path = '/core-loop-test'; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  select count(*) into v from public.issue_reports where path = '/core-loop-test' and status = 'done';
+  insert into r(step,expect,got) values ('관리자: 처리 완료 표시', '2', v::text);
+  insert into r(step,expect,got) values ('관리자: 오류 내용 고치기', '거부', t);
+  perform pg_temp.anon(); perform public.report_error('client', '시험 오류 core_loop', null, '/core-loop-test'); perform pg_temp.back();
+  select count(*) into v from public.issue_reports where path = '/core-loop-test' and kind = 'error';
+  insert into r(step,expect,got) values ('처리 완료 뒤 같은 오류가 다시 나면 새 줄', '2', v::text);
+  update public.issue_reports set last_seen = now() - interval '91 days' where path = '/core-loop-test' and status = 'done';
+  perform pg_temp.anon(); perform public.report_error('client', '다른 시험 오류', null, '/core-loop-test-2'); perform pg_temp.back();
+  select count(*) into v from public.issue_reports where path = '/core-loop-test' and status = 'done';
+  insert into r(step,expect,got) values ('90일 지난 기록은 다음 기록 때 지워짐', '0', v::text);
+
   -- 결과
   select '통과 ' || count(*) filter (where got = expect) || ' / 전체 ' || count(*) into summary from r;
   select string_agg(n || '. ' || step || ' (기대 ' || expect || ', 실제 ' || got || ')', E'\n' order by n)

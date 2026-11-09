@@ -5,7 +5,7 @@ import routerProvider from "@refinedev/nextjs-router/app";
 import { dataProvider } from "@refinedev/supabase";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,7 @@ const NAV = [
   { href: "/admin/fees", label: "강사료" },
   { href: "/admin/surveys", label: "만족도" },
   { href: "/admin/users", label: "사용자" },
+  { href: "/admin/issues", label: "오류·신고" },
   { href: "/admin/backup", label: "백업" },
 ];
 
@@ -26,6 +27,20 @@ const NAV = [
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const [provider] = useState(() => dataProvider(createClient()));
   const pathname = usePathname();
+  // 처리 전 오류·신고 수 (11장 34번). 관리자 화면을 옮겨 다닐 때마다 다시 셉니다.
+  const [openIssues, setOpenIssues] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    createClient()
+      .rpc("issue_counts")
+      .then(({ data }) => {
+        const row = data?.[0];
+        if (alive && row) setOpenIssues(Number(row.new_errors) + Number(row.new_reports));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [pathname]);
 
   return (
     <Refine
@@ -47,6 +62,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               )}
             >
               {item.label}
+              {item.href === "/admin/issues" && openIssues > 0 && (
+                <span className="ml-1 rounded-full bg-primary px-1.5 text-xs font-semibold leading-5 text-primary-foreground">
+                  {openIssues > 99 ? "99+" : openIssues}
+                  <span className="sr-only">건 처리 전</span>
+                </span>
+              )}
             </Link>
           ))}
         </nav>

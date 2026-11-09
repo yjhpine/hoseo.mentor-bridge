@@ -113,6 +113,7 @@
 
 | 증상 | 볼 곳 |
 | --- | --- |
+| 사용자가 "오류가 났다"고 함, 무엇이 문제인지 모름 | 먼저 관리자 → **오류·신고**. 사용자가 "문제 알리기"로 보낸 글과 화면·서버에서 자동으로 모인 오류(같은 오류는 횟수로 묶임)가 있습니다. 고쳤으면 **처리 완료**를 누릅니다. 메뉴의 숫자는 처리 전 건수이고, 기록은 90일 뒤 지워집니다. 개발 담당자에게 전할 때는 "자세히"를 펼쳐 내용을 함께 보냅니다 |
 | 사이트가 전혀 열리지 않음 | Cloudflare 대시보드 → Workers → `hoseo-mentor-bridge` → 배포 기록과 Logs |
 | 로그인·화면은 열리는데 데이터가 안 나옴, "프로젝트가 정지됨" 메일 | Supabase 대시보드에서 `hoseo-mentoring` 프로젝트를 복구(Restore). 정지 뒤 90일 안에 해야 합니다. Cloudflare → Workers → `hoseo-mentor-bridge` → Settings → Trigger events에서 매일 실행이 실패하고 있지 않은지도 봅니다 |
 | 가입·로그인에서 "자동 입력 방지 확인에 실패" | 페이지를 새로 고친 뒤 다시 시도. 계속되면 Supabase → Authentication → Bot and Abuse Protection의 Turnstile secret key와 Cloudflare Turnstile 위젯의 호스트 이름을 확인 |

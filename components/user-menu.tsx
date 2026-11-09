@@ -56,6 +56,9 @@ export function UserMenu({
         <DropdownMenuItem asChild>
           <Link href="/account/pin">PIN 변경</Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/report">문제 알리기</Link>
+        </DropdownMenuItem>
         <DropdownMenuItem
           disabled={pending}
           onSelect={(event) => {
