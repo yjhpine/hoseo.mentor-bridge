@@ -40,11 +40,10 @@ function HeaderFrame({ children, nav }: { children?: React.ReactNode; nav?: Reac
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background">
       <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 whitespace-nowrap px-4 sm:px-5">
-        <div className="flex items-center gap-6">
-          <BrandMark />
-          {nav}
-        </div>
-        <div className="flex items-center gap-1 sm:gap-2">{children}</div>
+        <BrandMark />
+        {/* 학교 홈페이지처럼 로고와 오른쪽 버튼 사이에 메뉴를 같은 간격으로 펼칩니다 (PC). */}
+        <div className="hidden min-w-0 flex-1 px-4 lg:block xl:px-8">{nav}</div>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">{children}</div>
       </div>
     </header>
   );
@@ -108,7 +107,10 @@ export async function SiteHeader() {
     <>
       <TopBar loggedIn={Boolean(user)} />
       <HeaderFrame nav={<SiteNav before={before} after={after} colleges={colleges} />}>
-        <ThemeSwitcher />
+        {/* 휴대폰은 폭이 좁아 밝기 설정을 ☰ 메뉴 안에 둡니다. */}
+        <span className="hidden sm:inline-flex">
+          <ThemeSwitcher />
+        </span>
         {user ? (
           <UserMenu
             name={displayName(user)}

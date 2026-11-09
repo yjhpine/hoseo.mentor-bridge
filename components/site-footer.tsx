@@ -10,12 +10,12 @@ export function SiteFooter() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div className="flex flex-col gap-3">
           <Image
-            src="/brand/hoseo-logo-white.png"
+            src="/brand/hoseo-signature-white.png"
             alt="호서대학교"
-            width={178}
-            height={48}
+            width={180}
+            height={42}
             unoptimized
-            className="h-12 w-[178px]"
+            className="h-[42px] w-[180px]"
           />
           <p className="text-sm">{PRIVACY_OPERATOR} 멘토링 · 단과대학별 현직 멘토 1:1 질문</p>
         </div>

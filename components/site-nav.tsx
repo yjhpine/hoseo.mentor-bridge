@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { isActive } from "@/components/main-nav";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -74,8 +75,8 @@ export function SiteNav({
   };
 
   return (
-    <nav aria-label="주 메뉴" className="hidden lg:block">
-      <ul className="flex items-center">
+    <nav aria-label="주 메뉴" className="hidden w-full lg:block">
+      <ul className="flex w-full items-center justify-evenly">
         {before.map(renderLink)}
         {colleges.length > 0 && (
           <li>
@@ -193,6 +194,10 @@ export function MobileSiteMenu({
               </li>
             )}
             {after.map(renderLink)}
+            <li className="flex h-12 items-center justify-between px-3 sm:hidden">
+              <span className="text-base">화면 밝기</span>
+              <ThemeSwitcher />
+            </li>
           </ul>
         </nav>
       )}
