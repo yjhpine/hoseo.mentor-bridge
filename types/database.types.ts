@@ -250,6 +250,57 @@ export type Database = {
         }
         Relationships: []
       }
+      issue_reports: {
+        Row: {
+          detail: string | null
+          fingerprint: string
+          first_seen: string
+          id: number
+          kind: string
+          last_seen: string
+          message: string
+          occurrences: number
+          path: string | null
+          resolved_at: string | null
+          source: string
+          status: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          detail?: string | null
+          fingerprint: string
+          first_seen?: string
+          id?: never
+          kind: string
+          last_seen?: string
+          message: string
+          occurrences?: number
+          path?: string | null
+          resolved_at?: string | null
+          source: string
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          detail?: string | null
+          fingerprint?: string
+          first_seen?: string
+          id?: never
+          kind?: string
+          last_seen?: string
+          message?: string
+          occurrences?: number
+          path?: string | null
+          resolved_at?: string | null
+          source?: string
+          status?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       job_fields: {
         Row: {
           id: number
@@ -651,6 +702,10 @@ export type Database = {
       is_room_member: { Args: { room_id: number }; Returns: boolean }
       is_backend: { Args: never; Returns: boolean }
       is_published_mentor: { Args: { mentor_id: string }; Returns: boolean }
+      issue_counts: {
+        Args: never
+        Returns: { new_errors: number; new_reports: number }[]
+      }
       login_email: {
         Args: { login_group: string; login_name: string }
         Returns: string
@@ -719,8 +774,16 @@ export type Database = {
           title: string
         }[]
       }
+      report_error: {
+        Args: { detail?: string; message: string; path?: string; source: string; user_agent?: string }
+        Returns: undefined
+      }
       revoke_other_sessions: { Args: never; Returns: undefined }
       revoke_user_sessions: { Args: { target: string }; Returns: undefined }
+      submit_issue_report: {
+        Args: { message: string; path?: string; user_agent?: string }
+        Returns: undefined
+      }
       set_current_semester: { Args: { semester_id: number }; Returns: undefined }
     }
     Enums: {
