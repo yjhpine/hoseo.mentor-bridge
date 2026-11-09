@@ -26,6 +26,9 @@ export function SiteFooter() {
           <Link href="/guide" className="flex h-10 items-center underline-offset-4 hover:text-white hover:underline">
             이용 안내
           </Link>
+          <Link href="/report" className="flex h-10 items-center underline-offset-4 hover:text-white hover:underline">
+            문제 알리기
+          </Link>
           <Link
             href={PRIVACY_PATH}
             className="flex h-10 items-center font-semibold text-white underline-offset-4 hover:underline"

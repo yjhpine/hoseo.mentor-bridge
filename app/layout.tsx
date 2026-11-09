@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import { headers } from "next/headers";
 import { ThemeProvider } from "next-themes";
+import { ErrorReporter } from "@/components/error-reporter";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -45,6 +46,8 @@ export default async function RootLayout({
         >
           {children}
         </ThemeProvider>
+        {/* 화면 오류를 관리자에게 자동으로 남깁니다 (11장 34번) */}
+        <ErrorReporter />
       </body>
     </html>
   );
