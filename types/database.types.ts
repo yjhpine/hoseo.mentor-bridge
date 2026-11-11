@@ -418,6 +418,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mentor_reports: {
+        Row: {
+          file_name: string
+          file_path: string
+          file_size: number
+          id: number
+          mentor_id: string
+          semester_id: number
+          submitted_at: string
+          updated_at: string
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: never
+          mentor_id: string
+          semester_id: number
+          submitted_at?: string
+          updated_at?: string
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: never
+          mentor_id?: string
+          semester_id?: number
+          submitted_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mentor_profiles: {
         Row: {
           accepting_questions: boolean
@@ -702,6 +735,8 @@ export type Database = {
       is_room_member: { Args: { room_id: number }; Returns: boolean }
       is_backend: { Args: never; Returns: boolean }
       is_published_mentor: { Args: { mentor_id: string }; Returns: boolean }
+      is_mentor: { Args: never; Returns: boolean }
+      semester_started: { Args: { semester_id: number }; Returns: boolean }
       issue_counts: {
         Args: never
         Returns: { new_errors: number; new_reports: number }[]
