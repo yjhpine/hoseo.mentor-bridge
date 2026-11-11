@@ -56,11 +56,11 @@ export default function AdminReportsPage() {
         {rows.map(({ mentor, report }) => (
           <li key={mentor.id} className="flex flex-col gap-2 rounded-md border p-4 sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1">
-              <p className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="font-medium">{(mentor.name ?? "") + (mentor.name_tag ?? "")}</span>
                 <span className="text-sm text-muted-foreground">{mentor.company}</span>
                 {mentor.college_name && <Badge variant="outline">{mentor.college_name}</Badge>}
-              </p>
+              </div>
               {report ? (
                 <p className="mt-1 break-all text-sm text-muted-foreground">
                   {report.file_name} · {formatFileSize(report.file_size)} · 낸 때 {formatTime(report.submitted_at)}

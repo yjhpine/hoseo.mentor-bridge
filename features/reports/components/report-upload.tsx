@@ -134,9 +134,10 @@ export function ReportUpload({
           </div>
         </div>
       ) : (
-        <p className="text-sm">
-          <Badge variant="secondary">미제출</Badge> <span className="text-muted-foreground">이 학기 보고서를 아직 내지 않았습니다.</span>
-        </p>
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <Badge variant="secondary">미제출</Badge>
+          <span className="text-muted-foreground">이 학기 보고서를 아직 내지 않았습니다.</span>
+        </div>
       )}
 
       <div className="grid gap-2">
