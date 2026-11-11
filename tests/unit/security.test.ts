@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import nextConfig from "@/next.config";
 import { buildContentSecurityPolicy, createNonce } from "@/lib/security/headers";
 import { COURSE_FILE_TYPES, courseFileContentType, fileExtension } from "@/lib/files/course-file-types";
+import { REPORT_FILE_TYPES, isReportPathFor, reportFileContentType, reportFilePath } from "@/lib/files/report-file-types";
 
 // 보안 검수(docs/security-review.md) 후속 조치가 빠지지 않았는지 확인합니다.
 
@@ -96,5 +97,39 @@ describe("전체 CSP (2차 C1)", () => {
   it("개발 서버에서만 unsafe-eval", () => {
     const d = directives(buildContentSecurityPolicy({ nonce: "abc", supabaseUrl, isDev: true }));
     expect(d["script-src"]).toContain("'unsafe-eval'");
+  });
+});
+
+describe("멘토 학기 보고서 파일 형식 (11장 35번)", () => {
+  it("PDF·한글·워드만 받음 (확장자 대소문자 무관)", () => {
+    expect(reportFileContentType("1학기 보고서.PDF")).toBe("application/pdf");
+    expect(reportFileContentType("보고서.hwpx")).toBe("application/hwp+zip");
+    expect(reportFileContentType("보고서.docx")).toBe(REPORT_FILE_TYPES.docx);
+    for (const name of ["보고서.xlsx", "사진.jpg", "압축.zip", "설치.exe", "확장자없음", "a.pdf.exe"]) {
+      expect(reportFileContentType(name)).toBeNull();
+    }
+  });
+
+  it("경로는 내 폴더·고른 학기·무작위 이름·허용 확장자만", () => {
+    const me = "11111111-2222-3333-4444-555555555555";
+    const id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+    const path = reportFilePath(me, 7, "보고서.HWP", id);
+    expect(path).toBe(`${me}/7/${id}.hwp`);
+    expect(isReportPathFor(path, me, 7)).toBe(true);
+    expect(isReportPathFor(path, me, 8)).toBe(false);
+    expect(isReportPathFor(`99999999-2222-3333-4444-555555555555/7/${id}.hwp`, me, 7)).toBe(false);
+    expect(isReportPathFor(`${me}/7/${id}.exe`, me, 7)).toBe(false);
+    expect(isReportPathFor(`${me}/7/../${id}.pdf`, me, 7)).toBe(false);
+  });
+
+  it("앱의 허용 목록과 Storage 버킷 허용 목록(마이그레이션)이 같음", () => {
+    const dir = "supabase/migrations";
+    const file = readdirSync(dir).filter((f) => f.endsWith("_mentor_reports.sql"))[0];
+    const sql = readFileSync(`${dir}/${file}`, "utf8");
+    const start = sql.indexOf("'mentor-reports', 'mentor-reports'");
+    const block = sql.slice(sql.indexOf("array[", start), sql.indexOf("]", sql.indexOf("array[", start)));
+    const inMigration = [...block.matchAll(/'([^']+)'/g)].map((m) => m[1]).sort();
+    const inApp = [...new Set(Object.values(REPORT_FILE_TYPES))].sort();
+    expect(inMigration).toEqual(inApp);
   });
 });

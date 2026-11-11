@@ -349,6 +349,76 @@ begin
   select count(*) into v from public.issue_reports where path = '/core-loop-test' and status = 'done';
   insert into r(step,expect,got) values ('90일 지난 기록은 다음 기록 때 지워짐', '0', v::text);
 
+  -- 13. 멘토 학기 보고서 (11장 35번): 멘토 본인만 내고 바꾸며, 관리자는 읽기만
+  perform pg_temp.act(m);
+  insert into public.mentor_reports(semester_id, mentor_id, file_path, file_name, file_size)
+  values (sem, m, m || '/' || sem || '/66666666-6666-6666-6666-666666666666.pdf', '보고서.pdf', 1000);
+  perform pg_temp.back();
+  select count(*) into v from public.mentor_reports where mentor_id = m and semester_id = sem;
+  insert into r(step,expect,got) values ('멘토: 학기 보고서 내기', '1', v::text);
+  perform pg_temp.act(m);
+  begin
+    insert into public.mentor_reports(semester_id, mentor_id, file_path, file_name, file_size)
+    values (sem, m, m || '/' || sem || '/77777777-7777-7777-7777-777777777777.pdf', '두번째.pdf', 1000);
+    t := '허용됨';
+  exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 같은 학기에 보고서 두 건', '거부', t);
+  perform pg_temp.act(m);
+  update public.mentor_reports set file_path = m || '/' || sem || '/88888888-8888-8888-8888-888888888888.hwp', file_name = '보고서.hwp'
+   where mentor_id = m and semester_id = sem;
+  perform pg_temp.back();
+  insert into r(step,expect,got) select '멘토: 보고서 바꾸기', '보고서.hwp', file_name from public.mentor_reports where mentor_id = m and semester_id = sem;
+  perform pg_temp.act(m);
+  begin
+    insert into public.mentor_reports(semester_id, mentor_id, file_path, file_name, file_size)
+    values (sem, ma, ma || '/' || sem || '/99999999-9999-9999-9999-999999999999.pdf', '대신.pdf', 1000);
+    t := '허용됨';
+  exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 남의 이름으로 보고서 내기', '거부', t);
+  perform pg_temp.act(ma); select count(*) into v from public.mentor_reports; perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 멘토 보고서 보기', '0', v::text);
+  perform pg_temp.act(a); select count(*) into v from public.mentor_reports where mentor_id = m; perform pg_temp.back();
+  insert into r(step,expect,got) values ('관리자: 멘토 보고서 보기', '1', v::text);
+  perform pg_temp.act(a);
+  begin update public.mentor_reports set file_name = '관리자가고침.pdf' where mentor_id = m; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) select '관리자: 멘토 보고서 고치기 (바뀌지 않음)', '보고서.hwp', file_name from public.mentor_reports where mentor_id = m and semester_id = sem;
+  perform pg_temp.act(a);
+  insert into public.semesters(name, starts_on, ends_on) values ('시험 다음 학기', current_date + 200, current_date + 300) returning id into v2;
+  perform pg_temp.back();
+  perform pg_temp.act(m);
+  begin
+    insert into public.mentor_reports(semester_id, mentor_id, file_path, file_name, file_size)
+    values (v2, m, m || '/' || v2 || '/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.pdf', '미리.pdf', 1000);
+    t := '허용됨';
+  exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 시작 안 한 학기 보고서 내기', '거부', t);
+  perform pg_temp.act(m);
+  begin insert into storage.objects(bucket_id, name) values ('mentor-reports', m || '/' || sem || '/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb.pdf'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 내 폴더에 보고서 파일 올리기', '허용됨', t);
+  perform pg_temp.act(m);
+  begin insert into storage.objects(bucket_id, name) values ('mentor-reports', ma || '/' || sem || '/cccccccc-cccc-cccc-cccc-cccccccccccc.pdf'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 남의 폴더에 보고서 파일 올리기', '거부', t);
+  perform pg_temp.act(m);
+  begin insert into storage.objects(bucket_id, name) values ('mentor-reports', m || '/' || sem || '/dddddddd-dddd-dddd-dddd-dddddddddddd.exe'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 허용 안 된 형식(.exe) 보고서 파일', '거부', t);
+  perform pg_temp.act(ma);
+  begin insert into storage.objects(bucket_id, name) values ('mentor-reports', ma || '/' || sem || '/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee.pdf'); t := '허용됨'; exception when others then t := '거부'; end;
+  select count(*) into v from storage.objects where bucket_id = 'mentor-reports' and name like m || '/%';
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 보고서 파일 올리기', '거부', t), ('멘티: 멘토 보고서 파일 보기', '0', v::text);
+  perform pg_temp.act(a); select count(*) into v from storage.objects where bucket_id = 'mentor-reports' and name like m || '/%'; perform pg_temp.back();
+  insert into r(step,expect,got) values ('관리자: 멘토 보고서 파일 보기', '1', v::text);
+  perform pg_temp.act(m); delete from public.mentor_reports where mentor_id = m and semester_id = sem; perform pg_temp.back();
+  select count(*) into v from public.mentor_reports where mentor_id = m;
+  insert into r(step,expect,got) values ('멘토: 보고서 지우기', '0', v::text);
+
   -- 결과
   select '통과 ' || count(*) filter (where got = expect) || ' / 전체 ' || count(*) into summary from r;
   select string_agg(n || '. ' || step || ' (기대 ' || expect || ', 실제 ' || got || ')', E'\n' order by n)

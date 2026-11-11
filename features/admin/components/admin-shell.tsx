@@ -17,6 +17,7 @@ const NAV = [
   { href: "/admin/chats", label: "질의응답" },
   { href: "/admin/fees", label: "강사료" },
   { href: "/admin/surveys", label: "만족도" },
+  { href: "/admin/reports", label: "보고서" },
   { href: "/admin/users", label: "사용자" },
   { href: "/admin/issues", label: "오류·신고" },
   { href: "/admin/backup", label: "백업" },
