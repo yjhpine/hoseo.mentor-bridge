@@ -7,7 +7,7 @@
 ## 운영
 
 - 사이트: <https://hoseo-mentor-bridge.yjhpine123.workers.dev> (Cloudflare Workers, `main`에 병합하면 자동 배포)
-- 관리자 운영 안내: [docs/operations.md](docs/operations.md) — 처음 할 일, 한 학기 운영 순서, [강사료 책정과 지급](docs/operations.md#강사료-책정과-지급), PIN 분실·탈퇴 요청 처리, 문제가 생겼을 때 볼 곳
+- 관리자 운영 안내: [docs/operations.md](docs/operations.md) — 처음 할 일, 한 학기 운영 순서, [강사료 책정과 지급](docs/operations.md#강사료-책정과-지급), [멘토 학기 보고서](docs/operations.md#멘토-학기-보고서), PIN 분실·탈퇴 요청 처리, 문제가 생겼을 때 볼 곳
 - 백업 절차: [docs/backup.md](docs/backup.md)
 - 개인정보 처리방침: 사이트의 `/privacy` (운영: 호서대학교 취업팀, 보호책임자 양정환 010-3830-5972)
 
