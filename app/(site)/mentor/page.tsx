@@ -12,6 +12,8 @@ import { MentorPageForm } from "@/features/mentors/components/mentor-page-form";
 import { PhotoUpload } from "@/features/mentors/components/photo-upload";
 import { InstallApp } from "@/features/notifications/components/install-app";
 import { PushToggle } from "@/features/notifications/components/push-toggle";
+import { listMyReports, listStartedSemesters } from "@/features/reports/api/reports";
+import { ReportUpload } from "@/features/reports/components/report-upload";
 import { requireRole } from "@/lib/auth/current-user";
 
 export const metadata: Metadata = { title: "내 멘토 페이지" };
@@ -33,10 +35,12 @@ export default function Page() {
 
 async function MentorDashboard() {
   const me = await requireRole("mentor");
-  const [mentor, rooms, courses] = await Promise.all([
+  const [mentor, rooms, courses, semesters, reports] = await Promise.all([
     getMentor(me.id),
     listMyRooms(me.id),
     listMentorCourses(me.id),
+    listStartedSemesters(),
+    listMyReports(me.id),
   ]);
   if (!mentor) {
     return <p className="py-6">멘토 정보를 찾지 못했습니다. 관리자에게 문의하세요.</p>;
@@ -71,6 +75,19 @@ async function MentorDashboard() {
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">받은 질문</h2>
         <RoomList rooms={rooms} viewer="mentor" />
+      </section>
+
+      <section id="report" className="flex scroll-mt-20 flex-col gap-2">
+        <h2 className="text-lg font-semibold">학기 보고서</h2>
+        {(() => {
+          const current = semesters.find((s) => s.is_current);
+          return current && !reports.some((r) => r.semester_id === current.id) ? (
+            <p className="rounded-md bg-accent px-3 py-2 text-sm text-accent-foreground">
+              {current.name} 학기 보고서를 아직 내지 않았습니다. 학기가 끝나기 전에 올려 주세요.
+            </p>
+          ) : null;
+        })()}
+        <ReportUpload mentorId={me.id} semesters={semesters} reports={reports} />
       </section>
 
       <section className="flex flex-col gap-2">

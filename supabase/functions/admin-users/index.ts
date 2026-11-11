@@ -192,7 +192,7 @@ async function updateIdentity(body: Extract<Body, { action: "update_identity" }>
 /**
  * 회원 탈퇴 (11장 20번: 본인 탈퇴 없이 담당자에게 요청하면 관리자가 처리).
  * 계정을 지우면 프로필·톡방·메시지·강의·수강·만족도·동의 기록이 DB에서 함께 지워집니다(on delete cascade).
- * Storage의 강의 파일과 프로필 사진은 DB와 따로 있어서 먼저 지웁니다.
+ * Storage의 강의 파일·프로필 사진·학기 보고서는 DB와 따로 있어서 먼저 지웁니다.
  */
 async function deleteUser(callerId: string, body: Extract<Body, { action: "delete_user" }>) {
   const target = await getProfile(body.user_id);
@@ -228,6 +228,22 @@ async function deleteUser(callerId: string, body: Extract<Body, { action: "delet
     if (photoPaths.length > 0) {
       const { error: e3 } = await admin.storage.from("avatars").remove(photoPaths);
       if (e3) throw e3;
+    }
+
+    // 학기 보고서 "{멘토 id}/{학기 id}/{파일}" (11장 35번). 학기 폴더마다 목록을 받아 지웁니다.
+    const { data: folders, error: e4 } = await admin.storage.from("mentor-reports").list(target.id, { limit: 1000 });
+    if (e4) throw e4;
+    const reportPaths: string[] = [];
+    for (const folder of folders ?? []) {
+      const { data: files, error: e5 } = await admin.storage
+        .from("mentor-reports")
+        .list(`${target.id}/${folder.name}`, { limit: 1000 });
+      if (e5) throw e5;
+      for (const f of files ?? []) reportPaths.push(`${target.id}/${folder.name}/${f.name}`);
+    }
+    for (let i = 0; i < reportPaths.length; i += 100) {
+      const { error: e6 } = await admin.storage.from("mentor-reports").remove(reportPaths.slice(i, i + 100));
+      if (e6) throw e6;
     }
   }
 
