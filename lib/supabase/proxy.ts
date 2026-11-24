@@ -10,6 +10,7 @@ import {
 import { LOGIN_PATH, isPublicPath } from "@/lib/auth/public-paths";
 
 const PIN_PATH = "/account/pin";
+const CONSENT_PATH = "/account/consent";
 const ALWAYS_OPEN = new Set(["/privacy", "/manifest.webmanifest", "/sw.js"]);
 
 // 이 함수가 돌려주는 모든 응답(화면, 로그인 화면으로 보내는 이동 응답 포함)에 보안 헤더를 붙입니다.
@@ -106,15 +107,19 @@ async function route(request: NextRequest, csp: Csp) {
     return redirectTo("/");
   }
 
-  // 임시 PIN으로 로그인한 사용자는 PIN을 바꿀 때까지 PIN 변경 화면으로 보냅니다 (6.1).
-  // 서버 액션(POST)은 막지 않습니다. 로그아웃은 어느 화면에서나 되어야 합니다.
-  if (request.method === "GET" && pathname !== PIN_PATH) {
+  // 1) 관리자가 대신 만든 계정처럼 동의 기록이 없는 멘토·멘티는 먼저 동의 화면으로 보냅니다 (6.1, 11장 36번).
+  // 2) 임시 PIN으로 로그인한 사용자는 PIN을 바꿀 때까지 PIN 변경 화면으로 보냅니다 (6.1).
+  // 서버 액션(POST)은 막지 않습니다. 로그아웃은 어느 화면에서나 되어야 합니다. 한 번의 조회로 둘 다 봅니다.
+  if (request.method === "GET" && pathname !== CONSENT_PATH) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("must_change_pin")
+      .select("role, must_change_pin, privacy_consents(user_id)")
       .eq("id", user.sub)
       .maybeSingle();
-    if (profile?.must_change_pin) {
+    if (profile && profile.role !== "admin" && profile.privacy_consents.length === 0) {
+      return redirectTo(CONSENT_PATH);
+    }
+    if (profile?.must_change_pin && pathname !== PIN_PATH) {
       return redirectTo(PIN_PATH);
     }
   }

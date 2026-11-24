@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import {
   CreateAdminForm,
+  CreateMentorForm,
   DeleteUserButton,
   IdentityForm,
   ResetPinButton,
@@ -23,7 +24,12 @@ import type { Tables } from "@/types/database.types";
 
 type UserRow = Tables<"profiles"> & {
   mentee_profiles: { department_id: number; departments: { name: string } | null } | null;
-  mentor_profiles: { company: string; status: Tables<"mentor_profiles">["status"] } | null;
+  mentor_profiles: {
+    company: string;
+    status: Tables<"mentor_profiles">["status"];
+    publish_on_consent: boolean;
+  } | null;
+  privacy_consents: { user_id: string }[];
 };
 
 const MENTOR_STATUS_LABELS = { pending: "개설 대기", published: "공개", hidden: "비공개" } as const;
@@ -46,11 +52,16 @@ export default function AdminUsersPage() {
     sorters: [{ field: "created_at", order: "desc" }],
     meta: {
       select:
-        "*, mentee_profiles(department_id, departments(name)), mentor_profiles(company, status)",
+        "*, mentee_profiles(department_id, departments(name)), mentor_profiles(company, status, publish_on_consent), privacy_consents(user_id)",
     },
   });
   const colleges = useList<Tables<"colleges">, HttpError>({
     resource: "colleges",
+    pagination: { mode: "off" },
+    sorters: [{ field: "position", order: "asc" }],
+  });
+  const jobFields = useList<Tables<"job_fields">, HttpError>({
+    resource: "job_fields",
     pagination: { mode: "off" },
     sorters: [{ field: "position", order: "asc" }],
   });
@@ -73,6 +84,23 @@ export default function AdminUsersPage() {
   return (
     <section className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">사용자</h1>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">멘토 계정 만들기</CardTitle>
+          <CardDescription>
+            학교가 받은 명단의 멘토를 대신 등록합니다. 임시 PIN이 정해지고, 멘토는 소속 &quot;멘토&quot;로 처음 로그인할 때
+            개인정보에 동의하고 PIN을 바꿉니다. 동의하기 전에는 공개되지 않고, 동의하면 고른 구역에 바로 공개됩니다.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CreateMentorForm
+            jobFields={jobFields.result.data}
+            colleges={colleges.result.data.filter((c) => c.is_active)}
+            onDone={refetch}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -132,6 +160,12 @@ export default function AdminUsersPage() {
                         </Badge>
                       )}
                       {user.must_change_pin && <Badge variant="outline">임시 PIN</Badge>}
+                      {user.role !== "admin" && user.privacy_consents.length === 0 && (
+                        <Badge variant="outline">동의 전</Badge>
+                      )}
+                      {user.mentor_profiles?.publish_on_consent && (
+                        <Badge variant="outline">동의하면 자동 공개</Badge>
+                      )}
                     </div>
                     {user.id !== myId && (
                       <div className="flex flex-wrap items-start justify-end gap-2">

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/native-select";
-import { createAdmin, deleteUser, resetPin, updateIdentity } from "@/features/admin/api/admin-users";
+import { createAdmin, createMentor, deleteUser, resetPin, updateIdentity } from "@/features/admin/api/admin-users";
 import type { FormState } from "@/features/auth/api/actions";
 import { FormMessage, submitWithoutReset } from "@/features/auth/components/fields";
 import { NAME_MAX_LENGTH } from "@/lib/auth/login-key";
@@ -182,6 +182,74 @@ export function CreateAdminForm({ onDone }: { onDone?: () => void }) {
         {pending ? "만드는 중…" : "관리자 만들기"}
       </Button>
       <div className="sm:basis-full">
+        <FormMessage state={state} />
+      </div>
+    </form>
+  );
+}
+
+/** 관리자가 대신 만드는 멘토 계정 (11장 36번) */
+export function CreateMentorForm({
+  jobFields,
+  colleges,
+  onDone,
+}: {
+  jobFields: { id: number; name: string }[];
+  colleges: { id: number; name: string }[];
+  onDone?: () => void;
+}) {
+  const [state, action, pending] = useActionState<FormState, FormData>(createMentor, {});
+  useOnSuccess(state, onDone);
+  const v = state.values ?? {};
+
+  return (
+    <form action={action} onSubmit={submitWithoutReset(action)} className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-2">
+        <Label htmlFor="mentor-name">이름</Label>
+        <Input id="mentor-name" name="name" maxLength={NAME_MAX_LENGTH} required defaultValue={v.name} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="mentor-tag">구분 문자 (필요할 때만)</Label>
+        <Input id="mentor-tag" name="nameTag" maxLength={3} pattern="[A-Za-z0-9]{1,3}" defaultValue={v.nameTag} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="mentor-company">기업명</Label>
+        <Input id="mentor-company" name="company" maxLength={100} required defaultValue={v.company} />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="mentor-job">직무 분야</Label>
+        <Select id="mentor-job" name="jobFieldId" required defaultValue={v.jobFieldId ?? ""}>
+          <option value="" disabled>
+            직무 분야를 고르세요
+          </option>
+          {jobFields.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.name}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="mentor-college">단과대학 구역 (동의하면 여기에 공개)</Label>
+        <Select id="mentor-college" name="collegeId" defaultValue={v.collegeId ?? ""}>
+          <option value="">나중에 정함 (개설 대기로 둠)</option>
+          {colleges.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </Select>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="mentor-headline">대표 멘토링 분야 (선택)</Label>
+        <Input id="mentor-headline" name="headline" maxLength={100} defaultValue={v.headline} />
+      </div>
+      <div className="sm:col-span-2">
+        <Button type="submit" disabled={pending}>
+          {pending ? "만드는 중…" : "멘토 계정 만들기"}
+        </Button>
+      </div>
+      <div className="sm:col-span-2">
         <FormMessage state={state} />
       </div>
     </form>
