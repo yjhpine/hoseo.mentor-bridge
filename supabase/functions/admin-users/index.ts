@@ -1,4 +1,4 @@
-// 관리자 계정 작업: PIN 초기화, 이름·소속 변경, 관리자 계정 생성, 회원 탈퇴 (docs/architecture.md 6.1, 6.7)
+// 관리자 계정 작업: PIN 초기화, 이름·소속 변경, 관리자·멘토 계정 생성, 회원 탈퇴 (docs/architecture.md 6.1, 6.7)
 // Supabase 관리자 API가 필요해 secret 키를 쓰는 유일한 곳입니다. 호출한 사람이 관리자인지 먼저 확인합니다.
 // 새 API 키는 플랫폼의 verify_jwt 검사를 쓸 수 없어 verify_jwt = false로 두고 여기서 직접 확인합니다.
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
@@ -26,6 +26,17 @@ type Body =
     department_id?: number;
   }
   | { action: "create_admin"; name: string; name_tag?: string | null; temp_pin: string }
+  | {
+    action: "create_mentor";
+    name: string;
+    name_tag?: string | null;
+    company: string;
+    job_field_id: number;
+    temp_pin: string;
+    college_id?: number | null;
+    headline?: string | null;
+    career?: string | null;
+  }
   | { action: "delete_user"; user_id: string };
 
 class HttpError extends Error {
@@ -289,6 +300,71 @@ async function createAdmin(body: Extract<Body, { action: "create_admin" }>) {
   return { ok: true, user_id: data.user.id };
 }
 
+function optionalText(raw: unknown, max: number, label: string): string | null {
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw !== "string") throw new HttpError(400, `${label} 값이 올바르지 않습니다.`);
+  const text = raw.trim();
+  if (text.length > max) throw new HttpError(400, `${label}은(는) ${max}자까지입니다.`);
+  return text || null;
+}
+
+/**
+ * 관리자가 대신 만드는 멘토 계정 (11장 36번). 가입 트리거는 동의 없는 멘토 가입을 거부하므로,
+ * secret 키로 mentor_invites에 한 번 쓸 허가를 넣고 만듭니다. 동의는 멘토가 처음 로그인할 때 받고(/account/consent),
+ * 그때 구역이 있으면 자동 공개합니다(publish_on_consent). 그전에는 개설 대기(pending)로 둡니다.
+ */
+async function createMentor(body: Extract<Body, { action: "create_mentor" }>) {
+  const name = cleanName(body.name);
+  const nameTag = cleanTag(body.name_tag);
+  const pin = checkPin(body.temp_pin);
+  const company = optionalText(body.company, 100, "기업명");
+  if (!company) throw new HttpError(400, "기업명을 입력해야 합니다.");
+  const jobFieldId = Number(body.job_field_id);
+  if (!Number.isInteger(jobFieldId) || jobFieldId < 1) throw new HttpError(400, "직무 분야를 골라야 합니다.");
+  const collegeId = body.college_id === undefined || body.college_id === null ? null : Number(body.college_id);
+  if (collegeId !== null && (!Number.isInteger(collegeId) || collegeId < 1)) {
+    throw new HttpError(400, "구역 값이 올바르지 않습니다.");
+  }
+  if (collegeId !== null) {
+    const { data: college } = await admin.from("colleges").select("id").eq("id", collegeId).eq("is_active", true).maybeSingle();
+    if (!college) throw new HttpError(400, "쓰고 있는 구역이 아닙니다.");
+  }
+  const headline = optionalText(body.headline, 100, "대표 분야");
+  const career = optionalText(body.career, 5000, "경력");
+  const { email } = await loginKey("mentor", name + (nameTag ?? ""));
+
+  const { error: e1 } = await admin
+    .from("mentor_invites")
+    .upsert({ email, created_at: new Date().toISOString() });
+  if (e1) throw e1;
+  let result: Awaited<ReturnType<typeof admin.auth.admin.createUser>>;
+  try {
+    result = await admin.auth.admin.createUser({
+      email,
+      password: pin,
+      email_confirm: true,
+      user_metadata: { login_group: "mentor", name, name_tag: nameTag, company, job_field_id: jobFieldId },
+    });
+  } finally {
+    await admin.from("mentor_invites").delete().eq("email", email);
+  }
+  const { data, error } = result;
+  if (error?.code === "email_exists") {
+    throw new HttpError(409, "같은 이름의 멘토가 이미 있습니다. 구분 문자를 붙여 주세요.");
+  }
+  if (error) throw error;
+
+  const userId = data.user.id;
+  const { error: e2 } = await admin.from("profiles").update({ must_change_pin: true }).eq("id", userId);
+  if (e2) throw e2;
+  const { error: e3 } = await admin
+    .from("mentor_profiles")
+    .update({ college_id: collegeId, headline, career, publish_on_consent: true })
+    .eq("id", userId);
+  if (e3) throw e3;
+  return { ok: true, user_id: userId };
+}
+
 Deno.serve(async (req) => {
   try {
     if (req.method !== "POST") throw new HttpError(405, "POST만 받습니다.");
@@ -315,6 +391,9 @@ Deno.serve(async (req) => {
         break;
       case "create_admin":
         result = await createAdmin(body);
+        break;
+      case "create_mentor":
+        result = await createMentor(body);
         break;
       case "delete_user":
         result = await deleteUser(auth.user.id, body);

@@ -68,6 +68,42 @@ export async function createAdmin(
   };
 }
 
+/**
+ * 관리자가 대신 만드는 멘토 계정 (11장 36번). 멘토는 임시 PIN으로 로그인해 개인정보 동의 → PIN 변경을 하고,
+ * 동의하면 고른 구역에 자동 공개됩니다. 그전에는 개설 대기로 남습니다.
+ */
+export async function createMentor(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const name = cleanName(field(formData, "name"));
+  const nameTag = field(formData, "nameTag").trim();
+  const company = field(formData, "company").trim();
+  const jobFieldId = field(formData, "jobFieldId");
+  const collegeId = field(formData, "collegeId");
+  const headline = field(formData, "headline").trim();
+  const values = { name, nameTag, company, jobFieldId, collegeId, headline };
+  if (!company) return { error: "기업명을 입력해 주세요.", values };
+  if (!/^[1-9][0-9]*$/.test(jobFieldId)) return { error: "직무 분야를 골라 주세요.", values };
+  const tempPin = randomPin();
+  const result = await callAdminUsers({
+    action: "create_mentor",
+    name,
+    name_tag: nameTag || null,
+    company,
+    job_field_id: Number(jobFieldId),
+    college_id: /^[1-9][0-9]*$/.test(collegeId) ? Number(collegeId) : null,
+    headline: headline || null,
+    temp_pin: tempPin,
+  });
+  if (result.error) {
+    return { error: result.error, values };
+  }
+  return {
+    success: `멘토 ${name}${nameTag} 계정을 만들었습니다. 임시 PIN ${tempPin} — 소속 "멘토"로 로그인하면 개인정보 동의와 PIN 변경을 하게 되고, 동의하면 고른 구역에 공개됩니다.`,
+  };
+}
+
 /** 이름·구분 문자·(멘티면) 학과 변경. 로그인 키가 바뀌므로 admin-users가 가상 이메일도 함께 바꿉니다. */
 export async function updateIdentity(
   _prev: FormState,

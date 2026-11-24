@@ -462,6 +462,7 @@ export type Database = {
           intro: string | null
           job_field_id: number
           photo_path: string | null
+          publish_on_consent: boolean
           published_at: string | null
           status: Database["public"]["Enums"]["mentor_status"]
         }
@@ -475,6 +476,7 @@ export type Database = {
           intro?: string | null
           job_field_id: number
           photo_path?: string | null
+          publish_on_consent?: boolean
           published_at?: string | null
           status?: Database["public"]["Enums"]["mentor_status"]
         }
@@ -488,6 +490,7 @@ export type Database = {
           intro?: string | null
           job_field_id?: number
           photo_path?: string | null
+          publish_on_consent?: boolean
           published_at?: string | null
           status?: Database["public"]["Enums"]["mentor_status"]
         }
@@ -736,6 +739,7 @@ export type Database = {
       is_backend: { Args: never; Returns: boolean }
       is_published_mentor: { Args: { mentor_id: string }; Returns: boolean }
       is_mentor: { Args: never; Returns: boolean }
+      record_privacy_consent: { Args: { policy_version: string }; Returns: undefined }
       semester_started: { Args: { semester_id: number }; Returns: boolean }
       issue_counts: {
         Args: never
