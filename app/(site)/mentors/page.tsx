@@ -61,7 +61,7 @@ async function MentorSearch({ searchParams }: { searchParams: SearchParams }) {
 
   return (
     <>
-      <MentorFilter colleges={colleges} jobFields={jobFields} value={value} />
+      <MentorFilter colleges={colleges} jobFields={jobFields} value={value} nameSearch={!!user} />
       <p className="text-sm text-muted-foreground">멘토 {result.total}명</p>
       {result.mentors.length > 0 ? (
         <MentorGrid mentors={result.mentors} locked={!user} />

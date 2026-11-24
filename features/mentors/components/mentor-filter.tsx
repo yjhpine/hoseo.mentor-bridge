@@ -13,10 +13,13 @@ export function MentorFilter({
   colleges,
   jobFields,
   value,
+  nameSearch = true,
 }: {
   colleges: Option[];
   jobFields: Option[];
   value: { college?: number; field?: number; q?: string };
+  /** 비로그인 방문자는 이름이 가려져 이름으로 찾을 수 없으므로 false (설계 11장 37번). */
+  nameSearch?: boolean;
 }) {
   return (
     <form
@@ -43,7 +46,7 @@ export function MentorFilter({
       <Input
         name="q"
         type="search"
-        placeholder="이름, 기업, 멘토링 분야 검색"
+        placeholder={nameSearch ? "이름, 기업, 멘토링 분야 검색" : "기업, 멘토링 분야 검색"}
         maxLength={50}
         defaultValue={value.q}
         aria-label="검색어"

@@ -25,7 +25,7 @@ export const COLLECTED_ITEMS = [
  * 소개·경력과 질문·답변은 로그인한 사용자만 봅니다.
  */
 export const MENTOR_PUBLIC_ITEMS = "프로필 사진, 이름, 기업명, 직무 분야, 대표 멘토링 분야, 단과대학 구역";
-export const MENTOR_PUBLIC_TEXT = `관리자가 개설한 멘토의 ${MENTOR_PUBLIC_ITEMS}은(는) 서비스 화면에 공개되어 로그인하지 않은 방문자도 볼 수 있습니다. 소개·경력과 질문·답변은 로그인한 이용자만 봅니다.`;
+export const MENTOR_PUBLIC_TEXT = `관리자가 개설한 멘토의 ${MENTOR_PUBLIC_ITEMS}은(는) 서비스 화면에 공개되어 로그인하지 않은 방문자도 볼 수 있습니다. 다만 로그인하지 않은 방문자에게는 이름의 가운데 글자를 O로 가려 보여 줍니다(예: 홍길동 → 홍O동). 소개·경력과 질문·답변은 로그인한 이용자만 봅니다.`;
 
 export const PURPOSES =
   "회원 식별과 로그인, 단과대학별 멘토·멘티 연결, 1:1 질의응답과 강의 운영, 새 메시지 알림, 멘토 강사료 산정, 만족도 조사, 부정 이용 방지";
