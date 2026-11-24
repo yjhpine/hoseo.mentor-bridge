@@ -18,5 +18,12 @@ export async function recordConsent(_prev: FormState, formData: FormData): Promi
   if (error) {
     return { error: "동의를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요." };
   }
-  redirect("/");
+  // 임시 PIN이면 바로 PIN 변경 화면으로 보냅니다. 서버 액션의 이동에는 proxy의 PIN 화면 이동이 주소에 반영되지 않습니다.
+  const { data: claims } = await supabase.auth.getClaims();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("must_change_pin")
+    .eq("id", claims?.claims?.sub ?? "")
+    .maybeSingle();
+  redirect(profile?.must_change_pin ? "/account/pin" : "/");
 }
