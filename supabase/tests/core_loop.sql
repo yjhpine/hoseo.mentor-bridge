@@ -457,6 +457,16 @@ begin
   perform pg_temp.back();
   insert into r(step,expect,got) values ('비로그인: 동의 기록 남기기', '거부', t);
 
+  -- 15. 비로그인에게 멘토 이름 가리기 (11장 37번)
+  perform pg_temp.anon(); select name into t from public.public_mentors(null, null, null, 50, 0) where id = m; perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 멘토 이름 가운데 가림', '시OO토', coalesce(t, '없음'));
+  perform pg_temp.act(ma); select name into t from public.public_mentors(null, null, null, 50, 0) where id = m; perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 멘토 실명', '시험멘토', coalesce(t, '없음'));
+  perform pg_temp.anon(); select count(*) into v from public.public_mentors(null, null, '시험멘토', 50, 0) where id = m; perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 실명으로 멘토 검색', '0', v::text);
+  perform pg_temp.anon(); select mentor_name into t from public.public_open_courses(50) where id = crs; perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 강의 목록의 멘토 이름 가림', '시OO토', coalesce(t, '없음'));
+
   -- 결과
   select '통과 ' || count(*) filter (where got = expect) || ' / 전체 ' || count(*) into summary from r;
   select string_agg(n || '. ' || step || ' (기대 ' || expect || ', 실제 ' || got || ')', E'\n' order by n)
