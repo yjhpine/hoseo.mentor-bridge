@@ -9,7 +9,16 @@ import {
 
 // 가입 화면의 개인정보 수집·이용 동의 (docs/architecture.md 6.7).
 // 법에서 알리라고 정한 네 가지(항목, 목적, 보유 기간, 거부할 권리와 불이익)를 보여 주고 체크를 받습니다.
-export function PrivacyConsent({ isMentor, defaultChecked }: { isMentor: boolean; defaultChecked?: boolean }) {
+export function PrivacyConsent({
+  isMentor,
+  defaultChecked,
+  refuseText = "동의하지 않을 수 있지만, 그러면 가입할 수 없습니다.",
+}: {
+  isMentor: boolean;
+  defaultChecked?: boolean;
+  /** 거부할 권리와 불이익 안내. 첫 로그인 동의 화면은 "이용할 수 없습니다"로 바꿉니다. */
+  refuseText?: string;
+}) {
   const mine = COLLECTED_ITEMS[isMentor ? 1 : 0];
   return (
     <div className="flex flex-col gap-3 rounded-md border p-3 text-xs">
@@ -31,7 +40,7 @@ export function PrivacyConsent({ isMentor, defaultChecked }: { isMentor: boolean
         )}
       </dl>
       <p className="text-muted-foreground">
-        동의하지 않을 수 있지만, 그러면 가입할 수 없습니다. 자세한 내용은{" "}
+        {refuseText} 자세한 내용은{" "}
         <Link href={PRIVACY_PATH} target="_blank" className="text-foreground underline underline-offset-4">
           개인정보 처리방침
         </Link>

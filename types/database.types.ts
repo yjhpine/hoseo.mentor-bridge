@@ -749,6 +749,7 @@ export type Database = {
         Args: { login_group: string; login_name: string }
         Returns: string
       }
+      mask_name: { Args: { raw: string }; Returns: string }
       mark_room_read: { Args: { room_id: number }; Returns: undefined }
       mentor_activity: {
         Args: { mentor_id: string }

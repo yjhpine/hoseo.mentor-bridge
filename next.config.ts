@@ -11,6 +11,10 @@ import { BASE_SECURITY_HEADERS } from "./lib/security/headers";
 const nextConfig: NextConfig = {
   // 응답에 "x-powered-by: Next.js"를 붙이지 않습니다 (사용 기술 노출 줄이기).
   poweredByHeader: false,
+  experimental: {
+    // Next.js 보안 업그레이드 안내(next upgrade --agent=security)를 따르도록 표시합니다 (2026-11-24, 16.4.3 → 16.4.6).
+    agentUpgrade: "security",
+  },
   async headers() {
     return [{ source: "/:path*", headers: [...BASE_SECURITY_HEADERS] }];
   },

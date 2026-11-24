@@ -13,7 +13,7 @@ export function ConsentForm({ isMentor }: { isMentor: boolean }) {
   const [leaving, startLeave] = useTransition();
   return (
     <form action={action} className="flex flex-col gap-4">
-      <PrivacyConsent isMentor={isMentor} />
+      <PrivacyConsent isMentor={isMentor} refuseText="동의하지 않을 수 있지만, 그러면 서비스를 이용할 수 없습니다." />
       <FormMessage state={state} />
       <Button type="submit" size="lg" disabled={pending || leaving}>
         {pending ? "저장하는 중…" : "동의하고 시작하기"}
