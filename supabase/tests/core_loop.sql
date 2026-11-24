@@ -25,6 +25,7 @@ grant usage on sequence r_n_seq to authenticated;
 do $$
 declare
   a uuid := gen_random_uuid(); m uuid := gen_random_uuid(); ma uuid := gen_random_uuid(); mb uuid := gen_random_uuid();
+  iv uuid := gen_random_uuid();
   dept bigint; college bigint; job bigint;
   sem bigint; room bigint; crs bigint; v int; v2 int; t text; summary text; failed text;
   long_answer text := '전자회로와 반도체공학을 깊게 공부하세요. 면접에서 공정 원리를 물어볼 때 이 두 과목이 기본이 됩니다. 현장 실습도 꼭 해 보세요.';
@@ -418,6 +419,43 @@ begin
   perform pg_temp.act(m); delete from public.mentor_reports where mentor_id = m and semester_id = sem; perform pg_temp.back();
   select count(*) into v from public.mentor_reports where mentor_id = m;
   insert into r(step,expect,got) values ('멘토: 보고서 지우기', '0', v::text);
+
+  -- 14. 관리자가 대신 만드는 멘토 계정 (11장 36번): 허가로 동의 없이 만들고, 첫 로그인 때 동의하면 자동 공개
+  begin
+    insert into auth.users (id, email, raw_user_meta_data, aud, role) values (gen_random_uuid(),
+      public.login_email('mentor', public.normalize_login_name('허가없는멘토')),
+      jsonb_build_object('login_group','mentor','name','허가없는멘토','company','시험','job_field_id',job), 'authenticated', 'authenticated');
+    t := '허용됨';
+  exception when others then t := '거부'; end;
+  insert into r(step,expect,got) values ('허가 없이 동의 없는 멘토 가입', '거부', t);
+  insert into public.mentor_invites(email) values (public.login_email('mentor', public.normalize_login_name('대신만든멘토')));
+  insert into auth.users (id, email, raw_user_meta_data, aud, role) values (iv,
+    public.login_email('mentor', public.normalize_login_name('대신만든멘토')),
+    jsonb_build_object('login_group','mentor','name','대신만든멘토','company','시험기업','job_field_id',job), 'authenticated', 'authenticated');
+  insert into r(step,expect,got)
+  select '관리자 허가로 만든 멘토 (동의 기록 없음)', '1/0',
+    (select count(*) from public.mentor_profiles where id = iv) || '/' || (select count(*) from public.privacy_consents where user_id = iv);
+  perform pg_temp.act(a);
+  update public.mentor_profiles set college_id = college, publish_on_consent = true where id = iv;
+  perform pg_temp.back();
+  perform pg_temp.act(m);
+  begin update public.mentor_profiles set publish_on_consent = true where id = m; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 자동 공개 설정 직접 바꾸기', '거부', t);
+  perform pg_temp.anon(); select count(*) into v from public.public_mentors(null, null, null, 50, 0) where id = iv; perform pg_temp.back();
+  insert into r(step,expect,got) values ('동의 전 대신 만든 멘토는 공개 안 됨', '0', v::text);
+  perform pg_temp.act(iv); perform public.record_privacy_consent('2026-11-24'); perform pg_temp.back();
+  insert into r(step,expect,got)
+  select '대신 만든 멘토: 첫 로그인 동의 → 동의 기록·자동 공개', '1/published/false',
+    (select count(*) from public.privacy_consents where user_id = iv) || '/' || status::text || '/' || publish_on_consent::text
+  from public.mentor_profiles where id = iv;
+  perform pg_temp.act(iv); perform public.record_privacy_consent('2026-11-24'); perform pg_temp.back();
+  select count(*) into v from public.privacy_consents where user_id = iv;
+  insert into r(step,expect,got) values ('동의를 두 번 눌러도 기록은 1건', '1', v::text);
+  perform pg_temp.anon();
+  begin perform public.record_privacy_consent('2026-11-24'); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 동의 기록 남기기', '거부', t);
 
   -- 결과
   select '통과 ' || count(*) filter (where got = expect) || ' / 전체 ' || count(*) into summary from r;
