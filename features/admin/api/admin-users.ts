@@ -70,7 +70,7 @@ export async function createAdmin(
 
 /**
  * 관리자가 대신 만드는 멘토 계정 (11장 36번). 멘토는 임시 PIN으로 로그인해 개인정보 동의 → PIN 변경을 하고,
- * 동의하면 고른 구역에 자동 공개됩니다. 그전에는 개설 대기로 남습니다.
+ * 구역을 고르면 만들 때 바로 공개되고(2026-11-25 변경), 고르지 않으면 개설 대기로 남습니다.
  */
 export async function createMentor(
   _prev: FormState,
@@ -100,7 +100,7 @@ export async function createMentor(
     return { error: result.error, values };
   }
   return {
-    success: `멘토 ${name}${nameTag} 계정을 만들었습니다. 임시 PIN ${tempPin} — 소속 "멘토"로 로그인하면 개인정보 동의와 PIN 변경을 하게 되고, 동의하면 고른 구역에 공개됩니다.`,
+    success: `멘토 ${name}${nameTag} 계정을 만들었습니다. 임시 PIN ${tempPin} — 소속 "멘토"로 로그인하면 개인정보 동의와 PIN 변경을 하게 됩니다.${collegeId ? " 고른 구역에 바로 공개했습니다." : " 멘토 개설에서 구역을 정해 개설하세요."}`,
   };
 }
 

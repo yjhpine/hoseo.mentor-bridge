@@ -230,7 +230,7 @@ export function CreateMentorForm({
         </Select>
       </div>
       <div className="grid gap-2">
-        <Label htmlFor="mentor-college">단과대학 구역 (동의하면 여기에 공개)</Label>
+        <Label htmlFor="mentor-college">단과대학 구역 (고르면 바로 공개)</Label>
         <Select id="mentor-college" name="collegeId" defaultValue={v.collegeId ?? ""}>
           <option value="">나중에 정함 (개설 대기로 둠)</option>
           {colleges.map((c) => (
