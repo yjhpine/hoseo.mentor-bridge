@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>호서대학교 멘토링 멘티(재학생) 이용 가이드</title>
+<!-- PDF 만들기: node scripts/build-manual.mjs (docs/manual/README.md) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body>
+
+<section class="cover">
+  <div class="top">
+    <div class="brand"><img src="../../public/brand/hoseo-signature.png" alt="호서대학교"><span>멘토링</span></div>
+    <h1>멘티 이용 가이드</h1>
+    <p class="sub">현직 선배 멘토에게 1:1로 묻고, 나의 진로를 설계하세요.<br>재학생을 위한 가입부터 질문·강의·알림까지 안내서</p>
+  </div>
+  <div class="meta">
+    <p><b>사이트</b> https://hoseo-mentor-bridge.yjhpine123.workers.dev</p>
+    <p><b>만든 날</b> 2026년 11월 25일</p>
+    <p>화면 사진은 설명을 위한 <b>예시</b>(멘토 홍길동, 멘티 이몽룡)입니다. 휴대폰 화면과 PC 화면은 메뉴 위치만 다르고 기능은 같습니다.</p>
+  </div>
+</section>
+
+<section class="chapter toc">
+  <h2>차례</h2>
+  <ol>
+    <li>1. 한눈에 보기</li>
+    <li>2. 회원가입</li>
+    <li>3. 로그인</li>
+    <li>4. 멘토 찾기</li>
+    <li>5. 질문하기 (1:1 톡방)</li>
+    <li>6. 강의 수강하기</li>
+    <li>7. 마이페이지 — 알림 켜기 · 앱으로 설치 · 만족도 조사</li>
+    <li>8. PIN 바꾸기 · 문제 알리기</li>
+    <li>9. 자주 묻는 질문</li>
+  </ol>
+  <div class="box tip" style="margin-top:24px"><span class="t">이 서비스는</span>호서대학교 취업팀이 운영하는 멘토링 서비스입니다. 단과대학별로 배치된 <b>현직 멘토</b>(기업에서 일하는 선배)에게 진로·취업·직무에 관해 1:1로 질문하고 답을 받을 수 있습니다. 비용은 없습니다.</div>
+</section>
+
+<section class="chapter">
+  <h2>1. 한눈에 보기</h2>
+  <ol class="steps">
+    <li><b>회원가입</b>: 소속(내 학과), 이름, 숫자 6자리 PIN을 정합니다. 이메일·학번은 받지 않습니다.</li>
+    <li><b>로그인</b>: 소속 + 이름 + PIN으로 로그인합니다. 같은 기기에서는 로그인이 유지됩니다.</li>
+    <li><b>멘토 찾기</b>: 단과대학 구역, 직무 분야, 검색어로 멘토를 찾습니다.</li>
+    <li><b>질문하기</b>: 멘토 상세에서 <span class="btn red">1:1 질문하기</span> → 그 멘토와의 톡방에서 질문합니다.</li>
+    <li><b>답변 받기</b>: 멘토가 답하면 톡방에 나타나고, 알림을 켜 두면 휴대폰·PC로 알려 줍니다.</li>
+    <li><b>강의 수강</b>: 멘토가 연 강의에 수강 신청하면 영상·자료·실시간 수업을 볼 수 있습니다.</li>
+    <li><b>학기가 끝나면</b>: 질문한 멘토에 대한 짧은 만족도 조사에 응답합니다.</li>
+  </ol>
+  <h3>로그인하지 않아도 볼 수 있는 것</h3>
+  <p>메인, 서비스 소개, 이용 안내, 단과대학 구역, 멘토 카드, 강의 목록은 누구나 봅니다. 이때 멘토 이름은 가운데 글자가 O로 가려져 보입니다(예: 홍O동). <b>멘토 상세·질문·수강 신청은 로그인한 뒤</b>에 할 수 있고, 누르면 로그인 화면으로 안내합니다.</p>
+  <div class="phones">
+    <figure><img src="images/guide/ph-mentee-home.jpg" alt=""><figcaption>휴대폰 · 메인</figcaption></figure>
+    <figure><img src="images/guide/ph-mentee-home-2.jpg" alt=""><figcaption>단과대학 구역 · 새로 개설된 멘토</figcaption></figure>
+  </div>
+  <p class="muted" style="font-size:9pt">휴대폰에서는 화면 아래에 <b>홈 · 멘토 찾기 · 톡방 · 마이페이지</b> 메뉴가 늘 보입니다. PC에서는 위쪽 메뉴를 씁니다.</p>
+</section>
+
+<section class="chapter">
+  <h2>2. 회원가입</h2>
+  <div class="two">
+    <figure><img src="images/guide/pc-signup.jpg" alt=""><figcaption>회원가입 화면</figcaption></figure>
+    <div>
+      <ol class="steps">
+        <li>오른쪽 위 <b>회원가입</b>(휴대폰은 ☰ 메뉴)을 누릅니다.</li>
+        <li><b>소속</b>에서 <b>내 학과</b>를 고릅니다. ("멘토"는 기업 현직자용입니다.)</li>
+        <li><b>이름</b>에 실명을 한글이나 영문으로 씁니다.</li>
+        <li><b>PIN</b> 숫자 6자리를 정하고 한 번 더 넣습니다.</li>
+        <li><b>개인정보 수집·이용 동의</b>를 읽고 체크합니다.</li>
+        <li>아래 자동 입력 방지 칸이 <b>"성공"</b>이 되면 가입 버튼을 누릅니다.</li>
+      </ol>
+      <div class="box warn"><span class="t">PIN은 비밀번호입니다</span>소속과 이름은 다른 사람도 알 수 있어서 PIN이 유일한 비밀번호입니다. 생일·학번 뒷자리·111111처럼 짐작하기 쉬운 숫자는 피하세요.</div>
+      <div class="box note"><span class="t">"같은 이름이 있습니다"가 나오면</span>같은 학과에 같은 이름이 있으면 이름 뒤에 붙일 <b>구분 문자</b>(영문·숫자 1~3자, 예: A)를 정하라고 안내합니다. 이후 로그인할 때도 <b>홍길동A</b>처럼 붙여 씁니다.</div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <h2>3. 로그인</h2>
+  <div class="phones">
+    <figure><img src="images/guide/ph-login.jpg" alt=""><figcaption>휴대폰 · 로그인</figcaption></figure>
+    <div style="flex:1">
+      <ol class="steps">
+        <li>오른쪽 위 <span class="btn red">로그인</span>을 누릅니다.</li>
+        <li><b>소속</b>(내 학과), <b>이름</b>(구분 문자가 있으면 함께), <b>PIN</b>을 넣습니다.</li>
+        <li>자동 입력 방지 칸이 "성공"이 된 뒤 로그인합니다.</li>
+      </ol>
+      <div class="box tip"><span class="t">로그인 유지</span>같은 휴대폰·PC에서는 로그인이 계속 유지됩니다. 도서관 PC처럼 여러 사람이 쓰는 기기에서는 다 쓴 뒤 오른쪽 위 <b>내 이름 → 로그아웃</b>을 누르세요.</div>
+      <div class="box note"><span class="t">PIN을 잊었으면</span>이메일이 없어서 스스로 찾을 수 없습니다. 관리자(취업팀)에게 연락하면 <b>임시 PIN</b>을 알려 줍니다. 임시 PIN으로 로그인하면 새 PIN을 정하는 화면이 먼저 나옵니다.</div>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <h2>4. 멘토 찾기</h2>
+  <ul>
+    <li>위쪽 <b>멘토 찾기</b> 메뉴 또는 <b>단과대학</b> 메뉴에서 구역을 고릅니다.</li>
+    <li><b>모든 구역 / 모든 직무 분야</b>를 골라 좁히고, 검색칸에 이름·기업·멘토링 분야를 넣어 찾을 수 있습니다.</li>
+    <li>카드의 <span class="btn red">질문 가능</span> 표시는 지금 질문을 받는 멘토라는 뜻입니다.</li>
+  </ul>
+  <div class="phones">
+    <figure><img src="images/guide/ph-mentee-mentors.jpg" alt=""><figcaption>멘토 찾기</figcaption></figure>
+    <figure><img src="images/guide/ph-mentee-mentor-detail.jpg" alt=""><figcaption>멘토 상세</figcaption></figure>
+  </div>
+  <p class="muted" style="font-size:8.6pt;text-align:center">예시 멘토 외 실제 멘토의 이름·기업은 가렸습니다.</p>
+  <p>멘토 카드를 누르면 <b>멘토 상세</b>가 열립니다. 대표 멘토링 분야, 소개, 주요 경력, 등록한 강의와 함께 답변 수·답변율·수강생 수를 볼 수 있습니다.</p>
+</section>
+
+<section class="chapter">
+  <h2>5. 질문하기 (1:1 톡방)</h2>
+  <div class="phones">
+    <figure><img src="images/guide/ph-mentee-chat-room.jpg" alt=""><figcaption>톡방에서 질문·답변</figcaption></figure>
+    <figure><img src="images/guide/ph-mentee-chats.jpg" alt=""><figcaption>톡방 목록</figcaption></figure>
+    <div style="flex:1;font-size:9.6pt">
+      <ol class="steps">
+        <li>멘토 상세에서 <span class="btn red">1:1 질문하기</span>를 누르면 그 멘토와의 톡방이 열립니다.</li>
+        <li>아래 칸에 질문을 쓰고 <span class="btn red">보내기</span>.</li>
+        <li>멘토가 답하면 톡방에 나타납니다. 지난 대화는 <b>톡방</b> 메뉴에서 다시 봅니다. 안 읽은 답변은 숫자로 표시됩니다.</li>
+      </ol>
+    </div>
+  </div>
+  <h3>좋은 질문을 쓰는 법</h3>
+  <table>
+    <tr><th style="width:45%">이렇게 쓰면 좋아요</th><th>이런 질문은 답하기 어려워요</th></tr>
+    <tr><td>"전자공학과 3학년입니다. 반도체 공정 엔지니어를 준비하는데, 4학년 때 들으면 좋은 과목을 추천해 주세요."</td><td>"취업 어떻게 해요?"</td></tr>
+    <tr><td>내 학년·전공·관심 직무 → 궁금한 점 하나 → 지금까지 해 본 것 순서로 짧게</td><td>개인 연락처, 회사 내부 정보, 추천서 요청</td></tr>
+  </table>
+  <div class="box note"><span class="t">알아 두세요</span>
+    <ul>
+      <li>멘토 답변은 공백을 뺀 50자 이상이어서 짧은 한 줄 답은 오지 않습니다. 멘토도 일을 하며 답하므로 답이 오기까지 며칠 걸릴 수 있습니다.</li>
+      <li>톡방은 <b>학기마다</b> 새로 열립니다. 학기가 끝나면 지난 톡방은 읽을 수만 있고 새 메시지는 쓸 수 없습니다.</li>
+      <li>"지금은 질문을 받는 학기가 아닙니다"가 나오면 학기 사이 기간입니다. 새 학기가 시작되면 다시 질문할 수 있습니다.</li>
+      <li>대화 내용은 운영(강사료 산정·부적절한 글 관리)을 위해 관리자가 볼 수 있습니다. 서로 예의를 지켜 주세요.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="chapter">
+  <h2>6. 강의 수강하기</h2>
+  <div class="phones">
+    <figure><img src="images/guide/ph-mentee-courses.jpg" alt=""><figcaption>강의 목록</figcaption></figure>
+    <figure><img src="images/guide/ph-mentee-course-detail.jpg" alt=""><figcaption>강의 상세 · 강의 자료</figcaption></figure>
+    <div style="flex:1;font-size:9.6pt">
+      <ol class="steps">
+        <li>위쪽 <b>강의</b> 메뉴에서 모집 중인 강의를 봅니다.</li>
+        <li>강의를 눌러 소개를 읽고 <span class="btn red">수강 신청</span>을 누릅니다.</li>
+        <li>신청하면 <b>강의 자료</b>가 열립니다.
+          <ul>
+            <li><span class="btn">영상 보기</span>: 유튜브 등 영상</li>
+            <li><span class="btn">수업 들어가기</span>: 정해진 시각의 실시간 수업</li>
+            <li><span class="btn">내려받기</span>: PDF·한글·PPT 등 자료</li>
+          </ul></li>
+        <li>그만 들으려면 <span class="btn">수강 취소</span>.</li>
+      </ol>
+    </div>
+  </div>
+  <p>수강 중인 강의는 <b>마이페이지 → 수강 중인 강의</b>에서도 모아 봅니다.</p>
+</section>
+
+<section class="chapter">
+  <h2>7. 마이페이지</h2>
+  <p>오른쪽 위 내 이름(휴대폰은 아래 <b>마이페이지</b>)을 누릅니다.</p>
+  <div class="phones">
+    <figure><img src="images/guide/ph-mentee-mypage.jpg" alt=""><figcaption>만족도 조사</figcaption></figure>
+    <figure><img src="images/guide/ph-mentee-mypage-2.jpg" alt=""><figcaption>새 메시지 알림 · 앱으로 설치</figcaption></figure>
+    <figure><img src="images/guide/ph-mentee-mypage-3.jpg" alt=""><figcaption>수강 중인 강의</figcaption></figure>
+  </div>
+  <h3>새 메시지 알림 켜기</h3>
+  <ol class="steps">
+    <li><b>새 메시지 알림</b>에서 <span class="btn red">알림 받기</span>를 누르고, 브라우저가 묻는 알림 허용에 <b>허용</b>을 누릅니다.</li>
+    <li>이제 멘토가 답하면 휴대폰·PC에 알림이 옵니다. 알림을 받을 기기마다 한 번씩 켭니다.</li>
+  </ol>
+  <div class="box note"><span class="t">"알림이 차단되어 있습니다"가 보이면</span>예전에 알림을 거부한 경우입니다. 주소창 왼쪽의 사이트 설정(또는 휴대폰 설정 → 알림)에서 허용으로 바꾼 뒤 페이지를 새로 고칩니다. 그래도 안 되면 <b>▸ 알림이 오지 않나요?</b>를 펼쳐 안내를 따릅니다.</div>
+  <h3>앱으로 설치 (홈 화면 아이콘)</h3>
+  <table>
+    <tr><th style="width:22%">기기</th><th>방법</th></tr>
+    <tr><td>안드로이드 (크롬)</td><td>마이페이지의 <b>앱 설치</b> 버튼, 또는 크롬 메뉴(⋮) → <b>홈 화면에 추가 / 앱 설치</b></td></tr>
+    <tr><td>아이폰 (사파리)</td><td>사파리 아래 <b>공유</b> 버튼 → <b>홈 화면에 추가</b>. 아이폰은 이렇게 설치한 아이콘으로 열어야 알림을 켤 수 있습니다.</td></tr>
+    <tr><td>PC (크롬·엣지)</td><td>주소창 오른쪽의 설치 아이콘</td></tr>
+  </table>
+  <div class="box tip"><span class="t">카카오톡에서 링크를 열었다면</span>카카오톡 안의 브라우저에서는 설치·알림이 안 됩니다. 오른쪽 아래(또는 위) 메뉴에서 <b>다른 브라우저로 열기</b>(크롬·사파리)를 누르세요.</div>
+  <h3>만족도 조사 (학기가 끝난 뒤)</h3>
+  <p>학기가 끝나면 그 학기에 <b>질문하고 답변을 받은 멘토</b>마다 만족도 조사가 열립니다. 홈 안내와 마이페이지에 나타나며, 별점(1~5)과 짧은 의견을 남기고 <span class="btn red">응답하기</span>를 누릅니다. 응답은 관리자만 보고, <b>멘토에게 이름이 알려지지 않습니다.</b> 마감일이 지나면 응답할 수 없습니다.</p>
+</section>
+
+<section class="chapter">
+  <h2>8. PIN 바꾸기 · 문제 알리기</h2>
+  <div class="phones">
+    <figure><img src="images/guide/ph-pin.jpg" alt=""><figcaption>PIN 변경</figcaption></figure>
+    <figure><img src="images/guide/ph-mentee-report.jpg" alt=""><figcaption>문제 알리기</figcaption></figure>
+    <div style="flex:1;font-size:9.6pt">
+      <p><b>PIN 바꾸기</b><br>오른쪽 위 내 이름 → <b>PIN 변경</b>. 현재 PIN과 새 PIN(두 번)을 넣고 <span class="btn red">PIN 바꾸기</span>.</p>
+      <p><b>문제 알리기</b><br>화면이 이상하거나 오류가 나면 화면 맨 아래 <b>문제 알리기</b>를 누릅니다. 무슨 일이 있었는지(어느 화면에서 무엇을 눌렀는지) 적어 보내면 관리자가 확인하고 고칩니다.</p>
+      <p><b>탈퇴</b><br>화면에서 직접 탈퇴하는 기능은 없습니다. 운영 담당자에게 요청하면 처리하며, 질문·답변 기록도 함께 지워집니다.</p>
+    </div>
+  </div>
+</section>
+
+<section class="chapter">
+  <h2>9. 자주 묻는 질문</h2>
+  <dl class="qa">
+    <dt>PIN을 잊어버렸어요.</dt>
+    <dd>운영 담당자에게 연락해 임시 PIN을 받으세요. 임시 PIN으로 로그인하면 새 PIN을 정하는 화면이 먼저 나옵니다.</dd>
+    <dt>로그인이 안 돼요.</dt>
+    <dd>소속이 <b>내 학과</b>인지, 이름에 구분 문자(예: 홍길동A)를 붙였는지, PIN이 맞는지 확인하세요. 자동 입력 방지 칸이 "성공"이 된 뒤에 버튼을 눌러야 합니다.</dd>
+    <dt>학과나 이름을 잘못 넣고 가입했어요.</dt>
+    <dd>운영 담당자에게 요청하면 고쳐 줍니다. 바뀐 학과·이름으로 로그인하게 됩니다.</dd>
+    <dt>다른 단과대학의 멘토에게도 질문할 수 있나요?</dt>
+    <dd>네. 멘토 찾기에서 모든 구역의 멘토를 보고 질문할 수 있습니다.</dd>
+    <dt>멘토 이름이 "홍O동"처럼 보여요.</dt>
+    <dd>로그인하지 않으면 멘토 이름 가운데를 가립니다. 로그인하면 실명이 보입니다.</dd>
+    <dt>답변 알림이 오지 않아요.</dt>
+    <dd>마이페이지에서 알림을 켰는지, 휴대폰 설정에서 브라우저(또는 설치한 앱) 알림이 허용되어 있는지 확인하세요. 아이폰은 홈 화면에 추가한 아이콘으로 열어야 합니다.</dd>
+    <dt>"지금은 질문을 받는 학기가 아닙니다"가 나와요.</dt>
+    <dd>학기 사이 기간입니다. 새 학기가 시작되면 다시 질문할 수 있습니다. 지난 대화는 톡방 메뉴에서 계속 읽을 수 있습니다.</dd>
+    <dt>내 질문을 다른 학생도 볼 수 있나요?</dt>
+    <dd>아니요. 1:1 톡방은 나와 멘토만 봅니다. 운영을 위해 관리자가 볼 수 있습니다.</dd>
+  </dl>
+  <div class="box tip" style="margin-top:18px"><span class="t">문의</span>운영: 호서대학교 취업팀 · 사이트의 <b>이용 안내</b> 화면 아래 문의처를 참고하세요. 개인정보 처리 내용은 사이트 맨 아래 <b>개인정보 처리방침</b>에 있습니다.</div>
+</section>
+
+</body>
+</html>
