@@ -360,14 +360,17 @@ export type Database = {
       }
       mentee_profiles: {
         Row: {
+          avatar_character: number | null
           department_id: number
           id: string
         }
         Insert: {
+          avatar_character?: number | null
           department_id: number
           id: string
         }
         Update: {
+          avatar_character?: number | null
           department_id?: number
           id?: string
         }
@@ -830,6 +833,7 @@ export type Database = {
         Returns: undefined
       }
       set_current_semester: { Args: { semester_id: number }; Returns: undefined }
+      set_my_mentee_character: { Args: { choice: number }; Returns: undefined }
     }
     Enums: {
       course_status: "draft" | "published"

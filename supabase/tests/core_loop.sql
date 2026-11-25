@@ -480,6 +480,18 @@ begin
   insert into r(step,expect,got) values ('비로그인: 멘토 카드에 고른 캐릭터', '3', coalesce(t, '없음'));
   perform pg_temp.act(ma); select avatar_character::text into t from public.mentor_directory where id = m; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘티: 멘토 목록에 고른 캐릭터', '3', coalesce(t, '없음'));
+  perform pg_temp.act(ma); perform public.set_my_mentee_character(2::smallint); perform pg_temp.back();
+  insert into r(step,expect,got) select '멘티: 평상복 캐릭터 고르기', '2', coalesce(avatar_character::text, '없음') from public.mentee_profiles where id = ma;
+  perform pg_temp.act(ma);
+  begin perform public.set_my_mentee_character(7::smallint); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 정장 캐릭터 번호(7) 고르기', '거부', t);
+  perform pg_temp.act(m);
+  begin perform public.set_my_mentee_character(1::smallint); t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 멘티 캐릭터 고르기', '거부', t);
+  perform pg_temp.act(m); select avatar_character::text into t from public.mentee_profiles where id = ma; perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 톡방 상대 멘티의 캐릭터 보기', '2', coalesce(t, '없음'));
 
   -- 결과
   select '통과 ' || count(*) filter (where got = expect) || ' / 전체 ' || count(*) into summary from r;
