@@ -1,6 +1,6 @@
 # 운영 안내
 
-호서대학교 멘토링 서비스를 운영하는 관리자를 위한 안내입니다. 개발 내용은 [architecture.md](architecture.md), 백업은 [backup.md](backup.md)에 있습니다. 화면 사진을 넣은 PDF 매뉴얼은 [manual/](manual/README.md)에 있습니다.
+호서대학교 멘토링 서비스를 운영하는 관리자를 위한 안내입니다. 개발 내용은 [architecture.md](architecture.md), 백업은 [backup.md](backup.md)에 있습니다. 화면 사진을 넣은 PDF 매뉴얼과 멘토·멘티 이용 가이드는 [manual/](manual/README.md)에 있습니다. 멘토·멘티 가이드는 사이트 이용 안내 화면에서 누구나 내려받을 수 있으니, 안내할 때 그 화면 주소(`/guide`)를 함께 알려 주세요.
 
 - 사이트 주소: <https://hoseo-mentor-bridge.yjhpine123.workers.dev>
 - 관리자 로그인: 소속 **관리자** + 이름 + PIN
