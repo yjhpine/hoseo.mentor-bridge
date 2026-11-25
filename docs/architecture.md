@@ -360,7 +360,7 @@ erDiagram
 | --- | --- | --- |
 | `profiles` | 모든 사용자의 공통 정보와 로그인 키. `auth.users`와 1:1 | 가입 트리거만 생성. `(login_group, login_name)` 중복 불가. `role`·이름·소속은 관리자만 변경 |
 | `mentee_profiles` | 멘티의 소속 학과 | 멘티일 때만 존재. `department_id`는 `profiles.login_group`과 일치 |
-| `mentor_profiles` | 멘토 페이지 내용과 공개 상태 | `status = 'published'`이면 `college_id` 필수. `status`, `college_id`, `published_at`은 관리자만 변경. `publish_on_consent`: 관리자가 대신 만든 계정을 멘토가 동의하면 자동 공개할지 (11장 36번). 2026-11-25부터 만들 때 바로 공개하므로 쓰지 않음(항상 false) |
+| `mentor_profiles` | 멘토 페이지 내용과 공개 상태 | `status = 'published'`이면 `college_id` 필수. `status`, `college_id`, `published_at`은 관리자만 변경. `publish_on_consent`: 관리자가 대신 만든 계정을 멘토가 동의하면 자동 공개할지 (11장 36번). 2026-11-25부터 만들 때 바로 공개하므로 쓰지 않음(항상 false). `avatar_character`: 사진이 없을 때 보일 기본 캐릭터 번호 1~10, null이면 id로 자동 (11장 38번). 멘토 본인이 바꿈 |
 | `colleges` | 단과대학 구역 | `name` 중복 불가 |
 | `departments` | 단과대학 아래 학과. 가입·로그인의 소속 목록 | (단과대학, 이름) 중복 불가. 로그인 키가 학과 id를 쓰므로 지우지 않고 `is_active = false`로 숨김 |
 | `job_fields` | 직무 분야 목록 (관리자 관리) | `name` 중복 불가 |
@@ -708,7 +708,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 15 | 이름·소속 변경 | 설계 기본값 | 관리자만 (로그인 키가 바뀌기 때문) | `/admin/users`, `admin-users` |
 | 16 | 무작위 대입 대책 | 설계 기본값 | 가입·로그인에 Cloudflare Turnstile CAPTCHA(관리형 모드). 실사용 전 필수. 켜는 순서는 6.1 | Supabase Auth 설정, `wrangler.jsonc`의 `TURNSTILE_SITE_KEY`, `features/auth/components/turnstile.tsx` |
 | 17 | 가상 이메일 도메인 | 사용자 | `login.hoseo-mentor.invalid` (2026-10-30 확정, 가입·로그인·PIN 변경 시험 통과) | `lib/auth/login-key.ts`, DB `login_email()` |
-| 18 | 멘토 사진 | 사용자 | 사진이 없으면 기본 프로필 이미지(`public/avatar-default.svg`). 2026-11-04 사진 등록 확정: 멘토 본인이 `/mentor`에서 올리고 바꾸거나 지움, 관리자는 `/admin/mentors`에서 부적절한 사진을 지움. 올리면 바로 공개. 공개 멘토의 사진은 비로그인 방문자도 봄(8번 변경, 2026-11-06), 개설 전·비공개 멘토 사진은 본인·관리자만(비공개 버킷 + 서명 URL). JPG·PNG·WEBP(원본 10MB까지)를 고르면 편집 화면에서 끌어서 위치를 맞추고 1~3배로 확대·축소하며 실제 크기 미리보기(96·56·40px)를 확인한 뒤, 보이는 부분만 512px 정사각형으로 줄여 저장(2026-11-04 추가). 탈퇴하면 사진도 지움 | `mentor_profiles.photo_path`, Storage `avatars`, 멘토 카드·상세·관리자 화면 |
+| 18 | 멘토 사진 | 사용자 | 사진이 없으면 기본 프로필 캐릭터(38번, 2026-11-25. 그전에는 `public/avatar-default.svg`). 2026-11-04 사진 등록 확정: 멘토 본인이 `/mentor`에서 올리고 바꾸거나 지움, 관리자는 `/admin/mentors`에서 부적절한 사진을 지움. 올리면 바로 공개. 공개 멘토의 사진은 비로그인 방문자도 봄(8번 변경, 2026-11-06), 개설 전·비공개 멘토 사진은 본인·관리자만(비공개 버킷 + 서명 URL). JPG·PNG·WEBP(원본 10MB까지)를 고르면 편집 화면에서 끌어서 위치를 맞추고 1~3배로 확대·축소하며 실제 크기 미리보기(96·56·40px)를 확인한 뒤, 보이는 부분만 512px 정사각형으로 줄여 저장(2026-11-04 추가). 탈퇴하면 사진도 지움 | `mentor_profiles.photo_path`, Storage `avatars`, 멘토 카드·상세·관리자 화면 |
 | 19 | 개인정보 처리 주체·보관 기간 | 사용자 | 호서대학교 취업팀(2026-11-04 창업팀에서 바꿈), 보호책임자 양정환(010-3830-5972). 보관 기간 1년: 마지막 이용 후 1년이 지나면 관리자가 확인하고 파기(자동 삭제 없음). 가입할 때 필수 동의 | `lib/privacy/policy.ts`, `/privacy`, `privacy_consents` |
 | 20 | 탈퇴 | 사용자 | 본인 탈퇴 기능 없음. 담당자에게 문의하면 관리자만 탈퇴 처리 | `/admin/users`, `admin-users`의 `delete_user` |
 | 21 | 백업 방식 | 사용자 | 관리자 화면 버튼으로 전체 JSON(+표별 CSV) 내려받기. 학기 종료 뒤와 탈퇴 처리 전에 받고, 백업 파일도 1년 뒤 파기 | `/admin/backup`, `admin_backup()`, [backup.md](backup.md) |
@@ -728,6 +728,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 35 | 멘토 학기 보고서 | 사용자 | 멘토가 학기마다 보고서 파일 1건을 냄. PDF·한글(HWP·HWPX)·워드(DOC·DOCX), 20MB까지. 학기 중에도 언제든 시작된 학기(현재·지난 학기)를 골라 내고, 언제든 다시 올려 바꾸거나 지울 수 있음. 관리자는 `/admin/reports`에서 학기별 제출·미제출을 보고 내려받음. 강사료와는 연결하지 않음 (2026-11-11) | `mentor_reports`, Storage `mentor-reports`, `/mentor`, `/admin/reports`, `/files/reports/[id]` |
 | 36 | 관리자가 대신 만드는 멘토 계정 | 사용자 | 학교가 받은 멘토 명단을 관리자가 등록할 수 있음(관리자 → 사용자 → 멘토 계정 만들기, `admin-users`의 `create_mentor`). 임시 PIN으로 만들고, 멘토가 처음 로그인하면 개인정보 동의 → PIN 변경 순서. 구역은 미리 배치하고 **만들 때 바로 공개**(2026-11-25 변경. 처음에는 동의하면 자동 공개였음. 학교가 멘토 모집 때 받은 공개 동의를 근거로 함. 서비스 이용 동의는 첫 로그인 때 그대로 받음). 명단의 전화번호·이메일·추천교수는 사이트에 넣지 않고, 근무 정보는 경력 칸에 미리 채움. 2026-11-24 명단 24명은 임시 PIN을 모두 같게 함(멘토에게 바로 바꾸라고 안내) | `mentor_invites`, `mentor_profiles.publish_on_consent`, `record_privacy_consent()`, `/account/consent`, `/admin/users` |
 | 37 | 비로그인 멘토 이름 가리기 | 사용자 | 로그인하지 않은 방문자에게는 멘토 이름의 첫 글자와 마지막 글자만 보이고 가운데 글자는 모두 O(이동훈 → 이O훈, 남궁민수 → 남OO수, 두 글자는 김민 → 김O, 공백은 그대로). 구분 문자는 그대로 붙임. 로그인한 멘티·멘토·관리자는 실명. 비로그인으로는 이름으로 검색할 수 없음(기업·대표 분야·직무로는 검색). 가리기는 DB 공개 함수가 하므로 API를 직접 불러도 실명이 나가지 않음 (2026-11-24) | `mask_name()`, `public_mentors()`, `public_open_courses()` |
+| 38 | 기본 프로필 캐릭터 | 사용자 | 사진이 없는 멘토·멘티에게 회색 사람 모양 대신 동물 캐릭터를 보여 줌. **멘토**는 정장 입은 동물 10종 중 내 멘토 페이지에서 직접 고르고(`mentor_profiles.avatar_character` 1~10), 고르지 않으면 멘토 id로 하나를 정해 늘 같은 캐릭터. **멘티**는 후드티·교복 입은 동물 6종 중 멘티 id로 자동(고르지 않음). 사진을 올리면 사진이 먼저. 그림은 담당자가 웹 ChatGPT로 만들어 제공한 16장(512px WEBP, `public/characters/mentor-01~10`, `mentee-01~06`) (2026-11-25) | `features/mentors/lib/characters.ts`, `public/characters/`, `mentor_profiles.avatar_character`, `mentor_directory`, `public_mentors()`, `/mentor` |
 
 ## 12. 구현 단계
 
