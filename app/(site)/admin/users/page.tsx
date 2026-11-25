@@ -90,7 +90,7 @@ export default function AdminUsersPage() {
           <CardTitle className="text-lg">멘토 계정 만들기</CardTitle>
           <CardDescription>
             학교가 받은 명단의 멘토를 대신 등록합니다. 임시 PIN이 정해지고, 멘토는 소속 &quot;멘토&quot;로 처음 로그인할 때
-            개인정보에 동의하고 PIN을 바꿉니다. 동의하기 전에는 공개되지 않고, 동의하면 고른 구역에 바로 공개됩니다.
+            개인정보에 동의하고 PIN을 바꿉니다. 구역을 고르면 만들 때 바로 공개되고, 고르지 않으면 멘토 개설에서 개설합니다.
           </CardDescription>
         </CardHeader>
         <CardContent>
