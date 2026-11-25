@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { FormState } from "@/features/auth/api/actions";
-import { setMyMentorPhoto } from "@/features/mentors/api/actions";
+import { setMyMentorCharacter, setMyMentorPhoto } from "@/features/mentors/api/actions";
 import { MentorAvatar } from "@/features/mentors/components/mentor-card";
 import { PhotoEditor, type ImageSize } from "@/features/mentors/components/photo-editor";
 import {
@@ -12,9 +12,9 @@ import {
   AVATAR_SOURCE_MAX_BYTES,
   AVATAR_SOURCE_TYPES,
   cropSource,
-  DEFAULT_AVATAR,
   type CropState,
 } from "@/features/mentors/lib/avatar";
+import { MENTOR_CHARACTERS } from "@/features/mentors/lib/characters";
 import { createClient } from "@/lib/supabase/client";
 
 // 멘토 프로필 사진 올리기 (11장 18번)
@@ -53,17 +53,31 @@ export function PhotoUpload({
   name,
   photoUrl,
   hasPhoto,
+  avatarCharacter,
 }: {
   mentorId: string;
   name: string;
   photoUrl: string;
   hasPhoto: boolean;
+  /** 지금 기본 캐릭터 번호 (고른 값, 없으면 id로 정한 값, 11장 38번) */
+  avatarCharacter: number;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [saved, setSaved] = useState<string | null>(hasPhoto ? photoUrl : null);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [state, setState] = useState<FormState>({});
   const [busy, setBusy] = useState(false);
+  const [character, setCharacter] = useState(avatarCharacter);
+  const characterSrc = MENTOR_CHARACTERS[character - 1]?.src ?? MENTOR_CHARACTERS[0].src;
+
+  async function pickCharacter(id: number) {
+    if (id === character) return;
+    setBusy(true);
+    const result = await setMyMentorCharacter(id);
+    setBusy(false);
+    setState(result);
+    if (result.success) setCharacter(id);
+  }
 
   // 편집용 임시 주소는 다 쓰면 정리합니다.
   useEffect(() => () => {
@@ -118,7 +132,7 @@ export function PhotoUpload({
   }
 
   async function remove() {
-    if (!window.confirm("사진을 지우고 기본 이미지로 바꿀까요?")) return;
+    if (!window.confirm("사진을 지우고 기본 캐릭터로 바꿀까요?")) return;
     setBusy(true);
     const result = await setMyMentorPhoto(null);
     setBusy(false);
@@ -139,7 +153,7 @@ export function PhotoUpload({
         />
       ) : (
         <div className="flex flex-wrap items-center gap-4">
-          <MentorAvatar src={saved ?? DEFAULT_AVATAR} name={name} size={96} />
+          <MentorAvatar src={saved ?? characterSrc} name={name} size={96} />
           <div className="flex flex-col gap-2">
             <p className="text-sm text-muted-foreground">
               JPG·PNG·WEBP 사진을 고르면 위치와 크기를 맞춘 뒤 저장합니다. 저장하면 바로 멘토 목록과 상세 화면에 보입니다.
@@ -157,6 +171,35 @@ export function PhotoUpload({
           </div>
         </div>
       )}
+      <div className="flex flex-col gap-2 border-t pt-3">
+        <h3 className="text-sm font-semibold">기본 캐릭터</h3>
+        <p className="text-sm text-muted-foreground">
+          사진이 없을 때 보이는 캐릭터입니다. 누르면 바로 바뀝니다. 사진을 올리면 사진이 먼저 보입니다.
+        </p>
+        <div role="radiogroup" aria-label="기본 캐릭터" className="flex flex-wrap gap-2">
+          {MENTOR_CHARACTERS.map((item) => {
+            const selected = item.id === character;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                aria-label={item.name}
+                title={item.name}
+                disabled={busy}
+                onClick={() => void pickCharacter(item.id)}
+                className={`rounded-full p-0.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 ${
+                  selected ? "ring-2 ring-brand ring-offset-2" : "opacity-80 hover:opacity-100"
+                }`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- 작은 정적 그림, 최적화 불필요 */}
+                <img src={item.src} alt="" width={48} height={48} className="size-12 rounded-full" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <input
         ref={inputRef}
         type="file"

@@ -16,6 +16,8 @@ export type MentorStats = {
   company: string;
   collegeName: string | null;
   photoPath: string | null;
+  /** 사진이 없을 때 보일 기본 캐릭터 번호 (11장 38번) */
+  avatarCharacter: number | null;
   roomCount: number;
   questionCount: number;
   answerCount: number;
@@ -75,6 +77,7 @@ export function useSemesterStats(semesterId: number | null) {
           company: mentor?.company ?? "",
           collegeName: mentor?.college_name ?? null,
           photoPath: mentor?.photo_path ?? null,
+          avatarCharacter: mentor?.avatar_character ?? null,
           roomCount: s.room_count,
           questionCount: s.question_count,
           answerCount: s.answer_count,
