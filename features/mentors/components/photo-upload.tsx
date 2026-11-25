@@ -15,6 +15,7 @@ import {
   type CropState,
 } from "@/features/mentors/lib/avatar";
 import { MENTOR_CHARACTERS } from "@/features/mentors/lib/characters";
+import { CharacterPicker } from "@/features/mentors/components/character-picker";
 import { createClient } from "@/lib/supabase/client";
 
 // 멘토 프로필 사진 올리기 (11장 18번)
@@ -71,7 +72,6 @@ export function PhotoUpload({
   const characterSrc = MENTOR_CHARACTERS[character - 1]?.src ?? MENTOR_CHARACTERS[0].src;
 
   async function pickCharacter(id: number) {
-    if (id === character) return;
     setBusy(true);
     const result = await setMyMentorCharacter(id);
     setBusy(false);
@@ -176,29 +176,7 @@ export function PhotoUpload({
         <p className="text-sm text-muted-foreground">
           사진이 없을 때 보이는 캐릭터입니다. 누르면 바로 바뀝니다. 사진을 올리면 사진이 먼저 보입니다.
         </p>
-        <div role="radiogroup" aria-label="기본 캐릭터" className="flex flex-wrap gap-2">
-          {MENTOR_CHARACTERS.map((item) => {
-            const selected = item.id === character;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                aria-label={item.name}
-                title={item.name}
-                disabled={busy}
-                onClick={() => void pickCharacter(item.id)}
-                className={`rounded-full p-0.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 ${
-                  selected ? "ring-2 ring-brand ring-offset-2" : "opacity-80 hover:opacity-100"
-                }`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- 작은 정적 그림, 최적화 불필요 */}
-                <img src={item.src} alt="" width={48} height={48} className="size-12 rounded-full" />
-              </button>
-            );
-          })}
-        </div>
+        <CharacterPicker characters={MENTOR_CHARACTERS} selected={character} busy={busy} onPick={(id) => void pickCharacter(id)} />
       </div>
       <input
         ref={inputRef}

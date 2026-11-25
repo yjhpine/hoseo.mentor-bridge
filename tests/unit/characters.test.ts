@@ -3,6 +3,7 @@ import {
   MENTEE_CHARACTERS,
   MENTOR_CHARACTERS,
   characterIndexFor,
+  menteeCharacterId,
   menteeCharacterSrc,
   mentorCharacterId,
   mentorCharacterSrc,
@@ -38,7 +39,11 @@ describe("기본 프로필 캐릭터 (11장 38번)", () => {
     for (const bad of [0, 11, 2.5, -1, undefined]) expect(mentorCharacterId(A, bad)).toBe(auto);
   });
 
-  it("멘티는 6종 중 하나", () => {
+  it("멘티는 평상복 6종 안에서만: 고른 값 우선, 7 이상은 자동", () => {
     expect(MENTEE_CHARACTERS.map((c) => c.src)).toContain(menteeCharacterSrc(B));
+    expect(menteeCharacterId(B, 4)).toBe(4);
+    expect(menteeCharacterSrc(B, 4)).toBe("/characters/mentee-04.webp");
+    expect(menteeCharacterId(B, 7)).toBe(menteeCharacterId(B, null));
+    expect(menteeCharacterId(B, 7)).toBeLessThanOrEqual(6);
   });
 });
