@@ -1,5 +1,5 @@
 // 기본 프로필 캐릭터 (docs/architecture.md 11장 38번).
-// 사진이 없는 멘토는 정장 입은 동물 10종 중 고른 캐릭터(없으면 id로 자동), 멘티는 6종 중 id로 자동.
+// 사진이 없는 멘토는 정장 입은 동물 10종, 멘티는 평상복 동물 6종 안에서 고릅니다. 고르지 않으면 id로 자동.
 // 그림은 담당자가 ChatGPT로 만들어 제공한 512px WEBP입니다(public/characters/).
 // 서버·브라우저 코드 양쪽에서 씁니다.
 
@@ -29,12 +29,19 @@ export function characterIndexFor(id: string, count: number): number {
   return (hash % count) + 1;
 }
 
-/** 멘토가 고른 번호가 올바르면 그 번호, 아니면 id로 정한 번호 */
+function pick(id: string, chosen: number | null | undefined, count: number): number {
+  if (typeof chosen === "number" && Number.isInteger(chosen) && chosen >= 1 && chosen <= count) return chosen;
+  return characterIndexFor(id, count);
+}
+
+/** 멘토가 고른 번호가 올바르면 그 번호, 아니면 id로 정한 번호 (정장 10종) */
 export function mentorCharacterId(mentorId: string, chosen?: number | null): number {
-  if (typeof chosen === "number" && Number.isInteger(chosen) && chosen >= 1 && chosen <= MENTOR_CHARACTERS.length) {
-    return chosen;
-  }
-  return characterIndexFor(mentorId, MENTOR_CHARACTERS.length);
+  return pick(mentorId, chosen, MENTOR_CHARACTERS.length);
+}
+
+/** 멘티가 고른 번호가 올바르면 그 번호, 아니면 id로 정한 번호 (평상복 6종) */
+export function menteeCharacterId(menteeId: string, chosen?: number | null): number {
+  return pick(menteeId, chosen, MENTEE_CHARACTERS.length);
 }
 
 /** 사진이 없는 멘토의 기본 이미지 */
@@ -42,7 +49,7 @@ export function mentorCharacterSrc(mentorId: string, chosen?: number | null): st
   return MENTOR_CHARACTERS[mentorCharacterId(mentorId, chosen) - 1].src;
 }
 
-/** 멘티의 기본 이미지 (멘티는 고르지 않음) */
-export function menteeCharacterSrc(menteeId: string): string {
-  return MENTEE_CHARACTERS[characterIndexFor(menteeId, MENTEE_CHARACTERS.length) - 1].src;
+/** 멘티의 기본 이미지 */
+export function menteeCharacterSrc(menteeId: string, chosen?: number | null): string {
+  return MENTEE_CHARACTERS[menteeCharacterId(menteeId, chosen) - 1].src;
 }

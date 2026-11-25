@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { listMyEnrollments } from "@/features/courses/api/courses";
+import { getMyMenteeCharacter } from "@/features/mentees/api/queries";
+import { MenteeCharacter } from "@/features/mentees/components/mentee-character";
+import { menteeCharacterId } from "@/features/mentors/lib/characters";
 import { CourseList } from "@/features/courses/components/course-list";
 import { listPendingSurveys } from "@/features/surveys/api/surveys";
 import { SurveyForm } from "@/features/surveys/components/survey-form";
@@ -11,7 +14,7 @@ import { displayName, requireRole } from "@/lib/auth/current-user";
 
 export const metadata: Metadata = { title: "마이페이지" };
 
-// 마이페이지 (4.1 /mypage, 멘티): 알림·앱 설치(6.9), 수강 중인 강의, 학기 말 만족도 조사 (6.5 4번)
+// 마이페이지 (4.1 /mypage, 멘티): 내 캐릭터(11장 38번), 알림·앱 설치(6.9), 수강 중인 강의, 학기 말 만족도 조사 (6.5 4번)
 export default function Page() {
   return (
     <Suspense fallback={<p className="py-6 text-sm text-muted-foreground">불러오는 중…</p>}>
@@ -22,7 +25,11 @@ export default function Page() {
 
 async function MyPage() {
   const me = await requireRole("mentee");
-  const [courses, surveys] = await Promise.all([listMyEnrollments(me.id), listPendingSurveys()]);
+  const [courses, surveys, character] = await Promise.all([
+    listMyEnrollments(me.id),
+    listPendingSurveys(),
+    getMyMenteeCharacter(me.id),
+  ]);
   return (
     <div className="flex flex-col gap-6 py-6">
       <h1 className="text-2xl font-semibold">{displayName(me)}님의 마이페이지</h1>
@@ -47,6 +54,8 @@ async function MyPage() {
           </ul>
         </section>
       )}
+
+      <MenteeCharacter initial={menteeCharacterId(me.id, character)} />
 
       <div id="notifications" className="flex scroll-mt-20 flex-col gap-3">
         <PushToggle role="mentee" />
