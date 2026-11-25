@@ -467,6 +467,20 @@ begin
   perform pg_temp.anon(); select mentor_name into t from public.public_open_courses(50) where id = crs; perform pg_temp.back();
   insert into r(step,expect,got) values ('비로그인: 강의 목록의 멘토 이름 가림', '시OO토', coalesce(t, '없음'));
 
+  -- 16. 기본 프로필 캐릭터 (11장 38번)
+  perform pg_temp.act(m); update public.mentor_profiles set avatar_character = 3 where id = m; perform pg_temp.back();
+  insert into r(step,expect,got) select '멘토: 기본 캐릭터 고르기', '3', coalesce(avatar_character::text, '없음') from public.mentor_profiles where id = m;
+  perform pg_temp.act(m);
+  begin update public.mentor_profiles set avatar_character = 11 where id = m; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘토: 없는 캐릭터 번호(11)', '거부', t);
+  perform pg_temp.act(m); update public.mentor_profiles set avatar_character = 5 where id = iv; perform pg_temp.back();
+  insert into r(step,expect,got) select '멘토: 남의 캐릭터 바꾸기 (바뀌지 않음)', '없음', coalesce(avatar_character::text, '없음') from public.mentor_profiles where id = iv;
+  perform pg_temp.anon(); select avatar_character::text into t from public.public_mentors(null, null, null, 50, 0) where id = m; perform pg_temp.back();
+  insert into r(step,expect,got) values ('비로그인: 멘토 카드에 고른 캐릭터', '3', coalesce(t, '없음'));
+  perform pg_temp.act(ma); select avatar_character::text into t from public.mentor_directory where id = m; perform pg_temp.back();
+  insert into r(step,expect,got) values ('멘티: 멘토 목록에 고른 캐릭터', '3', coalesce(t, '없음'));
+
   -- 결과
   select '통과 ' || count(*) filter (where got = expect) || ' / 전체 ' || count(*) into summary from r;
   select string_agg(n || '. ' || step || ' (기대 ' || expect || ', 실제 ' || got || ')', E'\n' order by n)

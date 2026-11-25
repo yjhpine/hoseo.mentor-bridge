@@ -1,5 +1,6 @@
 import { avatarUrls } from "@/features/mentors/api/avatar-urls";
 import { DEFAULT_AVATAR } from "@/features/mentors/lib/avatar";
+import { menteeCharacterSrc, mentorCharacterSrc } from "@/features/mentors/lib/characters";
 import type { AnswerRule } from "@/lib/chat/answer-length";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/types/database.types";
@@ -8,7 +9,7 @@ import type { Tables } from "@/types/database.types";
 
 const ROOM_SELECT =
   "id, created_at, last_message_at, semester:semesters(name, closed_at), " +
-  "mentor:mentor_profiles(id, company, photo_path, profile:profiles(name, name_tag)), " +
+  "mentor:mentor_profiles(id, company, photo_path, avatar_character, profile:profiles(name, name_tag)), " +
   "mentee:mentee_profiles(id, department:departments(name), profile:profiles(name, name_tag))";
 
 type RoomRow = {
@@ -20,6 +21,7 @@ type RoomRow = {
     id: string;
     company: string;
     photo_path: string | null;
+    avatar_character: number | null;
     profile: { name: string; name_tag: string | null } | null;
   } | null;
   mentee: {
@@ -114,12 +116,15 @@ export async function getRoom(id: number) {
     .order("created_at", { ascending: true })
     .limit(500);
 
-  // 톡방 프로필 사진 (카카오톡처럼 상대 메시지 옆에). 멘티는 사진이 없어 기본 이미지입니다 (11장 18번).
+  // 톡방 프로필 사진 (카카오톡처럼 상대 메시지 옆에). 사진이 없으면 기본 캐릭터, 멘티는 늘 캐릭터입니다 (11장 18번, 38번).
   const photo = await avatarUrls(supabase, [room.mentor?.photo_path]);
   const summary = toSummary(room, 0);
   const people = {
-    mentor: { name: summary.mentor.name, photoUrl: photo(room.mentor?.photo_path) },
-    mentee: { name: summary.mentee.name, photoUrl: DEFAULT_AVATAR },
+    mentor: {
+      name: summary.mentor.name,
+      photoUrl: photo(room.mentor?.photo_path, room.mentor ? mentorCharacterSrc(room.mentor.id, room.mentor.avatar_character) : DEFAULT_AVATAR),
+    },
+    mentee: { name: summary.mentee.name, photoUrl: room.mentee ? menteeCharacterSrc(room.mentee.id) : DEFAULT_AVATAR },
   };
   return { room: summary, people, messages: messages ?? [] };
 }

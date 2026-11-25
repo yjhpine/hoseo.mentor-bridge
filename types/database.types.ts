@@ -454,6 +454,7 @@ export type Database = {
       mentor_profiles: {
         Row: {
           accepting_questions: boolean
+          avatar_character: number | null
           career: string | null
           college_id: number | null
           company: string
@@ -468,6 +469,7 @@ export type Database = {
         }
         Insert: {
           accepting_questions?: boolean
+          avatar_character?: number | null
           career?: string | null
           college_id?: number | null
           company: string
@@ -482,6 +484,7 @@ export type Database = {
         }
         Update: {
           accepting_questions?: boolean
+          avatar_character?: number | null
           career?: string | null
           college_id?: number | null
           company?: string
@@ -668,6 +671,7 @@ export type Database = {
       mentor_directory: {
         Row: {
           accepting_questions: boolean | null
+          avatar_character: number | null
           career: string | null
           college_id: number | null
           college_name: string | null
@@ -789,6 +793,7 @@ export type Database = {
         Args: { college_id?: number; job_field_id?: number; lim?: number; off?: number; q?: string }
         Returns: {
           accepting_questions: boolean
+          avatar_character: number
           college_id: number
           college_name: string
           company: string

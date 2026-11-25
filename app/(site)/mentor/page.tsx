@@ -71,7 +71,13 @@ async function MentorDashboard() {
         <PushToggle role="mentor" />
         <InstallApp />
       </div>
-      <PhotoUpload mentorId={mentor.id} name={mentor.displayName} photoUrl={mentor.photoUrl} hasPhoto={mentor.hasPhoto} />
+      <PhotoUpload
+        mentorId={mentor.id}
+        name={mentor.displayName}
+        photoUrl={mentor.photoUrl}
+        hasPhoto={mentor.hasPhoto}
+        avatarCharacter={mentor.avatarCharacter}
+      />
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold">받은 질문</h2>
         <RoomList rooms={rooms} viewer="mentor" />

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { FormState } from "@/features/auth/api/actions";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { AVATAR_BUCKET, avatarOwner } from "@/features/mentors/lib/avatar";
+import { MENTOR_CHARACTERS } from "@/features/mentors/lib/characters";
 import { createClient } from "@/lib/supabase/server";
 
 // DB mentor_profiles CHECK와 같은 길이 제한
@@ -88,5 +89,34 @@ export async function setMyMentorPhoto(path: string | null): Promise<FormState> 
   revalidatePath(`/mentors/${user.id}`);
   revalidatePath("/mentors");
   revalidatePath("/");
-  return { success: path ? "사진을 바꿨습니다." : "사진을 지웠습니다. 기본 이미지가 보입니다." };
+  return { success: path ? "사진을 바꿨습니다." : "사진을 지웠습니다. 기본 캐릭터가 보입니다." };
+}
+
+/**
+ * 멘토 본인이 기본 캐릭터를 고릅니다 (11장 38번). 사진이 없을 때 보입니다.
+ * 번호는 1~10이고, DB CHECK도 다시 확인합니다.
+ */
+export async function setMyMentorCharacter(character: number): Promise<FormState> {
+  const user = await getCurrentUser();
+  if (user?.role !== "mentor") {
+    return { error: "멘토만 바꿀 수 있습니다." };
+  }
+  if (!Number.isInteger(character) || character < 1 || character > MENTOR_CHARACTERS.length) {
+    return { error: "캐릭터를 다시 골라 주세요." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("mentor_profiles")
+    .update({ avatar_character: character })
+    .eq("id", user.id);
+  if (error) {
+    return { error: "저장하지 못했습니다. 잠시 후 다시 시도해 주세요." };
+  }
+
+  revalidatePath("/mentor");
+  revalidatePath(`/mentors/${user.id}`);
+  revalidatePath("/mentors");
+  revalidatePath("/");
+  return { success: `기본 캐릭터를 ${MENTOR_CHARACTERS[character - 1].name}(으)로 바꿨습니다.` };
 }

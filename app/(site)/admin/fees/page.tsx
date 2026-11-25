@@ -19,6 +19,7 @@ import {
 } from "@/features/admin/lib/fee";
 import { MentorAvatar } from "@/features/mentors/components/mentor-card";
 import { useAvatarUrls } from "@/features/admin/components/use-avatar-urls";
+import { mentorCharacterSrc } from "@/features/mentors/lib/characters";
 import { formatTime } from "@/lib/chat/answer-length";
 import { createClient } from "@/lib/supabase/client";
 import type { Tables } from "@/types/database.types";
@@ -101,7 +102,7 @@ export default function AdminFeesPage() {
               key={`${semesterId}-${row.mentorId}-${fee?.amount ?? ""}-${fee?.paid_at ?? ""}-${rate?.perAnswer ?? ""}-${rate?.cap ?? ""}`}
               semesterId={semesterId!}
               stats={row}
-              photoUrl={photo(row.photoPath)}
+              photoUrl={photo(row.photoPath, mentorCharacterSrc(row.mentorId, row.avatarCharacter))}
               fee={fee}
               rate={rate}
               onSaved={() => fees.query.refetch()}

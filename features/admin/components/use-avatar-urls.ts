@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 /**
  * 관리자 화면(브라우저)에서 멘토 사진 경로를 서명 URL로 바꿉니다 (11장 18번).
- * 돌려주는 함수에 경로를 넣으면 주소를, 사진이 없거나 아직 못 받았으면 기본 이미지를 줍니다.
+ * 돌려주는 함수에 경로를 넣으면 주소를, 사진이 없거나 아직 못 받았으면 fallback(기본 캐릭터, 11장 38번)을 줍니다.
  */
 export function useAvatarUrls(paths: (string | null | undefined)[]) {
   const key = [...new Set(paths.filter((p): p is string => Boolean(p)))].sort().join("|");
@@ -31,5 +31,5 @@ export function useAvatarUrls(paths: (string | null | undefined)[]) {
     };
   }, [key]);
 
-  return (path: string | null | undefined) => (path && urls.get(path)) || DEFAULT_AVATAR;
+  return (path: string | null | undefined, fallback: string = DEFAULT_AVATAR) => (path && urls.get(path)) || fallback;
 }

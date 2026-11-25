@@ -7,6 +7,7 @@ import type { Database, Tables } from "@/types/database.types";
 
 import { avatarUrls } from "@/features/mentors/api/avatar-urls";
 import { DEFAULT_AVATAR } from "@/features/mentors/lib/avatar";
+import { mentorCharacterId, mentorCharacterSrc } from "@/features/mentors/lib/characters";
 
 export { DEFAULT_AVATAR };
 export const MENTORS_PAGE_SIZE = 12;
@@ -27,14 +28,16 @@ export type MentorSummary = {
 };
 
 export type MentorDetail = MentorSummary & {
-  /** 기본 이미지가 아닌 직접 올린 사진이 있는지 */
+  /** 기본 캐릭터가 아닌 직접 올린 사진이 있는지 */
   hasPhoto: boolean;
+  /** 사진이 없을 때 보이는 기본 캐릭터 번호 (고른 값, 없으면 id로 정한 값, 11장 38번) */
+  avatarCharacter: number;
   intro: string | null;
   career: string | null;
 };
 
 const SUMMARY_COLUMNS =
-  "id, name, name_tag, company, job_field_name, college_id, college_name, headline, photo_path, accepting_questions, status";
+  "id, name, name_tag, company, job_field_name, college_id, college_name, headline, photo_path, avatar_character, accepting_questions, status";
 
 function toSummary(row: Partial<DirectoryRow>, photoUrl: string = DEFAULT_AVATAR): MentorSummary {
   return {
@@ -45,7 +48,7 @@ function toSummary(row: Partial<DirectoryRow>, photoUrl: string = DEFAULT_AVATAR
     collegeId: row.college_id ?? null,
     collegeName: row.college_name ?? null,
     headline: row.headline ?? null,
-    // 사진이 있으면 서명 URL, 없으면 기본 이미지 (11장 18번)
+    // 사진이 있으면 서명 URL, 없으면 기본 캐릭터 (11장 18번, 38번)
     photoUrl,
     acceptingQuestions: row.accepting_questions ?? false,
     status: row.status ?? "pending",
@@ -89,7 +92,7 @@ export async function searchMentors(search: MentorSearch) {
   const total = rows[0]?.total ?? 0;
   const photo = await avatarUrls(supabase, rows.map((r) => r.photo_path));
   return {
-    mentors: rows.map((row) => publicToSummary(row, photo(row.photo_path))),
+    mentors: rows.map((row) => publicToSummary(row, photo(row.photo_path, mentorCharacterSrc(row.id, row.avatar_character)))),
     total,
     page,
     pageCount: Math.max(1, Math.ceil(total / MENTORS_PAGE_SIZE)),
@@ -101,7 +104,7 @@ export async function getRecentMentors(limit: number) {
   const { data } = await supabase.rpc("public_mentors", { lim: limit });
   const rows = data ?? [];
   const photo = await avatarUrls(supabase, rows.map((r) => r.photo_path));
-  return rows.map((row) => publicToSummary(row, photo(row.photo_path)));
+  return rows.map((row) => publicToSummary(row, photo(row.photo_path, mentorCharacterSrc(row.id, row.avatar_character))));
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -118,8 +121,9 @@ export async function getMentor(id: string): Promise<MentorDetail | null> {
   if (!data) return null;
   const photo = await avatarUrls(supabase, [data.photo_path]);
   return {
-    ...toSummary(data, photo(data.photo_path)),
+    ...toSummary(data, photo(data.photo_path, mentorCharacterSrc(data.id!, data.avatar_character))),
     hasPhoto: Boolean(data.photo_path),
+    avatarCharacter: mentorCharacterId(data.id!, data.avatar_character),
     intro: data.intro,
     career: data.career,
   };

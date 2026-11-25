@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/native-select";
 import { useAvatarUrls } from "@/features/admin/components/use-avatar-urls";
+import { mentorCharacterSrc } from "@/features/mentors/lib/characters";
 import { MentorAvatar } from "@/features/mentors/components/mentor-card";
 import { AVATAR_BUCKET } from "@/features/mentors/lib/avatar";
 import { createClient } from "@/lib/supabase/client";
@@ -75,7 +76,7 @@ export default function AdminMentorsPage() {
             <MentorRow
               key={mentor.id}
               mentor={mentor}
-              photoUrl={photo(mentor.photo_path)}
+              photoUrl={photo(mentor.photo_path, mentorCharacterSrc(mentor.id, mentor.avatar_character))}
               colleges={colleges.result.data.filter((college) => college.is_active)}
               jobFields={jobFields.result.data}
               onChanged={() => mentors.query.refetch()}
