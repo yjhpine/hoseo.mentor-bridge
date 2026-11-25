@@ -1,6 +1,7 @@
 // 브라우저 보안 헤더 (docs/security-review.md).
 // - 화면 응답(proxy를 거치는 모든 요청, 이동 응답 포함)에는 proxy가 아래 기본 헤더와 전체 CSP를 붙입니다.
-// - proxy를 거치지 않는 정적 파일에는 next.config.ts와 public/_headers가 기본 헤더를 붙입니다.
+// - proxy를 거치지 않는 경로(이미지 최적화·파비콘·이미지 파일)에는 next.config.ts가, Cloudflare 정적 파일에는
+//   public/_headers가 기본 헤더를 붙입니다. 한 응답에 두 곳이 겹쳐 붙이지 않게 나눕니다.
 
 /** CSP를 뺀 기본 보안 헤더 */
 export const BASE_SECURITY_HEADERS: ReadonlyArray<{ key: string; value: string }> = [

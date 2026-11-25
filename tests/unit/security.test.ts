@@ -49,17 +49,25 @@ describe("강의 자료 경로·이름 DB 검사 (2차 C6)", () => {
 });
 
 describe("보안 헤더 (M1)", () => {
-  it("정적 파일 등 모든 경로에 클릭재킹 방지 등 기본 헤더를 붙이고 x-powered-by를 끔", async () => {
+  it("proxy를 거치지 않는 경로(이미지 최적화·파비콘·이미지 파일)에만 기본 헤더를 붙이고 x-powered-by를 끔", async () => {
     expect(nextConfig.poweredByHeader).toBe(false);
     const rules = await nextConfig.headers!();
-    const all = rules.find((r) => r.source === "/:path*");
-    const headers = Object.fromEntries(all!.headers.map((h) => [h.key.toLowerCase(), h.value]));
-    expect(headers["x-frame-options"]).toBe("DENY");
-    expect(headers["x-content-type-options"]).toBe("nosniff");
-    expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
-    expect(headers["permissions-policy"]).toContain("camera=()");
-    // CSP는 proxy만 붙입니다 (두 번 붙으면 nonce CSP와 겹침)
-    expect(headers["content-security-policy"]).toBeUndefined();
+    expect(rules.map((r) => r.source)).toEqual([
+      "/_next/image/:path*",
+      "/favicon.ico",
+      "/:path(.*\\.(?:svg|png|jpg|jpeg|gif|webp))",
+    ]);
+    // 모든 경로(/:path*)에 붙이면 proxy가 붙인 화면 응답 헤더와 겹칩니다 (3차 점검)
+    expect(rules.some((r) => r.source === "/:path*")).toBe(false);
+    for (const rule of rules) {
+      const headers = Object.fromEntries(rule.headers.map((h) => [h.key.toLowerCase(), h.value]));
+      expect(headers["x-frame-options"]).toBe("DENY");
+      expect(headers["x-content-type-options"]).toBe("nosniff");
+      expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+      expect(headers["permissions-policy"]).toContain("camera=()");
+      // CSP는 proxy만 붙입니다 (두 번 붙으면 nonce CSP와 겹침)
+      expect(headers["content-security-policy"]).toBeUndefined();
+    }
   });
 });
 
