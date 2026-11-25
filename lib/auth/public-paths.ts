@@ -13,6 +13,9 @@ const EXACT_PUBLIC_PATHS = new Set([
   "/privacy",
   "/manifest.webmanifest",
   "/sw.js",
+  // 멘토·멘티 이용 가이드 PDF (이용 안내 화면에서 내려받음, docs/manual/README.md)
+  "/guides/mentee-guide.pdf",
+  "/guides/mentor-guide.pdf",
 ]);
 
 /** 단과대학 구역 화면 /colleges/[숫자] */

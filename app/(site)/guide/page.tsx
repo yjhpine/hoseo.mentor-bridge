@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BookOpen, Download } from "lucide-react";
 import { PageBanner } from "@/components/page-banner";
 import { PRIVACY_OFFICER, PRIVACY_OPERATOR, PRIVACY_PATH } from "@/lib/privacy/policy";
 
 export const metadata: Metadata = { title: "이용 안내" };
+
+// 화면 사진을 넣은 PDF 가이드 (docs/manual/, scripts/build-manual.mjs가 public/guides/로 복사)
+const GUIDES = [
+  { href: "/guides/mentee-guide.pdf", file: "호서멘토링_멘티_이용가이드.pdf", title: "멘티(재학생) 이용 가이드", desc: "가입, 멘토 찾기, 질문하기, 강의 수강, 알림·앱 설치, 만족도 조사", pages: 12 },
+  { href: "/guides/mentor-guide.pdf", file: "호서멘토링_멘토_이용가이드.pdf", title: "멘토 이용 가이드", desc: "첫 로그인, 내 멘토 페이지, 답변하기, 알림, 강의 만들기, 학기 보고서", pages: 10 },
+];
 
 const FAQ = [
   {
@@ -43,6 +50,28 @@ export default function GuidePage() {
       />
 
       <section className="flex flex-col gap-4">
+        <h2 className="text-xl font-bold">이용 가이드 내려받기</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {GUIDES.map((guide) => (
+            <a
+              key={guide.href}
+              href={guide.href}
+              download={guide.file}
+              className="flex items-start gap-3 rounded-xl border p-4 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <BookOpen aria-hidden className="mt-0.5 size-6 shrink-0 text-brand" />
+              <span className="flex flex-1 flex-col gap-1">
+                <span className="font-semibold">{guide.title}</span>
+                <span className="text-sm text-foreground/80">{guide.desc}</span>
+                <span className="text-xs text-muted-foreground">PDF · {guide.pages}쪽 · 화면 사진 포함</span>
+              </span>
+              <Download aria-hidden className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-4">
         <h2 className="text-xl font-bold">처음 쓰는 순서</h2>
         <ol className="flex flex-col gap-3">
           <Step n={1} title="회원가입">
@@ -50,7 +79,8 @@ export default function GuidePage() {
               회원가입
             </Link>
             에서 소속(학과, 또는 멘토)과 이름을 입력하고 숫자 6자리 PIN을 정합니다. 이메일은 받지 않습니다. 멘토는
-            기업명과 직무 분야도 입력하고, 관리자가 단과대학 구역에 배치하면 공개됩니다.
+            기업명과 직무 분야도 입력하고, 관리자가 단과대학 구역에 배치하면 공개됩니다. 학교가 명단으로 등록한
+            멘토는 안내받은 임시 PIN으로 로그인합니다.
           </Step>
           <Step n={2} title="로그인">
             오른쪽 위 <strong>로그인</strong> 버튼을 누르고 소속·이름·PIN을 입력합니다. 같은 기기에서는 로그인이

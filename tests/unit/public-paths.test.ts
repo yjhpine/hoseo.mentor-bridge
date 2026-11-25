@@ -8,6 +8,12 @@ describe("공개 화면 (11장 32번)", () => {
     }
   });
 
+  it("멘토·멘티 이용 가이드 PDF는 공개, 다른 파일은 아님", () => {
+    expect(isPublicPath("/guides/mentee-guide.pdf")).toBe(true);
+    expect(isPublicPath("/guides/mentor-guide.pdf")).toBe(true);
+    expect(isPublicPath("/guides/other.pdf")).toBe(false);
+  });
+
   it("멘토 상세·강의 상세·톡방·마이페이지·관리자는 로그인 필요", () => {
     for (const path of [
       "/mentors/3f1c",
