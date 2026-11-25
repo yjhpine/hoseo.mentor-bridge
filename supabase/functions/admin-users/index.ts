@@ -310,8 +310,9 @@ function optionalText(raw: unknown, max: number, label: string): string | null {
 
 /**
  * 관리자가 대신 만드는 멘토 계정 (11장 36번). 가입 트리거는 동의 없는 멘토 가입을 거부하므로,
- * secret 키로 mentor_invites에 한 번 쓸 허가를 넣고 만듭니다. 동의는 멘토가 처음 로그인할 때 받고(/account/consent),
- * 그때 구역이 있으면 자동 공개합니다(publish_on_consent). 그전에는 개설 대기(pending)로 둡니다.
+ * secret 키로 mentor_invites에 한 번 쓸 허가를 넣고 만듭니다. 구역을 골랐으면 만들 때 바로 공개하고(2026-11-25 변경,
+ * 학교가 모집 때 받은 공개 동의 근거), 고르지 않았으면 개설 대기(pending)로 둡니다. 서비스 이용 동의는 멘토가
+ * 처음 로그인할 때 받습니다(/account/consent).
  */
 async function createMentor(body: Extract<Body, { action: "create_mentor" }>) {
   const name = cleanName(body.name);
@@ -359,7 +360,13 @@ async function createMentor(body: Extract<Body, { action: "create_mentor" }>) {
   if (e2) throw e2;
   const { error: e3 } = await admin
     .from("mentor_profiles")
-    .update({ college_id: collegeId, headline, career, publish_on_consent: true })
+    .update({
+      college_id: collegeId,
+      headline,
+      career,
+      publish_on_consent: false,
+      ...(collegeId !== null ? { status: "published", published_at: new Date().toISOString() } : {}),
+    })
     .eq("id", userId);
   if (e3) throw e3;
   return { ok: true, user_id: userId };
