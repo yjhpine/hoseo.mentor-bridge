@@ -82,6 +82,7 @@ export type Database = {
           description: string | null
           id: number
           is_active: boolean
+          is_mentor_zone: boolean
           name: string
           position: number
         }
@@ -89,6 +90,7 @@ export type Database = {
           description?: string | null
           id?: never
           is_active?: boolean
+          is_mentor_zone?: boolean
           name: string
           position?: number
         }
@@ -96,6 +98,7 @@ export type Database = {
           description?: string | null
           id?: never
           is_active?: boolean
+          is_mentor_zone?: boolean
           name?: string
           position?: number
         }
