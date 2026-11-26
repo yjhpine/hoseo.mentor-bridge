@@ -33,16 +33,17 @@ export function AffiliationSelect({
   defaultValue?: string;
   onValueChange?: (value: string) => void;
 }) {
-  const [step, setStep] = useState<AffiliationStep>(() =>
-    splitAffiliation(departmentOnly && defaultValue ? `dept:${defaultValue}` : defaultValue, colleges),
-  );
+  // 고르기 전에는 defaultValue에서 매번 되살립니다. 관리자 화면처럼 단과대학 목록이 늦게 와도 처음 값이 비지 않습니다.
+  const [picked, setPicked] = useState<AffiliationStep | null>(null);
+  const step =
+    picked ?? splitAffiliation(departmentOnly && defaultValue ? `dept:${defaultValue}` : defaultValue, colleges);
   const collegeId = selectedCollegeId(step.top);
   const college = colleges.find((c) => c.id === collegeId);
   const joined = joinAffiliation(step);
   const value = departmentOnly ? joined.replace(/^dept:/, "") : joined;
 
   function change(next: AffiliationStep) {
-    setStep(next);
+    setPicked(next);
     const nextJoined = joinAffiliation(next);
     onValueChange?.(departmentOnly ? nextJoined.replace(/^dept:/, "") : nextJoined);
   }
