@@ -39,7 +39,7 @@ export function QuestionBadge({ accepting }: { accepting: boolean }) {
 
 /**
  * 멘토 카드: 큰 사진 · 이름 · 기업명 · 직무 분야 · 대표 멘토링 분야 · 단과대학 구역 · 질문 가능 여부 (4.2, 11장 33번)
- * 사진은 카드 위쪽을 정사각형으로 채워 한눈에 보이게 합니다.
+ * 사진은 카드 위쪽을 정사각형으로 채워 한눈에 보이게 하고, 글은 가운데 맞춤입니다(2026-11-26).
  * locked: 로그인하지 않은 방문자. 누르면 로그인 화면으로 가고, 로그인한 뒤 이 멘토 상세로 돌아옵니다.
  */
 export function MentorCard({ mentor, locked = false }: { mentor: MentorSummary; locked?: boolean }) {
@@ -62,20 +62,20 @@ export function MentorCard({ mentor, locked = false }: { mentor: MentorSummary; 
           <QuestionBadge accepting={mentor.acceptingQuestions} />
         </span>
       </div>
-      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-4">
-        <div className="min-w-0">
-          <p className="line-clamp-2 break-keep font-semibold sm:text-lg">{mentor.displayName}</p>
-          <p className="truncate text-sm text-muted-foreground">{mentor.company}</p>
-          <p className="truncate text-sm text-muted-foreground">{mentor.jobFieldName}</p>
+      <div className="flex flex-1 flex-col items-center gap-1.5 p-3 text-center sm:p-4">
+        <div className="w-full min-w-0">
+          <p className="line-clamp-2 break-keep text-lg font-semibold sm:text-xl">{mentor.displayName}</p>
+          <p className="truncate text-base text-muted-foreground">{mentor.company}</p>
+          <p className="truncate text-base text-muted-foreground">{mentor.jobFieldName}</p>
         </div>
-        <p className="line-clamp-2 min-h-10 text-sm">
+        <p className="line-clamp-2 min-h-11 break-keep text-[15px] leading-snug sm:min-h-12 sm:text-base">
           {mentor.headline || "대표 멘토링 분야를 준비 중입니다."}
         </p>
-        <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+        <div className="mt-auto flex flex-wrap items-center justify-center gap-2 pt-1">
           {mentor.collegeName && <Badge variant="outline">{mentor.collegeName}</Badge>}
         </div>
         {locked && (
-          <span className="flex items-center gap-1 pt-1 text-sm font-medium text-brand">
+          <span className="flex items-center justify-center gap-1 pt-1 text-sm font-medium text-brand">
             <LockKeyhole className="size-3.5" aria-hidden />
             로그인하고 보기
           </span>

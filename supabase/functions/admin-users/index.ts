@@ -327,8 +327,8 @@ async function createMentor(body: Extract<Body, { action: "create_mentor" }>) {
     throw new HttpError(400, "구역 값이 올바르지 않습니다.");
   }
   if (collegeId !== null) {
-    const { data: college } = await admin.from("colleges").select("id").eq("id", collegeId).eq("is_active", true).maybeSingle();
-    if (!college) throw new HttpError(400, "쓰고 있는 구역이 아닙니다.");
+    const { data: college } = await admin.from("colleges").select("id").eq("id", collegeId).eq("is_active", true).eq("is_mentor_zone", true).maybeSingle();
+    if (!college) throw new HttpError(400, "쓰고 있는 멘토 구역이 아닙니다.");
   }
   const headline = optionalText(body.headline, 100, "대표 분야");
   const career = optionalText(body.career, 5000, "경력");
