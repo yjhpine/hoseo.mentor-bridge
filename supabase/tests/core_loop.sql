@@ -493,6 +493,24 @@ begin
   perform pg_temp.act(m); select avatar_character::text into t from public.mentee_profiles where id = ma; perform pg_temp.back();
   insert into r(step,expect,got) values ('멘토: 톡방 상대 멘티의 캐릭터 보기', '2', coalesce(t, '없음'));
 
+  -- 17. 소속 2단계·소속 전용 단과대학 (11장 39번)
+  select d.id into v from public.departments d join public.colleges c on c.id = d.college_id
+   where not c.is_mentor_zone and d.is_active order by d.id limit 1;
+  insert into auth.users (id, email, raw_user_meta_data, aud, role) values (gen_random_uuid(),
+    public.login_email('dept:'||v, public.normalize_login_name('시험자유전공')),
+    jsonb_build_object('login_group','dept:'||v,'name','시험자유전공','privacy_policy_version','2026-11-01'), 'authenticated', 'authenticated');
+  select count(*) into v2 from public.mentee_profiles where department_id = v;
+  insert into r(step,expect,got) values ('소속 전용 단과대학 학과로 멘티 가입', '1', v2::text);
+  select c.id into v from public.colleges c where not c.is_mentor_zone order by c.id limit 1;
+  perform pg_temp.act(a);
+  begin update public.mentor_profiles set college_id = v where id = m; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('관리자: 멘토를 소속 전용 단과대학에 배치', '거부', t);
+  perform pg_temp.act(a);
+  begin update public.colleges set is_mentor_zone = false where id = college; t := '허용됨'; exception when others then t := '거부'; end;
+  perform pg_temp.back();
+  insert into r(step,expect,got) values ('관리자: 멘토가 있는 구역을 소속 전용으로 바꾸기', '거부', t);
+
   -- 결과
   select '통과 ' || count(*) filter (where got = expect) || ' / 전체 ' || count(*) into summary from r;
   select string_agg(n || '. ' || step || ' (기대 ' || expect || ', 실제 ' || got || ')', E'\n' order by n)

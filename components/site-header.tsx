@@ -65,6 +65,7 @@ async function getCollegeLinks(): Promise<CollegeLink[]> {
     .from("colleges")
     .select("id, name")
     .eq("is_active", true)
+    .eq("is_mentor_zone", true)
     .order("position")
     .order("name");
   return data ?? [];

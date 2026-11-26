@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/native-select";
 import { createAdmin, createMentor, deleteUser, resetPin, updateIdentity } from "@/features/admin/api/admin-users";
 import type { FormState } from "@/features/auth/api/actions";
+import type { CollegeOption } from "@/features/auth/api/affiliations";
+import { AffiliationSelect } from "@/features/auth/components/affiliation-select";
 import { FormMessage, submitWithoutReset } from "@/features/auth/components/fields";
 import { NAME_MAX_LENGTH } from "@/lib/auth/login-key";
 
@@ -90,12 +92,12 @@ export function DeleteUserButton({
 
 export function IdentityForm({
   user,
-  departments,
+  colleges,
   onDone,
 }: {
   user: { id: string; name: string; nameTag: string | null; departmentId: number | null };
   /** 멘티일 때만 넘깁니다. 멘토·관리자는 소속이 바뀌지 않습니다. */
-  departments?: { id: number; label: string }[];
+  colleges?: CollegeOption[];
   onDone?: () => void;
 }) {
   const [state, action, pending] = useActionState<FormState, FormData>(updateIdentity, {});
@@ -122,21 +124,16 @@ export function IdentityForm({
           defaultValue={user.nameTag ?? ""}
         />
       </div>
-      {departments && (
-        <div className="grid gap-1 sm:w-56">
-          <Label htmlFor={`dept-${user.id}`}>학과</Label>
-          <Select
+      {colleges && (
+        <div className="grid gap-1 sm:w-[28rem]">
+          <Label htmlFor={`dept-${user.id}`}>단과대학 · 학과</Label>
+          <AffiliationSelect
             id={`dept-${user.id}`}
             name="departmentId"
-            required
+            colleges={colleges}
+            departmentOnly
             defaultValue={user.departmentId ? String(user.departmentId) : ""}
-          >
-            {departments.map((department) => (
-              <option key={department.id} value={department.id}>
-                {department.label}
-              </option>
-            ))}
-          </Select>
+          />
         </div>
       )}
       <Button type="submit" size="sm" variant="outline" disabled={pending}>

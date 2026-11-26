@@ -144,6 +144,7 @@ export async function getCollegeCards(): Promise<CollegeCard[]> {
       .from("colleges")
       .select("id, name, description")
       .eq("is_active", true)
+      .eq("is_mentor_zone", true)
       .order("position")
       .order("name"),
     supabase.rpc("public_college_mentor_counts"),
@@ -166,6 +167,7 @@ export async function getCollege(id: number) {
     .select("id, name, description")
     .eq("id", id)
     .eq("is_active", true)
+    .eq("is_mentor_zone", true)
     .maybeSingle();
   return data;
 }

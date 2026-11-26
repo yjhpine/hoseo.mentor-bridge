@@ -37,8 +37,8 @@ export function SignUpForm({
   const [captchaToken, setCaptchaToken] = useState("");
   const waitingCaptcha = Boolean(turnstileSiteKey) && !captchaToken;
   // "멘토"를 골랐을 때만 기업명·직무 분야 칸을 보여 줍니다.
-  const [selectedGroup, setSelectedGroup] = useState("");
-  const group = selectedGroup || state.values?.group || "";
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+  const group = selectedGroup ?? state.values?.group ?? "";
   const isMentor = group === "mentor";
 
   return (
@@ -54,10 +54,10 @@ export function SignUpForm({
           name="group"
           colleges={colleges}
           defaultValue={state.values?.group ?? ""}
-          onChange={(e) => setSelectedGroup(e.target.value)}
+          onValueChange={setSelectedGroup}
         />
         <p className="text-xs text-muted-foreground">
-          재학생은 학과를, 기업 현직자는 &quot;멘토&quot;를 고릅니다.
+          재학생은 단과대학과 학과를, 기업 현직자는 &quot;멘토&quot;를 고릅니다.
         </p>
       </div>
 

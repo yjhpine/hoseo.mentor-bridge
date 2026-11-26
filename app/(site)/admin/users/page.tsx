@@ -72,11 +72,16 @@ export default function AdminUsersPage() {
     sorters: [{ field: "position", order: "asc" }],
   });
 
-  const collegeName = new Map(colleges.result.data.map((c) => [c.id, c.name]));
-  const departmentOptions = departments.result.data.map((d) => ({
-    id: d.id,
-    label: `${collegeName.get(d.college_id) ?? ""} · ${d.name}`,
-  }));
+  // 이름·소속 바꾸기의 단과대학 → 학과 2단계 선택 (11장 39번)
+  const collegeOptions = colleges.result.data
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      departments: departments.result.data
+        .filter((d) => d.college_id === c.id)
+        .map((d) => ({ id: d.id, name: d.name })),
+    }))
+    .filter((c) => c.departments.length > 0);
   const refetch = () => users.query.refetch();
   const all = users.result.data;
   const shown = role === "all" ? all : all.filter((user) => user.role === role);
@@ -96,7 +101,7 @@ export default function AdminUsersPage() {
         <CardContent>
           <CreateMentorForm
             jobFields={jobFields.result.data}
-            colleges={colleges.result.data.filter((c) => c.is_active)}
+            colleges={colleges.result.data.filter((c) => c.is_active && c.is_mentor_zone)}
             onDone={refetch}
           />
         </CardContent>
@@ -183,7 +188,7 @@ export default function AdminUsersPage() {
                         nameTag: user.name_tag,
                         departmentId: user.mentee_profiles?.department_id ?? null,
                       }}
-                      departments={user.role === "mentee" ? departmentOptions : undefined}
+                      colleges={user.role === "mentee" ? collegeOptions : undefined}
                       onDone={refetch}
                     />
                   </details>

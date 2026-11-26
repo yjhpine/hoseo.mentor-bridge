@@ -77,7 +77,7 @@ export default function AdminMentorsPage() {
               key={mentor.id}
               mentor={mentor}
               photoUrl={photo(mentor.photo_path, mentorCharacterSrc(mentor.id, mentor.avatar_character))}
-              colleges={colleges.result.data.filter((college) => college.is_active)}
+              colleges={colleges.result.data.filter((college) => college.is_active && college.is_mentor_zone)}
               jobFields={jobFields.result.data}
               onChanged={() => mentors.query.refetch()}
             />

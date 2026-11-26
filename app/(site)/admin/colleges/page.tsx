@@ -38,7 +38,7 @@ export default function AdminCollegesPage() {
     <section className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold">구역·학과</h1>
       <p className="text-sm text-muted-foreground">
-        단과대학 구역은 멘토 배치와 탐색에, 학과는 멘티 가입·로그인의 소속에 쓰입니다. 숨긴 학과는 새로 가입할 수 없지만 이미 가입한 멘티는 그대로 로그인합니다. 구역은 ↑↓, 학과는 이름을 눌러 ←→로 순서를 바꿉니다.
+        단과대학은 가입·로그인 소속의 첫 칸이고, &quot;멘토 구역&quot;인 단과대학만 멘토 배치와 탐색에 쓰입니다. &quot;소속 전용&quot;(교양대학 등)은 소속에만 보입니다. 학과는 소속의 둘째 칸입니다. 숨긴 학과는 새로 가입할 수 없지만 이미 가입한 멘티는 그대로 로그인합니다. 구역은 ↑↓, 학과는 이름을 눌러 ←→로 순서를 바꿉니다.
       </p>
 
       <form
@@ -100,11 +100,23 @@ function CollegeItem({
         <MoveButtons index={index} count={count} label={college.name} disabled={save.pending} onMove={onMove} />
         <h2 className="text-lg font-semibold">{college.name}</h2>
         {!college.is_active && <Badge variant="secondary">숨김</Badge>}
+        <Badge variant={college.is_mentor_zone ? "default" : "outline"}>
+          {college.is_mentor_zone ? "멘토 구역" : "소속 전용"}
+        </Badge>
         <span className="text-sm text-muted-foreground">학과 {active}개{departments.length > active && ` (숨김 ${departments.length - active})`}</span>
         <Button
           size="sm"
           variant="outline"
           className="ml-auto"
+          disabled={save.pending}
+          title="소속 전용은 가입·로그인 소속에만 보이고 멘토를 배치하지 않습니다. 멘토가 있는 구역은 소속 전용으로 바꿀 수 없습니다."
+          onClick={() => save.update("colleges", college.id, { is_mentor_zone: !college.is_mentor_zone })}
+        >
+          {college.is_mentor_zone ? "소속 전용으로" : "멘토 구역으로"}
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
           disabled={save.pending}
           onClick={() => save.update("colleges", college.id, { is_active: !college.is_active })}
         >

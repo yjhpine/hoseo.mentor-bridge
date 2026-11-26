@@ -21,7 +21,7 @@ export default function Page() {
       <CardHeader>
         <CardTitle className="text-2xl">회원가입</CardTitle>
         <CardDescription>
-          학과를 고르면 멘티로, &quot;멘토&quot;를 고르면 멘토로 가입합니다.
+          단과대학과 학과를 고르면 멘티로, &quot;멘토&quot;를 고르면 멘토로 가입합니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
