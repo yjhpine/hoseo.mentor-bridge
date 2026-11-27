@@ -1,0 +1,12 @@
+# 학교 서버용 Docker 이미지에 넣지 않을 것 (deploy/school/Dockerfile)
+node_modules
+.next
+.open-next
+.wrangler
+.git
+.env*
+references
+docs
+tests
+coverage
+*.log

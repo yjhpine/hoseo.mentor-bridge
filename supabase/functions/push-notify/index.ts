@@ -12,7 +12,9 @@ const admin = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 );
 
-const SITE_URL = "https://hoseo-mentor-bridge.yjhpine123.workers.dev";
+// 사이트 주소(푸시 서비스에 알리는 연락처). 학교 서버로 옮기면 Edge Function 환경 변수 SITE_URL에 새 주소를 넣습니다
+// (docs/school-server.md). 없으면 지금 주소를 씁니다.
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://hoseo-mentor-bridge.yjhpine123.workers.dev";
 const PREVIEW_LENGTH = 40;
 const MAX_AGE_MS = 2 * 60 * 1000;
 

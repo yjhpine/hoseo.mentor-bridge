@@ -91,3 +91,26 @@ jobs:
           fi
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "모든 검사를 통과했습니다." >> "$GITHUB_STEP_SUMMARY"
+
+  # 학교 서버용 Docker 이미지가 빌드되는지 봅니다 (deploy/school/Dockerfile, docs/school-server.md). 이미지는 올리지 않습니다.
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - name: 학교 서버용 이미지 빌드
+        run: |
+          docker build -f deploy/school/Dockerfile \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL=https://gxcnjcqfykcpbtikhixs.supabase.co \
+            --build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_rmealKeNWymyCvfvxdDRXA_lyJJ8X_c \
+            -t hoseo-mentor:ci .
+      - name: 컨테이너 실행 확인
+        run: |
+          docker run -d --name web -p 3000:3000 -e TURNSTILE_SITE_KEY=0x4AAAAAAFu1jPNYduGAEpLg \
+            -e NEXT_PUBLIC_SUPABASE_URL=https://gxcnjcqfykcpbtikhixs.supabase.co \
+            -e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_rmealKeNWymyCvfvxdDRXA_lyJJ8X_c hoseo-mentor:ci
+          for i in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:3000/about && break; sleep 2; done
+          for p in / /about /auth/login /sw.js; do echo "$p $(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000$p)"; done
+          curl -fsS -o /dev/null http://127.0.0.1:3000/auth/login
+          docker exec web node keepalive.mjs || echo "::warning::keepalive 요청 실패 (Supabase 응답 확인)"
+          docker logs web | tail -20

@@ -1,0 +1,21 @@
+# 학교 서버 실행 (docs/school-server.md 4장)
+#   cd deploy/school && cp .env.example .env && docker compose up -d --build
+# 앞에 nginx(nginx.conf.example)를 두고 HTTPS로 받습니다. 웹은 서버 안(127.0.0.1:3000)에만 엽니다.
+services:
+  web:
+    container_name: hoseo-mentor
+    build:
+      context: ../..
+      dockerfile: deploy/school/Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+    env_file: .env
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

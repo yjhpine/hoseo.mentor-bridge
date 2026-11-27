@@ -53,13 +53,18 @@ describe("보안 헤더 (M1)", () => {
     expect(nextConfig.poweredByHeader).toBe(false);
     const rules = await nextConfig.headers!();
     expect(rules.map((r) => r.source)).toEqual([
+      "/_next/static/:path*",
       "/_next/image/:path*",
+      "/sw.js",
       "/favicon.ico",
       "/:path(.*\\.(?:svg|png|jpg|jpeg|gif|webp))",
     ]);
+    // 서비스 워커는 캐시만 끕니다. 보안 헤더는 proxy가 붙입니다(두 번 붙지 않게).
+    const sw = rules.find((r) => r.source === "/sw.js")!;
+    expect(sw.headers).toEqual([{ key: "Cache-Control", value: "no-cache" }]);
     // 모든 경로(/:path*)에 붙이면 proxy가 붙인 화면 응답 헤더와 겹칩니다 (3차 점검)
     expect(rules.some((r) => r.source === "/:path*")).toBe(false);
-    for (const rule of rules) {
+    for (const rule of rules.filter((r) => r.source !== "/sw.js")) {
       const headers = Object.fromEntries(rule.headers.map((h) => [h.key.toLowerCase(), h.value]));
       expect(headers["x-frame-options"]).toBe("DENY");
       expect(headers["x-content-type-options"]).toBe("nosniff");
