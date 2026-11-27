@@ -701,7 +701,7 @@ Supabase 무료 플랜 기준입니다. 무료 한도는 **조직 전체 합산*
 | 8 | 비로그인 탐색 허용 | 사용자 | 2026-11-06 변경: 메인·소개·안내·구역·멘토 카드(사진·이름·기업·직무·대표 분야·구역)·강의 목록은 누구나 봄. 멘토 상세·질문·수강·톡방은 로그인 후. 처음 결정은 "허용 안 함"(멘토 실명·소속 보호)이었고, 공개 범위는 개인정보 처리방침에 적음 | `app_settings.public_browsing`, 공개 함수 `public_mentors()`·`public_college_mentor_counts()`·`public_open_courses()`, `lib/supabase/proxy.ts` |
 | 9 | 멘토의 강사료·만족도 열람 | 새로 생김 | 관리자만 | RLS 정책 |
 | 10 | 멘티 한 명이 질문할 수 있는 멘토 수 | 새로 생김 | 제한 없음 | `open_chat_room()` |
-| 11 | 배포처·도메인 | 사용자 | 배포처는 **Cloudflare Workers**(`@opennextjs/cloudflare`, 2026-11-01). `main`에 병합하면 Cloudflare가 GitHub에서 받아 빌드·배포. 무료 플랜으로 시작하고 요청당 CPU 한도(10ms)를 자주 넘으면 유료(월 5달러)로 올림. 도메인은 당분간 `hoseo-mentor-bridge.yjhpine123.workers.dev`를 씀(2026-11-01) | `wrangler.jsonc`, Cloudflare 대시보드 |
+| 11 | 배포처·도메인 | 사용자 | 처음 배포처는 **Cloudflare Workers**(`@opennextjs/cloudflare`, 2026-11-01). `main`에 병합하면 Cloudflare가 GitHub에서 받아 빌드·배포. 도메인은 `hoseo-mentor-bridge.yjhpine123.workers.dev`. **2026-11-27 변경 예정: 학교 서버로 이전**. 우선 웹(Next.js)만 옮기고 DB·로그인·파일·알림은 Supabase 클라우드에 그대로 둠. 학교 서버에서는 `next build`의 standalone 결과물을 Docker 또는 Node로 직접 돌리고 앞에 HTTPS 리버스 프록시(nginx 등)를 둠. 하루 한 번 Supabase 깨우기는 서버 cron으로 옮김. Turnstile CAPTCHA는 호스팅과 따로라 그대로 씀(위젯에 학교 도메인 추가). 옮길 때까지 Cloudflare가 운영을 계속하고, 옮긴 뒤에도 되돌릴 수 있게 바로 지우지 않음. 학교 도메인은 정해지면 적음 | `wrangler.jsonc`, `deploy/school/`, [school-server.md](school-server.md) |
 | 12 | 동명이인 | 사용자 | 같은 소속에 같은 이름이 있으면 이름 뒤에 구분 문자(영문·숫자 1~3자) | 가입 화면, `profiles.name_tag` |
 | 13 | PIN 형식과 변경 | 사용자 | 숫자 6자리. 사용자가 현재 PIN을 확인받고 언제든 바꿈 | 서버 액션 검사, Supabase 비밀번호 설정 |
 | 14 | PIN 분실 | 설계 기본값 | 관리자가 임시 PIN 설정 → 다음 로그인 때 사용자가 바꿈 | `/admin/users`, `admin-users` |
