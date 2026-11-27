@@ -9,6 +9,7 @@
 - 사이트: <https://hoseo-mentor-bridge.yjhpine123.workers.dev> (Cloudflare Workers, `main`에 병합하면 자동 배포)
 - 관리자 운영 안내: [docs/operations.md](docs/operations.md) — 처음 할 일, 한 학기 운영 순서, [강사료 책정과 지급](docs/operations.md#강사료-책정과-지급), [멘토 학기 보고서](docs/operations.md#멘토-학기-보고서), PIN 분실·탈퇴 요청 처리, 문제가 생겼을 때 볼 곳
 - 백업 절차: [docs/backup.md](docs/backup.md)
+- 학교 서버 이전 준비 (웹만 이전, Supabase 유지): [docs/school-server.md](docs/school-server.md) — 서버 요구 사항, 전산팀 질문지, 설치(`deploy/school/`), 이전 순서
 - 관리자 매뉴얼 (PDF, 화면 사진 포함): [docs/manual/관리자 매뉴얼.pdf](docs/manual/관리자%20매뉴얼.pdf) — 만드는 법은 [docs/manual/README.md](docs/manual/README.md)
 - 멘토·멘티 이용 가이드 (PDF): [멘토](docs/manual/멘토%20이용%20가이드.pdf), [멘티](docs/manual/멘티%20이용%20가이드.pdf) — 사이트 이용 안내(`/guide`)에서도 내려받음
 - 개인정보 처리방침: 사이트의 `/privacy` (운영: 호서대학교 취업팀, 보호책임자 양정환 010-3830-5972)
