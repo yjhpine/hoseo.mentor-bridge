@@ -1,0 +1,5 @@
+# 하루 한 번 Supabase 깨우기 (매일 12:17 KST). crontab -e에 한 줄을 넣습니다.
+# Docker로 돌릴 때
+17 12 * * * docker exec hoseo-mentor node keepalive.mjs >> /var/log/hoseo-mentor-keepalive.log 2>&1
+# Docker 없이 Node로 돌릴 때
+# 17 12 * * * cd /opt/hoseo-mentor && node --env-file=deploy/school/.env scripts/keepalive.mjs >> /var/log/hoseo-mentor-keepalive.log 2>&1

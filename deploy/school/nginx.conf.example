@@ -1,0 +1,34 @@
+# 학교 서버 nginx 예시 (docs/school-server.md 4장). mentor.example.ac.kr과 인증서 경로를 실제 값으로 바꿉니다.
+# HTTPS는 꼭 필요합니다: 서비스 워커·푸시 알림·앱 설치·보안 쿠키가 HTTPS에서만 동작합니다.
+server {
+    listen 80;
+    server_name mentor.example.ac.kr;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name mentor.example.ac.kr;
+
+    ssl_certificate     /etc/ssl/certs/mentor.example.ac.kr.crt;
+    ssl_certificate_key /etc/ssl/private/mentor.example.ac.kr.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    # 강의 자료·보고서·사진 파일은 브라우저가 Supabase로 바로 올리므로 웹 서버로는 작은 요청만 옵니다.
+    client_max_body_size 5m;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 60s;
+    }
+}

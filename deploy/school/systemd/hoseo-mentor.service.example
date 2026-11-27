@@ -1,0 +1,25 @@
+# Docker 없이 Node.js로 돌릴 때 (docs/school-server.md 4-2).
+# /opt/hoseo-mentor에 저장소를 받고 npm ci && npm run build를 한 뒤, standalone 결과물을 실행합니다.
+# 복사: sudo cp hoseo-mentor.service.example /etc/systemd/system/hoseo-mentor.service
+#       sudo systemctl daemon-reload && sudo systemctl enable --now hoseo-mentor
+[Unit]
+Description=Hoseo mentoring web (Next.js)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hoseo
+WorkingDirectory=/opt/hoseo-mentor/.next/standalone
+EnvironmentFile=/opt/hoseo-mentor/deploy/school/.env
+Environment=NODE_ENV=production HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
